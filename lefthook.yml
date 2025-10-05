@@ -1,0 +1,15 @@
+pre-commit:
+  parallel: true
+  commands:
+    format:
+      glob: "src/**/*.{ts,tsx,js,jsx}"
+      run: biome format {staged_files} --write
+      stage_fixed: true
+
+pre-push:
+  parallel: true
+  commands:
+    lint:
+      run: bun run lint
+    type-check:
+      run: bun run type-check
