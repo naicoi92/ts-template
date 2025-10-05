@@ -2,6 +2,47 @@
 
 Template TypeScript với Clean Architecture, DI Container, và các best practices cho các dự án backend.
 
+> **Lưu ý**: Đây là **starting template/boilerplate** để khởi tạo dự án mới, không phải là complete application. File `src/index.ts` chỉ là demo để verify setup hoạt động.
+
+## Runtime Compatibility
+
+Template này được thiết kế để tương thích với nhiều JavaScript runtimes:
+
+- ✅ **Bun** (recommended) - Native TypeScript support, fast execution
+- ✅ **Vercel Functions** - ESNext modules compatible
+- ✅ **Cloudflare Workers / Edge Runtime** - Modern runtime support
+- ✅ **Node.js** - Dev tự điều chỉnh module config nếu cần CommonJS
+
+Build output sử dụng ESNext modules để tối đa hóa tính tương thích với modern runtimes.
+
+## What This Template Provides
+
+✅ **Clean Architecture Structure** - Domain, Application, Infrastructure, Presentation layers với separation rõ ràng
+
+✅ **Dependency Injection Container** - TSyringe đã configured với token system type-safe
+
+✅ **Example Implementations** - User entity, use cases, controllers để reference
+
+✅ **Config Management** - Zod schema validation cho environment variables
+
+✅ **Logger Service** - Tự động adapt theo môi trường (có sẵn Vercel detection)
+
+✅ **Code Quality Tools** - Biome formatter/linter + Lefthook git hooks
+
+## What You Need to Add
+
+Để biến template này thành production application, bạn cần thêm:
+
+⚠️ **Application Entry Point** - HTTP server (Hono, Express, Fastify) hoặc CLI phù hợp với runtime của bạn
+
+⚠️ **Real Database Implementation** - Thay MemoryRepository bằng Prisma, Drizzle, hoặc adapter khác
+
+⚠️ **Testing Setup** - Framework và test cases (Vitest, Jest, Bun test)
+
+⚠️ **Authentication/Authorization** - Nếu dự án của bạn cần
+
+⚠️ **API Documentation** - Swagger/OpenAPI nếu build REST API
+
 ## Tính năng
 
 - ✅ **Clean Architecture**: Domain, Application, Infrastructure, Presentation layers
