@@ -90,13 +90,15 @@ bun install
 ### Development
 
 ```bash
-bun run dev
+bun run dev          # Dev mode với hot reload (Bun native watch)
 ```
 
 ### Build
 
 ```bash
-bun run build
+bun run build        # Build với Bun bundler (fast, optimized)
+bun run build:types  # Generate TypeScript declaration files (optional)
+bun run start        # Run production build
 ```
 
 ### Lint & Format

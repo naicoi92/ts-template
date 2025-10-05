@@ -6,9 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Development:**
 ```bash
-bun run dev          # Run with watch mode (tsx watch)
-bun run build        # Compile TypeScript
-bun run start        # Run compiled code
+bun run dev          # Dev mode with hot reload (Bun native watch)
+bun run build        # Build with Bun bundler (fast, single-file output)
+bun run build:types  # Generate TypeScript declaration files (optional)
+bun run start        # Run production build
 ```
 
 **Code Quality:**
