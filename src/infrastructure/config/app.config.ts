@@ -1,30 +1,10 @@
 import { injectable } from "tsyringe";
-import { z } from "zod";
+import z from "zod";
 import { InvalidConfigError } from "@/domain/errors/config.error";
-import type { Config } from "@/domain/types/config.types";
+import { envSchema } from "@/domain/schemas";
+import type { Config } from "@/domain/types";
 
 // Schema validation cho environment variables
-const envSchema = z.object({
-	// Node Environment
-	NODE_ENV: z
-		.enum(["development", "production", "test"])
-		.default("development"),
-
-	APP_NAME: z.string().default("ts-template"),
-	LOG_LEVEL: z
-		.enum(["trace", "debug", "info", "warn", "error", "fatal"])
-		.default("info"),
-
-	// Application
-	PORT: z
-		.string()
-		.default("3000")
-		.transform((val) => Number(val)),
-	VERSION: z.string().optional().default("1.0.0"),
-
-	// App Base URL
-	APP_BASE_URL: z.url().default("http://localhost:3000"),
-});
 
 @injectable()
 export class AppConfig implements Config {

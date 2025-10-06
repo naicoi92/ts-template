@@ -1,4 +1,4 @@
-import { z } from "zod";
+import z from "zod";
 import { SchemaValidationError } from "@/domain/errors/validation.errors";
 import type { ISchemaValidator } from "@/domain/interfaces/validation.interface";
 
