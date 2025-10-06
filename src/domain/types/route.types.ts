@@ -7,6 +7,20 @@ import { z } from "zod";
  */
 
 /**
+ * HTTP Methods Union Type
+ *
+ * Type-safe HTTP method definitions for request handlers
+ */
+export type HttpMethod =
+	| "GET"
+	| "POST"
+	| "PUT"
+	| "PATCH"
+	| "DELETE"
+	| "HEAD"
+	| "OPTIONS";
+
+/**
  * Schema for empty route parameters
  * Used by handlers that don't require any URL parameters
  */
