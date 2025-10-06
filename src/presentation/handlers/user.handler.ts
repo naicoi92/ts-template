@@ -1,10 +1,6 @@
 import { inject, injectable } from "tsyringe";
 import type { CreateUserUseCase } from "@/application/use-cases/create-user.use-case";
 import type { GetUserUseCase } from "@/application/use-cases/get-user.use-case";
-import {
-	InvalidRequestError,
-	SchemaValidationError,
-} from "@/domain/errors/validation.errors";
 import type { IRequestHandler } from "@/domain/interfaces/http-routing.interface";
 import type { IHttpRequestBodyParser } from "@/domain/interfaces/parsing.interface";
 import type { ISchemaValidator } from "@/domain/interfaces/validation.interface";
@@ -46,127 +42,26 @@ export class CreateUserRequestHandler
 	 * @returns Promise resolving to HTTP response with created user data
 	 */
 	async handle(request: Request, _params: EmptyParams): Promise<Response> {
-		try {
-			// Parse request body (Single Responsibility: HTTP parsing)
-			const rawBody = await this.bodyParser.parse(request);
+		// Parse request body (Single Responsibility: HTTP parsing)
+		const rawBody = await this.bodyParser.parse(request);
 
-			// Validate parsed data against schema (Single Responsibility: domain validation)
-			const createUserDto = this.schemaValidator.validate(
-				rawBody,
-				CreateUserSchema,
-			);
+		// Validate parsed data against schema (Single Responsibility: domain validation)
+		const createUserDto = this.schemaValidator.validate(
+			rawBody,
+			CreateUserSchema,
+		);
 
-			// Execute create user use case
-			const createdUser = await this.createUserUseCase.execute(createUserDto);
+		// Execute create user use case
+		const createdUser = await this.createUserUseCase.execute(createUserDto);
 
-			// Return successful response
-			return Response.json(createdUser, {
-				status: 201,
-				headers: {
-					"Content-Type": "application/json",
-					"Cache-Control": "no-cache",
-				},
-			});
-		} catch (error) {
-			// Return error response with proper error handling
-			const statusCode = this.getErrorStatusCode(error as Error);
-			const errorResponse = this.formatErrorResponse(error as Error);
-
-			return Response.json(
-				{
-					error: errorResponse,
-					timestamp: new Date().toISOString(),
-				},
-				{
-					status: statusCode,
-					headers: {
-						"Content-Type": "application/json",
-						"Cache-Control": "no-cache",
-					},
-				},
-			);
-		}
-	}
-
-	/**
-	 * Formats error response for consistent API error handling
-	 * @param error - Error object
-	 * @returns Formatted error response
-	 */
-	private formatErrorResponse(error: Error): {
-		code: string;
-		message: string;
-		details?: Record<string, string[]>;
-	} {
-		if (error instanceof SchemaValidationError) {
-			return {
-				code: error.code,
-				message: error.message,
-				details: error.fieldErrors,
-			};
-		}
-
-		if (error instanceof InvalidRequestError) {
-			return {
-				code: error.code,
-				message: error.message,
-			};
-		}
-
-		return {
-			code: this.getErrorCode(error),
-			message: error.message,
-		};
-	}
-
-	/**
-	 * Gets appropriate HTTP status code for error
-	 * @param error - Error object
-	 * @returns HTTP status code
-	 */
-	private getErrorStatusCode(error: Error): number {
-		// Handle domain validation errors
-		if (
-			error instanceof SchemaValidationError ||
-			error instanceof InvalidRequestError
-		) {
-			return 400; // Bad Request
-		}
-
-		const message = error.message.toLowerCase();
-
-		if (message.includes("required") || message.includes("invalid")) {
-			return 400; // Bad Request
-		}
-
-		if (message.includes("already exists") || message.includes("duplicate")) {
-			return 409; // Conflict
-		}
-
-		return 500; // Internal Server Error
-	}
-
-	/**
-	 * Gets error code for error response
-	 * @param error - Error object
-	 * @returns Error code string
-	 */
-	private getErrorCode(error: Error): string {
-		const message = error.message.toLowerCase();
-
-		if (message.includes("name")) {
-			return "INVALID_NAME";
-		}
-
-		if (message.includes("email")) {
-			return "INVALID_EMAIL";
-		}
-
-		if (message.includes("json")) {
-			return "INVALID_JSON";
-		}
-
-		return "CREATE_USER_ERROR";
+		// Return successful response
+		return Response.json(createdUser, {
+			status: 201,
+			headers: {
+				"Content-Type": "application/json",
+				"Cache-Control": "no-cache",
+			},
+		});
 	}
 }
 
@@ -195,76 +90,16 @@ export class GetUserRequestHandler implements IRequestHandler<UserParams> {
 	 * @returns Promise resolving to HTTP response with user data
 	 */
 	async handle(_request: Request, params: UserParams): Promise<Response> {
-		try {
-			// Execute get user use case with validated user ID
-			const user = await this.getUserUseCase.execute(params.id);
+		// Execute get user use case with validated user ID
+		const user = await this.getUserUseCase.execute(params.id);
 
-			// Return successful response
-			return Response.json(user, {
-				status: 200,
-				headers: {
-					"Content-Type": "application/json",
-					"Cache-Control": "private, max-age=300", // Cache for 5 minutes
-				},
-			});
-		} catch (error) {
-			// Return error response
-			const statusCode = this.getErrorStatusCode(error as Error);
-
-			return Response.json(
-				{
-					error: {
-						code: this.getErrorCode(error as Error),
-						message: (error as Error).message,
-					},
-					timestamp: new Date().toISOString(),
-				},
-				{
-					status: statusCode,
-					headers: {
-						"Content-Type": "application/json",
-						"Cache-Control": "no-cache",
-					},
-				},
-			);
-		}
-	}
-
-	/**
-	 * Gets appropriate HTTP status code for error
-	 * @param error - Error object
-	 * @returns HTTP status code
-	 */
-	private getErrorStatusCode(error: Error): number {
-		const message = error.message.toLowerCase();
-
-		if (message.includes("not found") || message.includes("id")) {
-			return 404; // Not Found
-		}
-
-		if (message.includes("required") || message.includes("invalid")) {
-			return 400; // Bad Request
-		}
-
-		return 500; // Internal Server Error
-	}
-
-	/**
-	 * Gets error code for error response
-	 * @param error - Error object
-	 * @returns Error code string
-	 */
-	private getErrorCode(error: Error): string {
-		const message = error.message.toLowerCase();
-
-		if (message.includes("not found")) {
-			return "USER_NOT_FOUND";
-		}
-
-		if (message.includes("id")) {
-			return "INVALID_USER_ID";
-		}
-
-		return "GET_USER_ERROR";
+		// Return successful response
+		return Response.json(user, {
+			status: 200,
+			headers: {
+				"Content-Type": "application/json",
+				"Cache-Control": "private, max-age=300", // Cache for 5 minutes
+			},
+		});
 	}
 }
