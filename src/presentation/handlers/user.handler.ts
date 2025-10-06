@@ -2,7 +2,6 @@ import { inject, injectable } from "tsyringe";
 import type { CreateUserUseCase } from "@/application/use-cases/create-user.use-case";
 import type { GetUserUseCase } from "@/application/use-cases/get-user.use-case";
 import type { IRequestHandler } from "@/domain/interfaces/http-routing.interface";
-import type { IHttpRequestBodyParser } from "@/domain/interfaces/parsing.interface";
 import type { ISchemaValidator } from "@/domain/interfaces/validation.interface";
 import { CreateUserSchema } from "@/domain/schemas/user.schema";
 import type { EmptyParams, UserParams } from "@/domain/types";
@@ -22,13 +21,10 @@ export class CreateUserRequestHandler implements IRequestHandler<EmptyParams> {
 	readonly pathname = "/users";
 	readonly method = "POST";
 	readonly paramsSchema = EmptyParamsSchema;
-	readonly bodySchema = CreateUserSchema;
 
 	constructor(
 		@inject(TOKENS.CREATE_USER_USE_CASE)
 		private readonly createUserUseCase: CreateUserUseCase,
-		@inject(TOKENS.JSON_BODY_PARSER)
-		private readonly bodyParser: IHttpRequestBodyParser,
 		@inject(TOKENS.SCHEMA_VALIDATION_SERVICE)
 		private readonly schemaValidator: ISchemaValidator,
 	) {}
@@ -41,11 +37,11 @@ export class CreateUserRequestHandler implements IRequestHandler<EmptyParams> {
 	 */
 	async handle(request: Request, _params: EmptyParams): Promise<Response> {
 		// Parse request body (Single Responsibility: HTTP parsing)
-		const rawBody = await this.bodyParser.parse(request);
+		const jsonBody = await request.json();
 
 		// Validate parsed data against schema (Single Responsibility: domain validation)
 		const createUserDto = this.schemaValidator.validate(
-			rawBody,
+			jsonBody,
 			CreateUserSchema,
 		);
 
