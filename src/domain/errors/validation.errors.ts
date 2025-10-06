@@ -5,16 +5,19 @@
  * These errors are domain-specific and independent of infrastructure concerns
  */
 
+import { ApplicationError } from "./application.error";
+
 /**
  * Base class for all domain validation errors
  */
-export abstract class DomainValidationError extends Error {
+export abstract class DomainValidationError extends ApplicationError {
 	constructor(
 		message: string,
-		public readonly code: string,
+		code: string,
+		statusCode: number = 400,
+		details?: Record<string, unknown>,
 	) {
-		super(message);
-		this.name = this.constructor.name;
+		super(message, code, statusCode, details);
 	}
 }
 
@@ -25,9 +28,9 @@ export abstract class DomainValidationError extends Error {
 export class InvalidRequestError extends DomainValidationError {
 	constructor(
 		message: string = "Invalid request body format",
-		public readonly details?: Record<string, unknown>,
+		details?: Record<string, unknown>,
 	) {
-		super(message, "INVALID_REQUEST");
+		super(message, "INVALID_REQUEST", 400, details);
 	}
 }
 
@@ -38,9 +41,9 @@ export class InvalidRequestError extends DomainValidationError {
 export class SchemaValidationError extends DomainValidationError {
 	constructor(
 		message: string = "Schema validation failed",
-		public readonly fieldErrors: Record<string, string[]> = {},
+		fieldErrors: Record<string, string[]> = {},
 	) {
-		super(message, "SCHEMA_VALIDATION");
+		super(message, "SCHEMA_VALIDATION", 400, { fieldErrors });
 	}
 }
 
@@ -49,10 +52,7 @@ export class SchemaValidationError extends DomainValidationError {
  * Specific type of InvalidRequestError for JSON parsing failures
  */
 export class InvalidJsonError extends InvalidRequestError {
-	constructor(
-		message: string = "Invalid JSON format",
-		public readonly originalError?: Error,
-	) {
+	constructor(message: string = "Invalid JSON format", originalError?: Error) {
 		super(message, { originalError: originalError?.message });
 	}
 }

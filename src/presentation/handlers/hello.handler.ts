@@ -30,34 +30,15 @@ export class HelloWorldRequestHandler implements IRequestHandler<EmptyParams> {
 	 * @returns Promise resolving to HTTP response with hello message
 	 */
 	async handle(_request: Request, _params: EmptyParams): Promise<Response> {
-		try {
-			// Execute hello world use case
-			const helloResult = this.helloWorldUseCase.execute();
+		// Execute hello world use case
+		const helloResult = this.helloWorldUseCase.execute();
 
-			// Return successful response
-			return Response.json(helloResult, {
-				status: 200,
-				headers: {
-					"Cache-Control": "public, max-age=60", // Cache for 1 minute
-				},
-			});
-		} catch (error) {
-			// Return error response
-			return Response.json(
-				{
-					error: {
-						code: "HELLO_ERROR",
-						message: (error as Error).message,
-					},
-					timestamp: new Date().toISOString(),
-				},
-				{
-					status: 500,
-					headers: {
-						"Cache-Control": "no-cache",
-					},
-				},
-			);
-		}
+		// Return successful response
+		return Response.json(helloResult, {
+			status: 200,
+			headers: {
+				"Cache-Control": "public, max-age=60", // Cache for 1 minute
+			},
+		});
 	}
 }

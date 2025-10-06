@@ -1,5 +1,7 @@
 import "reflect-metadata";
 import { container } from "tsyringe";
+// Import Application services
+import { HttpErrorHandler } from "@/application/services/error-handler.service";
 // Import HTTP Router
 import { HttpRouter } from "@/application/services/http-router.service";
 // Import use cases
@@ -42,6 +44,9 @@ container.registerSingleton(
 	SchemaValidationService,
 );
 
+// Application services
+container.registerSingleton(TOKENS.HTTP_ERROR_HANDLER, HttpErrorHandler);
+
 // Infrastructure services (external concerns)
 container.registerSingleton(TOKENS.JSON_BODY_PARSER, JsonBodyParser);
 
@@ -63,9 +68,5 @@ container.register(TOKENS.REQUEST_HANDLER, HealthRequestHandler);
 container.register(TOKENS.REQUEST_HANDLER, HelloWorldRequestHandler);
 container.register(TOKENS.REQUEST_HANDLER, CreateUserRequestHandler);
 container.register(TOKENS.REQUEST_HANDLER, GetUserRequestHandler);
-
-// Log successful registration
-const logger = container.resolve<LoggerService>(TOKENS.LOGGER_SERVICE);
-logger.info("HTTP Router and Request Handlers configured successfully");
 
 export { container };
