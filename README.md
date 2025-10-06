@@ -2,7 +2,7 @@
 
 Template TypeScript với Clean Architecture, DI Container, và các best practices cho các dự án backend.
 
-> **Lưu ý**: Đây là **starting template/boilerplate** để khởi tạo dự án mới, không phải là complete application. File `src/index.ts` chỉ là demo để verify setup hoạt động.
+> **Lưu ý**: Đây là **starting template/boilerplate** để khởi tạo dự án mới, có sẵn HTTP server và application lifecycle management. Template đã sẵn sàng để phát triển tiếp.
 
 ## Runtime Compatibility
 
@@ -17,11 +17,19 @@ Build output sử dụng ESNext modules để tối đa hóa tính tương thíc
 
 ## What This Template Provides
 
+✅ **Complete HTTP Server** - Bun HTTP server với proper error handling và routing
+
+✅ **Application Lifecycle Management** - AppBootstrapService với graceful shutdown và signal handling
+
 ✅ **Clean Architecture Structure** - Domain, Application, Infrastructure, Presentation layers với separation rõ ràng
 
 ✅ **Dependency Injection Container** - TSyringe đã configured với token system type-safe
 
-✅ **Example Implementations** - User entity, use cases, controllers để reference
+✅ **HTTP Request Handling** - Type-safe routing với automatic handler discovery
+
+✅ **Error Handling System** - Centralized error handling với proper error types
+
+✅ **Example Implementations** - User entity, use cases, handlers để reference
 
 ✅ **Config Management** - Zod schema validation cho environment variables
 
@@ -29,11 +37,9 @@ Build output sử dụng ESNext modules để tối đa hóa tính tương thíc
 
 ✅ **Code Quality Tools** - Biome formatter/linter + Lefthook git hooks
 
-## What You Need to Add
+## What You Need to Add for Production
 
 Để biến template này thành production application, bạn cần thêm:
-
-⚠️ **Application Entry Point** - HTTP server (Hono, Express, Fastify) hoặc CLI phù hợp với runtime của bạn
 
 ⚠️ **Real Database Implementation** - Thay MemoryRepository bằng Prisma, Drizzle, hoặc adapter khác
 
@@ -43,10 +49,16 @@ Build output sử dụng ESNext modules để tối đa hóa tính tương thíc
 
 ⚠️ **API Documentation** - Swagger/OpenAPI nếu build REST API
 
+⚠️ **Monitoring & Metrics** - Health checks, metrics collection
+
 ## Tính năng
 
+- ✅ **HTTP Server**: Bun HTTP server với routing và error handling
+- ✅ **Application Lifecycle Management**: Graceful shutdown, signal handling
+- ✅ **Request Handling**: Type-safe routing với automatic handler discovery
+- ✅ **Error Handling**: Centralized error handling với proper error types
 - ✅ **Clean Architecture**: Domain, Application, Infrastructure, Presentation layers
-- ✅ **Dependency Injection**: TSyringe
+- ✅ **Dependency Injection**: TSyringe với token system
 - ✅ **Logger**: LogLayer với nhiều log levels
 - ✅ **Config Management**: Zod schema validation cho environment variables
 - ✅ **Memory Repository**: Repository pattern mẫu
@@ -60,23 +72,27 @@ Build output sử dụng ESNext modules để tối đa hóa tính tương thíc
 src/
 ├── application/        # Business logic & use cases
 │   ├── dto/           # Data Transfer Objects
+│   ├── services/      # Application services (HTTP router, error handler, bootstrap)
 │   └── use-cases/     # Use cases
 ├── domain/            # Domain layer
 │   ├── entities/      # Business entities
 │   ├── errors/        # Custom errors
-│   └── interfaces/    # Contracts/Interfaces
+│   ├── interfaces/    # Contracts/Interfaces
+│   ├── schemas/       # Domain schemas
+│   ├── services/      # Domain services (schema validation)
+│   └── types/         # Domain types
 ├── infrastructure/    # External concerns
 │   ├── config/        # Configuration
-│   └── repositories/  # Data persistence
-├── presentation/      # API/Controllers
-│   ├── controllers/   # Controllers
-│   └── middleware/    # Middleware
+│   ├── parsing/       # Request body parsing
+│   ├── repositories/  # Data persistence
+│   └── server/        # HTTP server implementations (Bun, Deno)
+├── presentation/      # Entry points (API/Controllers)
+│   └── handlers/      # Request handlers
 ├── shared/            # Shared utilities
-│   ├── constants/     # Constants
 │   └── logger.ts      # Logger service
 ├── container.ts       # DI container setup
 ├── tokens.ts          # DI tokens
-└── index.ts           # Entry point
+└── index.ts           # Application entry point
 ```
 
 ## Cài đặt
@@ -92,6 +108,12 @@ bun install
 ```bash
 bun run dev          # Dev mode với hot reload (Bun native watch)
 ```
+
+Server sẽ start tại `http://localhost:3000` với các endpoints:
+- `GET /health` - Health check
+- `GET /hello` - Hello World example
+- `POST /users` - Create user
+- `GET /users/:id` - Get user by ID
 
 ### Build
 
@@ -147,14 +169,32 @@ Các biến môi trường:
 ### Thêm Use Case mới
 
 1. Tạo use case trong `src/application/use-cases/`
-2. Đăng ký trong `src/container.ts`
-3. Thêm token trong `src/tokens.ts`
+2. Tạo DTO trong `src/application/dto/` (nếu cần)
+3. Đăng ký trong `src/container.ts`
+4. Thêm token trong `src/tokens.ts`
 
-### Thêm Controller mới
+### Thêm Request Handler mới
 
-1. Tạo controller trong `src/presentation/controllers/`
-2. Đăng ký trong `src/container.ts`
-3. Thêm token trong `src/tokens.ts`
+1. Tạo handler trong `src/presentation/handlers/`
+2. Implement `IRequestHandler` interface với `pathname`, `paramsSchema`, `bodySchema`
+3. Đăng ký trong `src/container.ts` với `TOKENS.REQUEST_HANDLER`
+4. HTTP router sẽ tự động discovery handler mới
+
+### Thêm Service mới
+
+1. Tạo interface trong `src/domain/interfaces/`
+2. Implement service trong `src/application/services/` (hoặc `infrastructure/` cho external concerns)
+3. Đăng ký trong `src/container.ts`
+4. Thêm token trong `src/tokens.ts`
+
+### Application Lifecycle Customization
+
+AppBootstrapService hỗ trợ các tùy chỉnh:
+- Graceful shutdown timeout (default: 10s)
+- Health check integration
+- Custom startup/shutdown hooks
+
+Xem `src/application/services/app-bootstrap.service.ts` để tùy chỉnh.
 
 ## Git Hooks
 
