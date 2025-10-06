@@ -17,8 +17,9 @@ export const TOKENS = {
 	CREATE_USER_USE_CASE: createToken("CreateUserUseCase"),
 	GET_USER_USE_CASE: createToken("GetUserUseCase"),
 
-	// Controller tokens
-	HELLO_CONTROLLER: createToken("HelloController"),
-	HEALTH_CONTROLLER: createToken("HealthController"),
-	USER_CONTROLLER: createToken("UserController"),
+	// Request Handler tokens (Clean Architecture)
+	REQUEST_HANDLER: createToken("RequestHandler"),
+
+	// HTTP Router token
+	HTTP_ROUTER: createToken("HttpRouter"),
 } as const;
