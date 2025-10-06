@@ -1,0 +1,30 @@
+{
+  "tasks": {
+    "dev": "deno run --watch --allow-read --allow-env --allow-net --allow-sys --sloppy-imports src/index.ts",
+    "build": "deno compile --allow-read --allow-env --allow-net --allow-sys --sloppy-imports --output dist/index src/index.ts",
+    "start": "deno run --allow-read --allow-env --allow-net --allow-sys --sloppy-imports dist/index",
+    "type-check": "deno check --sloppy-imports src/index.ts",
+    "check": "deno lint src/ && deno check --sloppy-imports src/index.ts"
+  },
+  "imports": {
+    "@/": "./src/",
+    "path-to-regexp": "npm:path-to-regexp@^8.3.0",
+    "reflect-metadata": "npm:reflect-metadata@^0.2.2",
+    "tsyringe": "npm:tsyringe@^4.10.0",
+    "zod": "npm:zod@^4.1.11",
+    "loglayer": "npm:loglayer@^6.7.2",
+    "@loglayer/transport-pino": "npm:@loglayer/transport-pino@^2.2.4",
+    "pino": "npm:pino@^10.0.0",
+    "pino-pretty": "npm:pino-pretty@^13.1.1",
+    "serialize-error": "npm:serialize-error@^12.0.0"
+  },
+  "compilerOptions": {
+    "allowJs": true,
+    "strict": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}

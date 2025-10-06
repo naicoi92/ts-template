@@ -1,3 +1,4 @@
+import { match } from "path-to-regexp";
 import { inject, injectAll, injectable } from "tsyringe";
 import type { z } from "zod";
 import type { IRequestHandler } from "@/domain/interfaces/http-routing.interface";
@@ -78,13 +79,11 @@ export class HttpRouter {
 	 */
 	private findHandler(pathname: string): HandlerMatch | null {
 		for (const handler of this.handlers) {
-			const pattern = new URLPattern({ pathname: handler.pathname });
-			const match = pattern.exec({ pathname });
+			const matchFn = match(handler.pathname);
+			const matchResult = matchFn(pathname);
 
-			if (match) {
-				const validation = handler.paramsSchema.safeParse(
-					match.pathname.groups,
-				);
+			if (matchResult) {
+				const validation = handler.paramsSchema.safeParse(matchResult.params);
 
 				if (validation.success) {
 					this.logger
