@@ -8,6 +8,7 @@
   },
   "imports": {
     "@/": "./src/",
+    "path-to-regexp": "npm:path-to-regexp@^8.3.0",
     "reflect-metadata": "npm:reflect-metadata@^0.2.2",
     "tsyringe": "npm:tsyringe@^4.10.0",
     "zod": "npm:zod@^4.1.11",

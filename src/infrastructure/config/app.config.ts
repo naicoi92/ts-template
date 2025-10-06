@@ -1,7 +1,7 @@
 import { injectable } from "tsyringe";
 import { z } from "zod";
 import { InvalidConfigError } from "@/domain/errors/config.error";
-import type { IConfig } from "@/domain/interfaces/config.interface";
+import type { Config } from "@/domain/types/config.types";
 
 // Schema validation cho environment variables
 const envSchema = z.object({
@@ -27,7 +27,7 @@ const envSchema = z.object({
 });
 
 @injectable()
-export class AppConfig implements IConfig {
+export class AppConfig implements Config {
 	private readonly env: z.infer<typeof envSchema>;
 
 	constructor() {

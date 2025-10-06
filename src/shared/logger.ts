@@ -10,8 +10,8 @@ import pino from "pino";
 import pretty from "pino-pretty";
 import { serializeError } from "serialize-error";
 import { inject, injectable } from "tsyringe";
-import type { IConfig } from "@/domain/interfaces/config.interface";
 import type { ILogger } from "@/domain/interfaces/logger.interface";
+import type { Config } from "@/domain/types/config.types";
 import { TOKENS } from "@/tokens";
 
 @injectable()
@@ -20,7 +20,7 @@ export class LogLayerLogger implements ILogger {
 	private logLayer: LogLayer;
 	private transports: LogLayerTransport[];
 
-	constructor(@inject(TOKENS.CONFIG_SERVICE) private config: IConfig) {
+	constructor(@inject(TOKENS.CONFIG_SERVICE) private config: Config) {
 		this.transports = this.setupTransports();
 
 		this.logLayer = new LogLayer({

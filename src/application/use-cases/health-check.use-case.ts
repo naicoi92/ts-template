@@ -1,27 +1,16 @@
 import { inject, injectable } from "tsyringe";
-import type { IConfig } from "@/domain/interfaces/config.interface";
 import type { ILogger } from "@/domain/interfaces/logger.interface";
+import type { Config } from "@/domain/types/config.types";
+import type {
+	HealthCheckOutput,
+	HealthCheckStatus,
+} from "@/domain/types/use-case.types";
 import { TOKENS } from "@/tokens";
-
-export interface HealthCheckStatus {
-	status: "up" | "down";
-	message: string;
-	details?: Record<string, unknown>;
-}
-
-export interface HealthCheckOutput {
-	status: "healthy" | "unhealthy";
-	version: string;
-	timestamp: string;
-	checks: {
-		api: HealthCheckStatus;
-	};
-}
 
 @injectable()
 export class HealthCheckUseCase {
 	constructor(
-		@inject(TOKENS.CONFIG_SERVICE) readonly config: IConfig,
+		@inject(TOKENS.CONFIG_SERVICE) readonly config: Config,
 		@inject(TOKENS.LOGGER_SERVICE) readonly logger: ILogger,
 	) {}
 

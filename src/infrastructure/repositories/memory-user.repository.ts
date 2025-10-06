@@ -1,6 +1,6 @@
 import { injectable } from "tsyringe";
-import type { User } from "@/domain/entities/user.entity";
 import type { IUserRepository } from "@/domain/interfaces/user.repository.interface";
+import type { User } from "@/domain/types/entity.types";
 
 @injectable()
 export class MemoryUserRepository implements IUserRepository {
