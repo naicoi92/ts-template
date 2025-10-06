@@ -1,4 +1,4 @@
-import { HttpRouter } from "@/application/services/http-router.service";
+import type { HttpRouter } from "@/application/services/http-router.service";
 import { container } from "@/container";
 import { TOKENS } from "@/tokens";
 
