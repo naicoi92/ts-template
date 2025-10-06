@@ -1,4 +1,4 @@
-import { z } from "zod";
+import z from "zod";
 
 /**
  * User Domain Schemas
@@ -10,20 +10,15 @@ import { z } from "zod";
 /**
  * Email validation schema with proper format checking
  */
-const EmailSchema = z
-	.string()
-	.min(1, "Email is required")
-	.email("Invalid email format")
-	.toLowerCase()
-	.trim();
+const EmailSchema = z.email().toLowerCase().trim();
 
 /**
  * Name validation schema with length constraints
  */
 const NameSchema = z
 	.string()
-	.min(1, "Name is required")
-	.max(100, "Name must be less than 100 characters")
+	.min(1, { error: "Name is required" })
+	.max(100, { error: "Name must be less than 100 characters" })
 	.trim();
 
 /**
@@ -49,8 +44,9 @@ export const UpdateUserSchema = z
 	});
 
 /**
- * Inferred types from schemas for type safety
- * Single source of truth for schema-based types
+ * Schema for user ID route parameters
+ * Used for GET /users/:id endpoint
  */
-export type CreateUserInput = z.infer<typeof CreateUserSchema>;
-export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
+export const UserParamsSchema = z.object({
+	id: z.string().min(1, { error: "User ID is required" }),
+});

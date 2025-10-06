@@ -31,7 +31,7 @@ Build output sử dụng ESNext modules để tối đa hóa tính tương thíc
 
 ✅ **Example Implementations** - User entity, use cases, handlers để reference
 
-✅ **Config Management** - Zod schema validation cho environment variables
+✅ **Config Management** - Zod v4 schema validation cho environment variables
 
 ✅ **Logger Service** - Tự động adapt theo môi trường (có sẵn Vercel detection)
 
@@ -60,7 +60,7 @@ Build output sử dụng ESNext modules để tối đa hóa tính tương thíc
 - ✅ **Clean Architecture**: Domain, Application, Infrastructure, Presentation layers
 - ✅ **Dependency Injection**: TSyringe với token system
 - ✅ **Logger**: LogLayer với nhiều log levels
-- ✅ **Config Management**: Zod schema validation cho environment variables
+- ✅ **Config Management**: Zod v4 schema validation cho environment variables
 - ✅ **Memory Repository**: Repository pattern mẫu
 - ✅ **Type Safety**: TypeScript strict mode
 - ✅ **Code Quality**: Biome formatter & linter
@@ -142,6 +142,47 @@ bun run type-check
 bun run check
 ```
 
+## Zod v4 Schema Validation
+
+Template này sử dụng **Zod v4** cho validation với các quy tắc sau:
+
+### Import Syntax
+```typescript
+// ✅ Đúng - Default import
+import z from "zod";
+import type z from "zod";
+
+// ❌ Sai - Named import
+import { z } from "zod";
+```
+
+### Schema Syntax v4
+```typescript
+// Error messages
+z.string().min(1, { error: "Field is required" })  // ✅ v4
+// z.string().min(1, "Field is required")          // ❌ v3
+
+// Top-level functions
+z.email()                                          // ✅ v4
+// z.string().email()                              // ❌ v3
+z.url()                                            // ✅ v4
+// z.string().url()                                // ❌ v3
+
+// Transform + Default order
+z.string().transform(Number).default(0)             // ✅ v4
+// z.string().default("0").transform(Number)       // ❌ v3
+```
+
+### Schema Organization
+- **Domain schemas** nằm trong `src/domain/schemas/`
+- **Type exports** nằm trong `src/domain/types/` (inferred từ schemas)
+- **Environment schema** nằm trong `src/domain/schemas/env.schema.ts`
+
+### Best Practices
+1. **Single source of truth**: Schema định nghĩa ở `schemas/`, types inferred ở `types/`
+2. **Proper imports**: Luôn import từ đúng paths để maintain separation of concerns
+3. **Zod v4 syntax**: Sử dụng latest syntax để tận dụng performance và type safety
+
 ## Environment Variables
 
 Tạo file `.env` từ `.env.example`:
@@ -157,6 +198,30 @@ Các biến môi trường:
 - `APP_NAME`: Tên ứng dụng
 - `APP_BASE_URL`: Base URL
 - `LOG_LEVEL`: Log level (trace/debug/info/warn/error/fatal)
+
+## Development Workflow
+
+### Quy trình làm việc để tránh lỗi
+
+1. **Luôn kiểm tra version**: Đảm bảo sử dụng đúng version của dependencies
+2. **Tuân thủ syntax**: Sử dụng đúng syntax theo version hiện tại (Zod v4)
+3. **Import paths**: Import từ đúng paths theo architecture:
+   ```typescript
+   // Schemas - từ domain/schemas
+   import { UserSchema } from "@/domain/schemas";
+
+   // Types - từ domain/types
+   import type { UserType } from "@/domain/types";
+   ```
+4. **Test before commit**: Chạy `bun run check` trước khi commit
+5. **Review changes**: Kiểm tra diff để đảm bảo không vi phạm architecture rules
+
+### Common mistakes cần tránh
+
+❌ **Không** import types từ schemas file
+❌ **Không** sử dụng outdated syntax của dependencies
+❌ **Không** vi phạm dependency rules (dependencies phải point inward)
+❌ **Không** handle errors ở business logic layers (chỉ centralized trong HttpRouter)
 
 ## Mở rộng Template
 

@@ -3,9 +3,12 @@ import type { CreateUserUseCase } from "@/application/use-cases/create-user.use-
 import type { GetUserUseCase } from "@/application/use-cases/get-user.use-case";
 import type { IRequestHandler } from "@/domain/interfaces/http-routing.interface";
 import type { ISchemaValidator } from "@/domain/interfaces/validation.interface";
-import { CreateUserSchema } from "@/domain/schemas/user.schema";
+import {
+	CreateUserSchema,
+	EmptyParamsSchema,
+	UserParamsSchema,
+} from "@/domain/schemas";
 import type { EmptyParams, UserParams } from "@/domain/types";
-import { EmptyParamsSchema, UserParamsSchema } from "@/domain/types";
 import { TOKENS } from "@/tokens";
 
 /**

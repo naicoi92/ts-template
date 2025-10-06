@@ -1,5 +1,5 @@
 import { inject, injectable } from "tsyringe";
-import { z } from "zod";
+import z from "zod";
 import { ApplicationError } from "@/domain/errors/application.error";
 import type { ILogger } from "@/domain/interfaces/logger.interface";
 import { TOKENS } from "@/tokens";

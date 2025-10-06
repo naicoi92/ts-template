@@ -1,7 +1,7 @@
 import { inject, injectable } from "tsyringe";
 import type { ILogger } from "@/domain/interfaces/logger.interface";
 import type { IUserRepository } from "@/domain/interfaces/user.repository.interface";
-import type { CreateUserInput } from "@/domain/schemas/user.schema";
+import type { CreateUserInput } from "@/domain/types";
 import type { UserResponseDto } from "@/domain/types/dto.types";
 import { TOKENS } from "@/tokens";
 

@@ -1,9 +1,10 @@
-import { z } from "zod";
+import type z from "zod";
+import type { EmptyParamsSchema } from "../schemas/route.schema";
 
 /**
  * Route-related Domain Types
  *
- * Types and schemas for HTTP route parameters and routing
+ * Types for HTTP route parameters and routing
  */
 
 /**
@@ -19,12 +20,6 @@ export type HttpMethod =
 	| "DELETE"
 	| "HEAD"
 	| "OPTIONS";
-
-/**
- * Schema for empty route parameters
- * Used by handlers that don't require any URL parameters
- */
-export const EmptyParamsSchema = z.object({});
 
 /**
  * Type for empty route parameters
