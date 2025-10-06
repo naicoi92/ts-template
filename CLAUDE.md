@@ -27,6 +27,43 @@ bun run check        # Run lint + type-check
 
 Install hooks: `bunx lefthook install`
 
+## 🔴 CRITICAL: ZOD v4 COMPLIANCE
+
+### **ZOD v4 REQUIREMENTS**
+Template này sử dụng **Zod v4** - BẮT BUỘC tuân thủ các quy tắc sau:
+
+```typescript
+// ✅ CORRECT - Default imports
+import z from "zod";
+import type z from "zod";
+
+// ❌ WRONG - Named imports
+import { z } from "zod";
+import type { z } from "zod";
+
+// ✅ CORRECT - v4 syntax
+z.string().min(1, { error: "Required" })
+z.email()  // Top-level function
+z.string().transform(Number).default(0)  // Transform before default
+
+// ❌ WRONG - v3 syntax
+z.string().min(1, "Required")
+z.string().email()
+z.string().default("0").transform(Number)
+```
+
+### **SCHEMA ORGANIZATION RULES**
+- **Schemas**: `src/domain/schemas/` - Chứa Zod schema definitions
+- **Types**: `src/domain/types/` - Chứa inferred types TỪ schemas
+- **NEVER** import types trực tiếp từ schema files
+- **LUÔN** import schemas từ `@/domain/schemas`
+- **LUÔN** import types từ `@/domain/types`
+
+### **VERSION MANAGEMENT**
+- Luôn kiểm tra version mới nhất của dependencies trước khi update
+- Đọc documentation/changelog cho breaking changes
+- Test kỹ với new syntax trước khi commit
+
 ## Core Development Principles
 
 ### **KISS (Keep It Simple, Stupid)**
@@ -323,3 +360,68 @@ Follow this consistent pattern for ANY new feature:
 - **DTOs**: See `src/application/dto/`
 - **Tokens**: See `src/tokens.ts`
 - **DI Registration**: See `src/container.ts`
+
+## 🔴 UNIVERSAL ANTI-PATTERNS - KHÔNG BAO GIỜ LÀM
+
+### **ZOD & SCHEMA ANTI-PATTERNS**
+❌ **KHÔNG** sử dụng named import cho Zod v4:
+```typescript
+// ❌ WRONG
+import { z } from "zod";
+import type { z } from "zod";
+
+// ✅ CORRECT
+import z from "zod";
+import type z from "zod";
+```
+
+❌ **KHÔNG** sử dụng Zod v3 syntax:
+```typescript
+// ❌ WRONG
+z.string().min(1, "Required")
+z.string().email()
+z.string().default("0").transform(Number)
+
+// ✅ CORRECT
+z.string().min(1, { error: "Required" })
+z.email()
+z.string().transform(Number).default(0)
+```
+
+❌ **KHÔNG** import types từ schema files:
+```typescript
+// ❌ WRONG
+import type { UserType } from "@/domain/schemas/user.schema";
+
+// ✅ CORRECT
+import type { UserType } from "@/domain/types";
+```
+
+❌ **KHÔNG** define schemas trong type files
+❌ **KHÔNG** vi phạm single source of truth principle
+
+### **ARCHITECTURE ANTI-PATTERNS**
+❌ **KHÔNG** tạo abstraction layers không cần thiết
+❌ **KHÔNG** handle errors ở nhiều places (chỉ centralized trong HttpRouter)
+❌ **KHÔNG** return null hoặc error codes thay vì throw proper errors
+❌ **KHÔNG** vi phạm dependency rules (dependencies must point inward)
+❌ **KHÔNG** đặt business logic trong presentation layer
+
+### **DEPENDENCY MANAGEMENT ANTI-PATTERNS**
+❌ **KHÔNG** update dependencies mà không đọc changelog
+❌ **KHÔNG** sử dụng outdated syntax
+❌ **KHÔNG** assume API backward compatibility
+❌ **KHÔNG** skip testing khi update versions
+
+### **CODE QUALITY ANTI-PATTERMS**
+❌ **KHÔNG** commit mà không chạy `bun run check`
+❌ **KHÔNG** ignore linting errors
+❌ **KHÔNG** vi phạm Clean Architecture principles
+❌ **KHÔNG** tạo over-engineered solutions
+
+### **🔥 GOLDEN RULES**
+1. **CHECK BEFORE CHANGE**: Luôn kiểm tra version và documentation trước khi update
+2. **TEST SYNTAX**: Verify new syntax với examples trước khi implement
+3. **FOLLOW PATTERNS**: Tuân thủ existing patterns trong codebase
+4. **ARCHITECTURE FIRST**: Không bao giờ vi phạm Clean Architecture
+5. **SINGLE SOURCE**: Schema định nghĩa ở schemas/, types inferred ở types/
