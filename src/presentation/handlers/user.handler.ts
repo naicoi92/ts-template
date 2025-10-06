@@ -37,11 +37,11 @@ export class CreateUserRequestHandler implements IRequestHandler<EmptyParams> {
 	 */
 	async handle(request: Request, _params: EmptyParams): Promise<Response> {
 		// Parse request body (Single Responsibility: HTTP parsing)
-		const rawBody = await request.json();
+		const jsonBody = await request.json();
 
 		// Validate parsed data against schema (Single Responsibility: domain validation)
 		const createUserDto = this.schemaValidator.validate(
-			rawBody,
+			jsonBody,
 			CreateUserSchema,
 		);
 
