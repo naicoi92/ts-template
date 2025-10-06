@@ -1,9 +1,11 @@
 import { match } from "path-to-regexp";
 import { inject, injectAll, injectable } from "tsyringe";
-import type { z } from "zod";
+import { RouteNotFoundError } from "@/domain/errors/routing.error";
 import type { IRequestHandler } from "@/domain/interfaces/http-routing.interface";
 import type { ILogger } from "@/domain/interfaces/logger.interface";
+import type { ISchemaValidator } from "@/domain/interfaces/validation.interface";
 import { TOKENS } from "@/tokens";
+import type { HttpErrorHandler } from "./error-handler.service";
 
 /**
  * Type-safe handler match result
@@ -28,6 +30,10 @@ export class HttpRouter {
 		private readonly handlers: IRequestHandler[],
 		@inject(TOKENS.LOGGER_SERVICE)
 		private readonly logger: ILogger,
+		@inject(TOKENS.HTTP_ERROR_HANDLER)
+		private readonly errorHandler: HttpErrorHandler,
+		@inject(TOKENS.SCHEMA_VALIDATION_SERVICE)
+		private readonly schemaValidator: ISchemaValidator,
 	) {}
 
 	/**
@@ -45,154 +51,123 @@ export class HttpRouter {
 			})
 			.debug("Processing HTTP request");
 
-		const handlerMatch = this.findHandler(url.pathname);
+		try {
+			// Find and validate handler for path
+			const handlerMatch = this.findHandler(url.pathname);
 
-		if (!handlerMatch) {
+			const response = await this.executeHandler(handlerMatch, request);
+
 			this.logger
-				.withData({ path: url.pathname })
-				.debug("No handler found for request");
+				.withData({
+					handler: handlerMatch.handler.constructor.name,
+					status: response.status,
+				})
+				.debug("Request processed successfully");
 
-			return Response.json(
-				{
-					error: {
-						code: "NOT_FOUND",
-						message: "Route not found",
-					},
-					timestamp: new Date().toISOString(),
-				},
-				{ status: 404 },
+			return response;
+		} catch (error) {
+			// Create error context for better debugging
+			const errorContext = this.createErrorContext(
+				request,
+				url,
+				error as Error,
 			);
-		}
 
-		// Execute handler with full type safety
-		return this.executeHandler(
-			handlerMatch.handler,
-			handlerMatch.params,
-			request,
-		);
+			return this.errorHandler.handleError(error as Error, errorContext);
+		}
 	}
 
 	/**
-	 * Finds a matching handler for the given pathname with type safety
+	 * Finds a matching handler for the given pathname
 	 * @param pathname - The request pathname
-	 * @returns Handler match with validated parameters or null
+	 * @returns Handler match with validated parameters
+	 * @throws RouteNotFoundError when no route matches
 	 */
-	private findHandler(pathname: string): HandlerMatch | null {
+	private findHandler(pathname: string): HandlerMatch {
 		for (const handler of this.handlers) {
 			const matchFn = match(handler.pathname);
 			const matchResult = matchFn(pathname);
 
-			if (matchResult) {
-				const validation = handler.paramsSchema.safeParse(matchResult.params);
-
-				if (validation.success) {
-					this.logger
-						.withData({
-							handler: handler.constructor.name,
-							pathname,
-							params: validation.data,
-						})
-						.debug("Handler found with valid parameters");
-
-					// Type-safe return - params are validated against handler's schema
-					return {
-						handler,
-						params: validation.data,
-					} as HandlerMatch;
-				} else {
-					this.logger
-						.withData({
-							handler: handler.constructor.name,
-							pathname,
-							error: validation.error.message,
-						})
-						.debug("Handler found but parameter validation failed");
-
-					// Return validation error directly
-					return {
-						handler: {
-							handle: async () =>
-								this.createValidationErrorResponse(validation.error),
-							paramsSchema: handler.paramsSchema,
-							pathname: handler.pathname,
-						},
-						params: {} as never,
-					};
-				}
+			// Early continue if no match
+			if (!matchResult) {
+				continue;
 			}
+
+			// We have a matching route - validate and return
+			this.logger
+				.withData({
+					handler: handler.constructor.name,
+					pathname,
+				})
+				.debug("Handler found for path");
+
+			// Validate parameters using SchemaValidationService
+			const validatedParams = this.schemaValidator.validate(
+				matchResult.params,
+				handler.paramsSchema,
+			);
+
+			return {
+				handler,
+				params: validatedParams,
+			};
 		}
 
-		return null;
+		// No handler found after checking all handlers
+		throw new RouteNotFoundError(pathname);
 	}
 
 	/**
 	 * Executes a handler with validated parameters and full type safety
-	 * @param handler - The request handler to execute
-	 * @param params - Validated parameters matching handler's expected type
+	 * @param handlerMatch - The matched handler with validated parameters
 	 * @param request - The incoming request
 	 * @returns Promise resolving to HTTP response
 	 */
 	private async executeHandler<TParams>(
-		handler: IRequestHandler<TParams>,
-		params: TParams,
+		handlerMatch: HandlerMatch<TParams>,
 		request: Request,
 	): Promise<Response> {
-		try {
-			this.logger
-				.withData({
-					handler: handler.constructor.name,
-					params,
-				})
-				.debug("Executing handler");
+		this.logger
+			.withData({
+				handler: handlerMatch.handler.constructor.name,
+				params: handlerMatch.params,
+			})
+			.debug("Executing handler");
 
-			const response = await handler.handle(request, params);
+		// Execute handler - errors will bubble up to handle method
+		const response = await handlerMatch.handler.handle(
+			request,
+			handlerMatch.params,
+		);
 
-			this.logger
-				.withData({
-					handler: handler.constructor.name,
-					status: response.status,
-				})
-				.debug("Handler executed successfully");
-
-			return response;
-		} catch (error) {
-			this.logger
-				.withError(error as Error)
-				.withData({
-					handler: handler.constructor.name,
-					params,
-				})
-				.error("Handler execution failed");
-
-			return Response.json(
-				{
-					error: {
-						code: "INTERNAL_SERVER_ERROR",
-						message: "Internal server error",
-					},
-					timestamp: new Date().toISOString(),
-				},
-				{ status: 500 },
-			);
-		}
+		return response;
 	}
 
 	/**
-	 * Creates a validation error response
-	 * @param validationError - The Zod validation error
-	 * @returns Validation error response
+	 * Creates error context with all relevant information
+	 * @param request - The incoming request
+	 * @param url - Parsed URL object
+	 * @param error - The error that occurred
+	 * @returns Error context object
 	 */
-	private createValidationErrorResponse(validationError: z.ZodError): Response {
-		return Response.json(
-			{
-				error: {
-					code: "VALIDATION_ERROR",
-					message: validationError.message,
-					details: validationError.issues,
-				},
-				timestamp: new Date().toISOString(),
-			},
-			{ status: 400 },
-		);
+	private createErrorContext(
+		request: Request,
+		url: URL,
+		error: Error,
+	): {
+		handlerName?: string;
+		requestMethod: string;
+		requestPath: string;
+		params?: unknown;
+	} {
+		// Extract handler name from error stack trace if available
+		const handlerMatch = error.stack?.match(/at\s+(\w+RequestHandler)\./);
+		const handlerName = handlerMatch?.[1];
+
+		return {
+			handlerName,
+			requestMethod: request.method,
+			requestPath: url.pathname,
+		};
 	}
 }
