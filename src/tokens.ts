@@ -11,6 +11,7 @@ export const TOKENS = {
 	CONFIG_SERVICE: createToken("ConfigService"),
 	LOGGER_SERVICE: createToken("LoggerService"),
 	SCHEMA_VALIDATION_SERVICE: createToken("SchemaValidationService"),
+	HTTP_ERROR_HANDLER: createToken("HttpErrorHandler"),
 
 	// Infrastructure tokens
 	JSON_BODY_PARSER: createToken("JsonBodyParser"),
