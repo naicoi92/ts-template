@@ -9,6 +9,8 @@ import { HelloWorldUseCase } from "@/application/use-cases/hello-world.use-case"
 import { AppConfig } from "@/infrastructure/config/app.config";
 // Import repositories
 import { MemoryUserRepository } from "@/infrastructure/repositories/memory-user.repository";
+//Import Server
+import { DenoServer } from "@/infrastructure/server/deno.server";
 // Import controllers
 import { HealthController } from "@/presentation/controllers/health.controller";
 import { HelloController } from "@/presentation/controllers/hello.controller";
@@ -18,6 +20,7 @@ import { LoggerService } from "@/shared/logger";
 // Import tokens
 import { TOKENS } from "@/tokens";
 
+container.registerSingleton(TOKENS.SERVER, DenoServer);
 // Singleton services (shared instances across app)
 container.registerSingleton(TOKENS.CONFIG_SERVICE, AppConfig);
 container.registerSingleton(TOKENS.LOGGER_SERVICE, LoggerService);
