@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import type { HttpMethod } from "@/domain/types";
 
 /**
  * HTTP Routing Interfaces - Clean Architecture
@@ -16,6 +17,9 @@ import type { z } from "zod";
 export interface IRequestHandler<TParams = unknown, TBody = unknown> {
 	/** URL pathname pattern for route matching */
 	readonly pathname: string;
+
+	/** HTTP method for this handler with type safety */
+	readonly method: HttpMethod;
 
 	/** Zod schema for parameter validation and type inference */
 	readonly paramsSchema: z.ZodSchema<TParams>;
