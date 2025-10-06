@@ -1,19 +1,20 @@
-import { z } from "zod";
-
 /**
  * Common Domain Types
  *
- * Reusable types and schemas used across the application
+ * Reusable types used across the application
  */
 
 /**
- * Schema for empty route parameters
- * Used by handlers that don't require any URL parameters
+ * Generic key-value pair type for flexible data structures
  */
-export const EmptyParamsSchema = z.object({});
+export type KeyValuePair<T = unknown> = Record<string, T>;
 
 /**
- * Type for empty route parameters
- * Inferred from EmptyParamsSchema
+ * Optional type utility
  */
-export type EmptyParams = z.infer<typeof EmptyParamsSchema>;
+export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
+/**
+ * Required type utility for nested objects
+ */
+export type RequiredFields<T, K extends keyof T> = T & Required<Pick<T, K>>;

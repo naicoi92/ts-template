@@ -7,8 +7,12 @@ import { CreateUserUseCase } from "@/application/use-cases/create-user.use-case"
 import { GetUserUseCase } from "@/application/use-cases/get-user.use-case";
 import { HealthCheckUseCase } from "@/application/use-cases/health-check.use-case";
 import { HelloWorldUseCase } from "@/application/use-cases/hello-world.use-case";
+// Import Domain services
+import { SchemaValidationService } from "@/domain/services/schema-validation.service";
 // Import config
 import { AppConfig } from "@/infrastructure/config/app.config";
+// Import Infrastructure services
+import { JsonBodyParser } from "@/infrastructure/parsing/json-body-parser";
 // Import repositories
 import { MemoryUserRepository } from "@/infrastructure/repositories/memory-user.repository";
 // Import Server
@@ -31,6 +35,15 @@ container.registerSingleton(TOKENS.SERVER, BunServer);
 // Singleton services (shared instances across app)
 container.registerSingleton(TOKENS.CONFIG_SERVICE, AppConfig);
 container.registerSingleton(TOKENS.LOGGER_SERVICE, LoggerService);
+
+// Domain services (business logic, no external dependencies)
+container.registerSingleton(
+	TOKENS.SCHEMA_VALIDATION_SERVICE,
+	SchemaValidationService,
+);
+
+// Infrastructure services (external concerns)
+container.registerSingleton(TOKENS.JSON_BODY_PARSER, JsonBodyParser);
 
 // Singleton repositories
 container.registerSingleton(TOKENS.USER_REPOSITORY, MemoryUserRepository);

@@ -1,4 +1,11 @@
-export interface IConfig {
+/**
+ * Configuration Types
+ *
+ * Application configuration types
+ * These are value objects, not mutable interfaces
+ */
+
+export type Config = {
 	// Application
 	readonly nodeEnv: string;
 	readonly port: number;
@@ -16,4 +23,4 @@ export interface IConfig {
 	readonly isProduction: boolean;
 	readonly isTest: boolean;
 	readonly isVercel: boolean;
-}
+};

@@ -1,8 +1,15 @@
 import { inject, injectable } from "tsyringe";
-import type { CreateUserDto } from "@/application/dto/user.dto";
 import type { CreateUserUseCase } from "@/application/use-cases/create-user.use-case";
 import type { GetUserUseCase } from "@/application/use-cases/get-user.use-case";
+import {
+	InvalidRequestError,
+	SchemaValidationError,
+} from "@/domain/errors/validation.errors";
 import type { IRequestHandler } from "@/domain/interfaces/http-routing.interface";
+import type { IHttpRequestBodyParser } from "@/domain/interfaces/parsing.interface";
+import type { ISchemaValidator } from "@/domain/interfaces/validation.interface";
+import type { CreateUserInput } from "@/domain/schemas/user.schema";
+import { CreateUserSchema } from "@/domain/schemas/user.schema";
 import type { EmptyParams, UserParams } from "@/domain/types";
 import { EmptyParamsSchema, UserParamsSchema } from "@/domain/types";
 import { TOKENS } from "@/tokens";
@@ -16,13 +23,20 @@ import { TOKENS } from "@/tokens";
  * - Executes create user use case
  */
 @injectable()
-export class CreateUserRequestHandler implements IRequestHandler<EmptyParams> {
+export class CreateUserRequestHandler
+	implements IRequestHandler<EmptyParams, CreateUserInput>
+{
 	readonly pathname = "/users";
 	readonly paramsSchema = EmptyParamsSchema;
+	readonly bodySchema = CreateUserSchema;
 
 	constructor(
 		@inject(TOKENS.CREATE_USER_USE_CASE)
 		private readonly createUserUseCase: CreateUserUseCase,
+		@inject(TOKENS.JSON_BODY_PARSER)
+		private readonly bodyParser: IHttpRequestBodyParser,
+		@inject(TOKENS.SCHEMA_VALIDATION_SERVICE)
+		private readonly schemaValidator: ISchemaValidator,
 	) {}
 
 	/**
@@ -33,9 +47,14 @@ export class CreateUserRequestHandler implements IRequestHandler<EmptyParams> {
 	 */
 	async handle(request: Request, _params: EmptyParams): Promise<Response> {
 		try {
-			// Parse and validate request body
-			const requestBody = await this.parseRequestBody(request);
-			const createUserDto = this.validateAndCreateDto(requestBody);
+			// Parse request body (Single Responsibility: HTTP parsing)
+			const rawBody = await this.bodyParser.parse(request);
+
+			// Validate parsed data against schema (Single Responsibility: domain validation)
+			const createUserDto = this.schemaValidator.validate(
+				rawBody,
+				CreateUserSchema,
+			);
 
 			// Execute create user use case
 			const createdUser = await this.createUserUseCase.execute(createUserDto);
@@ -49,15 +68,13 @@ export class CreateUserRequestHandler implements IRequestHandler<EmptyParams> {
 				},
 			});
 		} catch (error) {
-			// Return error response
+			// Return error response with proper error handling
 			const statusCode = this.getErrorStatusCode(error as Error);
+			const errorResponse = this.formatErrorResponse(error as Error);
 
 			return Response.json(
 				{
-					error: {
-						code: this.getErrorCode(error as Error),
-						message: (error as Error).message,
-					},
+					error: errorResponse,
 					timestamp: new Date().toISOString(),
 				},
 				{
@@ -72,53 +89,34 @@ export class CreateUserRequestHandler implements IRequestHandler<EmptyParams> {
 	}
 
 	/**
-	 * Parses request body as JSON
-	 * @param request - HTTP request
-	 * @returns Parsed request body
+	 * Formats error response for consistent API error handling
+	 * @param error - Error object
+	 * @returns Formatted error response
 	 */
-	private async parseRequestBody(request: Request): Promise<unknown> {
-		try {
-			return await request.json();
-		} catch (_parseError) {
-			throw new Error("Invalid JSON in request body");
-		}
-	}
-
-	/**
-	 * Validates and creates CreateUserDto from request body
-	 * @param body - Parsed request body
-	 * @returns Validated CreateUserDto
-	 */
-	private validateAndCreateDto(body: unknown): CreateUserDto {
-		if (!body || typeof body !== "object") {
-			throw new Error("Request body must be an object");
+	private formatErrorResponse(error: Error): {
+		code: string;
+		message: string;
+		details?: Record<string, string[]>;
+	} {
+		if (error instanceof SchemaValidationError) {
+			return {
+				code: error.code,
+				message: error.message,
+				details: error.fieldErrors,
+			};
 		}
 
-		const { name, email } = body as Record<string, unknown>;
-
-		if (!name || typeof name !== "string") {
-			throw new Error("Name is required and must be a string");
+		if (error instanceof InvalidRequestError) {
+			return {
+				code: error.code,
+				message: error.message,
+			};
 		}
 
-		if (!email || typeof email !== "string") {
-			throw new Error("Email is required and must be a string");
-		}
-
-		if (!this.isValidEmail(email)) {
-			throw new Error("Invalid email format");
-		}
-
-		return { name: name.trim(), email: email.trim().toLowerCase() };
-	}
-
-	/**
-	 * Validates email format
-	 * @param email - Email to validate
-	 * @returns True if email is valid
-	 */
-	private isValidEmail(email: string): boolean {
-		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		return emailRegex.test(email);
+		return {
+			code: this.getErrorCode(error),
+			message: error.message,
+		};
 	}
 
 	/**
@@ -127,6 +125,14 @@ export class CreateUserRequestHandler implements IRequestHandler<EmptyParams> {
 	 * @returns HTTP status code
 	 */
 	private getErrorStatusCode(error: Error): number {
+		// Handle domain validation errors
+		if (
+			error instanceof SchemaValidationError ||
+			error instanceof InvalidRequestError
+		) {
+			return 400; // Bad Request
+		}
+
 		const message = error.message.toLowerCase();
 
 		if (message.includes("required") || message.includes("invalid")) {

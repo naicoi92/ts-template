@@ -10,6 +10,10 @@ export const TOKENS = {
 	// Service tokens
 	CONFIG_SERVICE: createToken("ConfigService"),
 	LOGGER_SERVICE: createToken("LoggerService"),
+	SCHEMA_VALIDATION_SERVICE: createToken("SchemaValidationService"),
+
+	// Infrastructure tokens
+	JSON_BODY_PARSER: createToken("JsonBodyParser"),
 
 	// Use case tokens
 	HELLO_WORLD_USE_CASE: createToken("HelloWorldUseCase"),

@@ -1,8 +1,8 @@
 import { inject, injectable } from "tsyringe";
 import type { HttpRouter } from "@/application/services/http-router.service";
-import type { IConfig } from "@/domain/interfaces/config.interface";
 import type { ILogger } from "@/domain/interfaces/logger.interface";
 import type { IServer } from "@/domain/interfaces/server.interface";
+import type { Config } from "@/domain/types/config.types";
 import { TOKENS } from "@/tokens";
 
 declare global {
@@ -29,7 +29,7 @@ export class DenoServer implements IServer {
 	private abortController?: AbortController;
 
 	constructor(
-		@inject(TOKENS.CONFIG_SERVICE) private readonly config: IConfig,
+		@inject(TOKENS.CONFIG_SERVICE) private readonly config: Config,
 		@inject(TOKENS.LOGGER_SERVICE) private readonly logger: ILogger,
 		@inject(TOKENS.HTTP_ROUTER) private readonly router: HttpRouter,
 	) {}

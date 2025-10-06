@@ -1,8 +1,8 @@
 import { inject, injectable } from "tsyringe";
-import type { UserResponseDto } from "@/application/dto/user.dto";
 import { NotFoundError } from "@/domain/errors/not-found.error";
 import type { ILogger } from "@/domain/interfaces/logger.interface";
 import type { IUserRepository } from "@/domain/interfaces/user.repository.interface";
+import type { UserResponseDto } from "@/domain/types/dto.types";
 import { TOKENS } from "@/tokens";
 
 @injectable()
