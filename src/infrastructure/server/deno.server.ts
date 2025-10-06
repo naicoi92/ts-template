@@ -6,6 +6,17 @@ import type { HealthController } from "@/presentation/controllers/health.control
 import type { HelloController } from "@/presentation/controllers/hello.controller";
 import { TOKENS } from "@/tokens";
 
+declare global {
+	const Deno: {
+		serve(options: {
+			port?: number;
+			hostname?: string;
+			signal?: AbortSignal;
+			handler: (request: Request) => Response | Promise<Response>;
+		}): { finished: Promise<void> };
+	};
+}
+
 @injectable()
 export class DenoServer implements IServer {
 	private abortController?: AbortController;
