@@ -1,17 +1,13 @@
 import { container } from "@/container";
-import type { IServer } from "@/domain/interfaces/server.interface";
+import type { IAppBootstrap } from "@/domain/interfaces/app-bootstrap.interface";
 import { TOKENS } from "@/tokens";
 
 async function main() {
-	const server = container.resolve<IServer>(TOKENS.SERVER);
-	await server.start();
+	const bootstrap = container.resolve<IAppBootstrap>(TOKENS.APP_BOOTSTRAP);
+	await bootstrap.start();
 }
 
-main()
-	.catch((error) => {
-		console.error("Error:", error);
-		process.exit(1);
-	})
-	.finally(() => {
-		process.exit(0);
-	});
+main().catch((error) => {
+	console.error("Failed to start application:", error);
+	process.exit(1);
+});

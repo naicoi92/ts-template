@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import { container } from "tsyringe";
 // Import Application services
+import { AppBootstrapService } from "@/application/services/app-bootstrap.service";
 import { HttpErrorHandler } from "@/application/services/error-handler.service";
 // Import HTTP Router
 import { HttpRouter } from "@/application/services/http-router.service";
@@ -46,6 +47,7 @@ container.registerSingleton(
 
 // Application services
 container.registerSingleton(TOKENS.HTTP_ERROR_HANDLER, HttpErrorHandler);
+container.registerSingleton(TOKENS.APP_BOOTSTRAP, AppBootstrapService);
 
 // Infrastructure services (external concerns)
 container.registerSingleton(TOKENS.JSON_BODY_PARSER, JsonBodyParser);
