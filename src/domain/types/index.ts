@@ -15,7 +15,7 @@ export * from "./dto.types";
 // Entity types
 export * from "./entity.types";
 // Route and HTTP types
-export type { EmptyParams } from "./route.types";
+export type { EmptyParams, HttpMethod } from "./route.types";
 export { EmptyParamsSchema } from "./route.types";
 // Use case types
 export * from "./use-case.types";

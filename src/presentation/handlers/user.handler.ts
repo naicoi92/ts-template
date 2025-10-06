@@ -4,7 +4,6 @@ import type { GetUserUseCase } from "@/application/use-cases/get-user.use-case";
 import type { IRequestHandler } from "@/domain/interfaces/http-routing.interface";
 import type { IHttpRequestBodyParser } from "@/domain/interfaces/parsing.interface";
 import type { ISchemaValidator } from "@/domain/interfaces/validation.interface";
-import type { CreateUserInput } from "@/domain/schemas/user.schema";
 import { CreateUserSchema } from "@/domain/schemas/user.schema";
 import type { EmptyParams, UserParams } from "@/domain/types";
 import { EmptyParamsSchema, UserParamsSchema } from "@/domain/types";
@@ -19,10 +18,9 @@ import { TOKENS } from "@/tokens";
  * - Executes create user use case
  */
 @injectable()
-export class CreateUserRequestHandler
-	implements IRequestHandler<EmptyParams, CreateUserInput>
-{
+export class CreateUserRequestHandler implements IRequestHandler<EmptyParams> {
 	readonly pathname = "/users";
+	readonly method = "POST";
 	readonly paramsSchema = EmptyParamsSchema;
 	readonly bodySchema = CreateUserSchema;
 
@@ -76,6 +74,7 @@ export class CreateUserRequestHandler
 @injectable()
 export class GetUserRequestHandler implements IRequestHandler<UserParams> {
 	readonly pathname = "/users/:id";
+	readonly method = "GET";
 	readonly paramsSchema = UserParamsSchema;
 
 	constructor(

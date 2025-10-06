@@ -16,6 +16,7 @@ import { TOKENS } from "@/tokens";
 @injectable()
 export class HelloWorldRequestHandler implements IRequestHandler<EmptyParams> {
 	readonly pathname = "/hello";
+	readonly method = "GET";
 	readonly paramsSchema = EmptyParamsSchema;
 
 	constructor(
