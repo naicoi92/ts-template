@@ -3,6 +3,7 @@ const createToken = (name: string): symbol => Symbol.for(`ts-template.${name}`);
 
 // Export all tokens as TOKENS object with Symbol tokens
 export const TOKENS = {
+	SERVER: createToken("Server"),
 	// Repository tokens
 	USER_REPOSITORY: createToken("UserRepository"),
 
