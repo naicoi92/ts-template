@@ -1,8 +1,8 @@
 import { inject, injectable } from "tsyringe";
 import type { HelloWorldUseCase } from "@/application/use-cases/hello-world.use-case";
 import type { IRequestHandler } from "@/domain/interfaces/http-routing.interface";
+import { EmptyParamsSchema } from "@/domain/schemas";
 import type { EmptyParams } from "@/domain/types";
-import { EmptyParamsSchema } from "@/domain/types";
 import { TOKENS } from "@/tokens";
 
 /**

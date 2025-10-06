@@ -1,21 +1,30 @@
-import { z } from "zod";
+import type z from "zod";
+import type {
+	CreateUserSchema,
+	UpdateUserSchema,
+	UserParamsSchema,
+} from "../schemas/user.schema";
 
 /**
  * User Domain Types
  *
- * Type definitions and schemas related to user entities
+ * Type definitions related to user entities
  */
-
-/**
- * Schema for user ID route parameters
- * Used for GET /users/:id endpoint
- */
-export const UserParamsSchema = z.object({
-	id: z.string().min(1, "User ID is required"),
-});
 
 /**
  * Type for user ID route parameters
  * Inferred from UserParamsSchema
  */
 export type UserParams = z.infer<typeof UserParamsSchema>;
+
+/**
+ * Type for creating a new user
+ * Inferred from CreateUserSchema
+ */
+export type CreateUserInput = z.infer<typeof CreateUserSchema>;
+
+/**
+ * Type for updating an existing user
+ * Inferred from UpdateUserSchema
+ */
+export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;

@@ -5,8 +5,6 @@
  * Organized by responsibility for clean architecture
  */
 
-// Schema types (from schemas directly to maintain single source of truth)
-export type { CreateUserInput, UpdateUserInput } from "../schemas/user.schema";
 // Core types
 export * from "./common.types";
 export * from "./config.types";
@@ -15,12 +13,11 @@ export * from "./dto.types";
 // Entity types
 export * from "./entity.types";
 // Route and HTTP types
-export type { EmptyParams, HttpMethod } from "./route.types";
-export { EmptyParamsSchema } from "./route.types";
+export * from "./route.types";
 // Use case types
 export * from "./use-case.types";
-export type { UserParams } from "./user.types";
-export { UserParamsSchema } from "./user.types";
+// User types (inferred from schemas)
+export * from "./user.types";
 
 // Validation types
 export * from "./validation.types";
