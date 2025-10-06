@@ -16,6 +16,7 @@ import { TOKENS } from "@/tokens";
 @injectable()
 export class HealthRequestHandler implements IRequestHandler<EmptyParams> {
 	readonly pathname = "/health";
+	readonly method = "GET";
 	readonly paramsSchema = EmptyParamsSchema;
 
 	constructor(

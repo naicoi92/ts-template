@@ -23,6 +23,7 @@ export class CreateUserRequestHandler
 	implements IRequestHandler<EmptyParams, CreateUserInput>
 {
 	readonly pathname = "/users";
+	readonly method = "POST";
 	readonly paramsSchema = EmptyParamsSchema;
 	readonly bodySchema = CreateUserSchema;
 
@@ -76,6 +77,7 @@ export class CreateUserRequestHandler
 @injectable()
 export class GetUserRequestHandler implements IRequestHandler<UserParams> {
 	readonly pathname = "/users/:id";
+	readonly method = "GET";
 	readonly paramsSchema = UserParamsSchema;
 
 	constructor(
