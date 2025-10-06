@@ -10,8 +10,7 @@
 export * from "./http-routing.interface";
 // Service interfaces
 export * from "./logger.interface";
-// Parsing and validation interfaces
-export * from "./parsing.interface";
+// Validation interfaces
 export * from "./server.interface";
 export * from "./user.repository.interface";
 export * from "./validation.interface";

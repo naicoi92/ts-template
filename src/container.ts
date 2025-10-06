@@ -14,8 +14,7 @@ import { HelloWorldUseCase } from "@/application/use-cases/hello-world.use-case"
 import { SchemaValidationService } from "@/domain/services/schema-validation.service";
 // Import config
 import { AppConfig } from "@/infrastructure/config/app.config";
-// Import Infrastructure services
-import { JsonBodyParser } from "@/infrastructure/parsing/json-body-parser";
+
 // Import repositories
 import { MemoryUserRepository } from "@/infrastructure/repositories/memory-user.repository";
 // Import Server
@@ -48,9 +47,6 @@ container.registerSingleton(
 // Application services
 container.registerSingleton(TOKENS.HTTP_ERROR_HANDLER, HttpErrorHandler);
 container.registerSingleton(TOKENS.APP_BOOTSTRAP, AppBootstrapService);
-
-// Infrastructure services (external concerns)
-container.registerSingleton(TOKENS.JSON_BODY_PARSER, JsonBodyParser);
 
 // Singleton repositories
 container.registerSingleton(TOKENS.USER_REPOSITORY, MemoryUserRepository);
