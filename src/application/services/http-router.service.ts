@@ -52,8 +52,8 @@ export class HttpRouter {
 			.debug("Processing HTTP request");
 
 		try {
-			// Find and validate handler for path
-			const handlerMatch = this.findHandler(url.pathname);
+			// Find and validate handler for path and method
+			const handlerMatch = this.findHandler(url.pathname, request.method);
 
 			const response = await this.executeHandler(handlerMatch, request);
 
@@ -78,12 +78,16 @@ export class HttpRouter {
 	}
 
 	/**
-	 * Finds a matching handler for the given pathname
+	 * Finds a matching handler for the given pathname and method
 	 * @param pathname - The request pathname
+	 * @param method - The HTTP method (will be normalized to uppercase)
 	 * @returns Handler match with validated parameters
 	 * @throws RouteNotFoundError when no route matches
 	 */
-	private findHandler(pathname: string): HandlerMatch {
+	private findHandler(pathname: string, method: string): HandlerMatch {
+		// Normalize HTTP method to uppercase for consistent comparison
+		const normalizedMethod = method.toUpperCase();
+
 		for (const handler of this.handlers) {
 			const matchFn = match(handler.pathname);
 			const matchResult = matchFn(pathname);
@@ -93,13 +97,19 @@ export class HttpRouter {
 				continue;
 			}
 
+			// Check HTTP method match (handler.method is already uppercase by type definition)
+			if (handler.method !== normalizedMethod) {
+				continue;
+			}
+
 			// We have a matching route - validate and return
 			this.logger
 				.withData({
 					handler: handler.constructor.name,
 					pathname,
+					method: normalizedMethod,
 				})
-				.debug("Handler found for path");
+				.debug("Handler found for path and method");
 
 			// Validate parameters using SchemaValidationService
 			const validatedParams = this.schemaValidator.validate(
@@ -114,7 +124,7 @@ export class HttpRouter {
 		}
 
 		// No handler found after checking all handlers
-		throw new RouteNotFoundError(pathname);
+		throw new RouteNotFoundError(pathname, normalizedMethod);
 	}
 
 	/**
