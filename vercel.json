@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "bun install",
+  "fluid": true,
+  "functions": {
+    "api/vercel.js": {
+      "experimentalTriggers": []
+    }
+  },
+  "rewrites": [
+    { "source": "/:path*", "destination": "/api/vercel" },
+    { "source": "/", "destination": "/api/vercel" }
+  ]
+}
