@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "bun --watch src/index.ts",
-    "build": "bun build src/index.ts --outdir dist --target bun --sourcemap=external",
-    "build:types": "tsc --emitDeclarationOnly --declaration",
+    "build:vercel": "bun run build/vercel.ts",
+    "deploy:vercel": "vercel deploy --prod --cwd dist/vercel",
     "start": "bun dist/index.js",
     "lint": "bunx @biomejs/biome check src/",
     "lint:fix": "bunx @biomejs/biome check src/ --write",

@@ -119,9 +119,42 @@ Server sẽ start tại `http://localhost:3000` với các endpoints:
 
 ```bash
 bun run build        # Build với Bun bundler (fast, optimized)
-bun run build:types  # Generate TypeScript declaration files (optional)
 bun run start        # Run production build
 ```
+
+### Deployment (Vercel)
+
+Template này đã được cấu hình sẵn để triển khai trên Vercel platform.
+
+#### Các bước triển khai:
+
+1. **Khởi tạo Vercel project:**
+   ```bash
+   vercel init
+   ```
+
+2. **Build cho Vercel:**
+   ```bash
+   bun run build:vercel
+   ```
+
+3. **Deploy lên production:**
+   ```bash
+   bun run deploy:vercel
+   ```
+
+#### Files cấu hình Vercel:
+
+- `src/vercel.ts` - Entry point cho Vercel Functions
+- `vercel.json` - Cấu hình routing và functions
+- `package.json` - Scripts cho build và deploy
+
+#### Tự động deployment:
+
+Sau khi push code, Vercel sẽ tự động:
+- Install dependencies với `bun install`
+- Build application
+- Deploy lên production
 
 ### Lint & Format
 
