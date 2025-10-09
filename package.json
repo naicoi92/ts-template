@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@loglayer/transport-pino": "^2.2.4",
+    "lodash-es": "^4.17.21",
     "loglayer": "^6.7.2",
     "path-to-regexp": "^8.3.0",
     "pino": "^10.0.0",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.5",
+    "@types/lodash-es": "^4.17.12",
     "@types/node": "22",
     "lefthook": "^1.13.6",
     "typescript": "^5.9.3"
