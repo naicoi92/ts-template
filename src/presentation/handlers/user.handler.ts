@@ -2,13 +2,8 @@ import { inject, injectable } from "tsyringe";
 import type { CreateUserUseCase } from "@/application/use-cases/create-user.use-case";
 import type { GetUserUseCase } from "@/application/use-cases/get-user.use-case";
 import type { IRequestHandler } from "@/domain/interfaces/http-routing.interface";
-import type { ISchemaValidator } from "@/domain/interfaces/validation.interface";
-import {
-	CreateUserSchema,
-	EmptyParamsSchema,
-	UserParamsSchema,
-} from "@/domain/schemas";
-import type { EmptyParams, UserParams } from "@/domain/types";
+import { CreateUserSchema, UserParamsSchema } from "@/domain/schemas";
+import type { CreateUserInput, UserParams } from "@/domain/types";
 import { TOKENS } from "@/tokens";
 
 /**
@@ -20,36 +15,30 @@ import { TOKENS } from "@/tokens";
  * - Executes create user use case
  */
 @injectable()
-export class CreateUserRequestHandler implements IRequestHandler<EmptyParams> {
+export class CreateUserRequestHandler
+	implements IRequestHandler<undefined, undefined, CreateUserInput>
+{
 	readonly pathname = "/users";
 	readonly method = "POST";
-	readonly paramsSchema = EmptyParamsSchema;
+	readonly bodySchema = CreateUserSchema;
 
 	constructor(
 		@inject(TOKENS.CREATE_USER_USE_CASE)
 		private readonly createUserUseCase: CreateUserUseCase,
-		@inject(TOKENS.SCHEMA_VALIDATION_SERVICE)
-		private readonly schemaValidator: ISchemaValidator,
 	) {}
 
 	/**
 	 * Handles create user requests
-	 * @param request - The incoming HTTP request
-	 * @param _params - Empty parameters (type-safe from domain)
+	 * @param _request - The incoming HTTP request (unused - body already validated)
+	 * @param data - Validated request data containing body
 	 * @returns Promise resolving to HTTP response with created user data
 	 */
-	async handle(request: Request, _params: EmptyParams): Promise<Response> {
-		// Parse request body (Single Responsibility: HTTP parsing)
-		const jsonBody = await request.json();
-
-		// Validate parsed data against schema (Single Responsibility: domain validation)
-		const createUserDto = this.schemaValidator.validate(
-			jsonBody,
-			CreateUserSchema,
-		);
-
-		// Execute create user use case
-		const createdUser = await this.createUserUseCase.execute(createUserDto);
+	async handle(
+		_request: Request,
+		data: { body: CreateUserInput },
+	): Promise<Response> {
+		// Execute create user use case with validated data
+		const createdUser = await this.createUserUseCase.execute(data.body);
 
 		// Return successful response
 		return Response.json(createdUser, {
@@ -84,12 +73,17 @@ export class GetUserRequestHandler implements IRequestHandler<UserParams> {
 	/**
 	 * Handles get user requests
 	 * @param _request - The incoming HTTP request (unused)
-	 * @param params - Route parameters containing validated user ID (type-safe from domain)
+	 * @param data - Validated request data containing params
 	 * @returns Promise resolving to HTTP response with user data
 	 */
-	async handle(_request: Request, params: UserParams): Promise<Response> {
+	async handle(
+		_request: Request,
+		data: {
+			params: UserParams;
+		},
+	): Promise<Response> {
 		// Execute get user use case with validated user ID
-		const user = await this.getUserUseCase.execute(params.id);
+		const user = await this.getUserUseCase.execute(data.params.id);
 
 		// Return successful response
 		return Response.json(user, {

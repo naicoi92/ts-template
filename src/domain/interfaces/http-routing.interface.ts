@@ -14,7 +14,11 @@ import type { HttpMethod } from "@/domain/types";
  * Generic parameter type allows for specific parameter typing
  * while maintaining schema validation for both parameters and body
  */
-export interface IRequestHandler<TParams = unknown> {
+export interface IRequestHandler<
+	TParams = unknown,
+	TQuery = unknown,
+	TBody = unknown,
+> {
 	/** URL pathname pattern for route matching */
 	readonly pathname: string;
 
@@ -22,13 +26,24 @@ export interface IRequestHandler<TParams = unknown> {
 	readonly method: HttpMethod;
 
 	/** Zod schema for parameter validation and type inference */
-	readonly paramsSchema: z.ZodSchema<TParams>;
+	readonly paramsSchema?: z.ZodSchema<TParams>;
+	readonly querySchema?: z.ZodSchema<TQuery>;
+	readonly bodySchema?: z.ZodSchema<TBody>;
 
 	/**
-	 * Handles an HTTP request with validated parameters and body
+	 * Handles an HTTP request with validated parameters, query, and body
 	 * @param request - The incoming HTTP request
 	 * @param params - Validated route parameters with specific typing
+	 * @param query - Validated query parameters with specific typing
+	 * @param body - Validated request body with specific typing
 	 * @returns Promise resolving to HTTP response
 	 */
-	handle(request: Request, params: TParams): Promise<Response>;
+	handle(
+		request: Request,
+		data: {
+			params: TParams;
+			query: TQuery;
+			body: TBody;
+		},
+	): Promise<Response>;
 }
