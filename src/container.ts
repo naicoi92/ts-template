@@ -2,8 +2,8 @@ import "reflect-metadata";
 import { container } from "tsyringe";
 // Import Application services
 import { AppBootstrapService } from "@/application/services/app-bootstrap.service";
-import { HandlerFactory } from "@/application/services/handler-factory.service";
 import { HttpErrorHandler } from "@/application/services/error-handler.service";
+import { HandlerFactory } from "@/application/services/handler-factory.service";
 // Import HTTP Router
 import { HttpRouter } from "@/application/services/http-router.service";
 // Import use cases
