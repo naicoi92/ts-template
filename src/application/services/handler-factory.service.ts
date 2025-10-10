@@ -2,7 +2,6 @@ import { match } from "path-to-regexp";
 import { inject, injectAll, injectable } from "tsyringe";
 import type { IRequestHandler } from "@/domain/interfaces/http-routing.interface";
 import type { ILogger } from "@/domain/interfaces/logger.interface";
-import type { RouteNotFoundHandler } from "@/presentation/handlers/route-not-found.handler";
 import { TOKENS } from "@/tokens";
 
 /**
@@ -22,7 +21,7 @@ export class HandlerFactory {
 		@inject(TOKENS.LOGGER_SERVICE)
 		private readonly logger: ILogger,
 		@inject(TOKENS.ROUTE_NOT_FOUND_HANDLER)
-		private readonly routeNotFoundHandler: RouteNotFoundHandler,
+		private readonly routeNotFoundHandler: IRequestHandler,
 	) {}
 
 	/**
