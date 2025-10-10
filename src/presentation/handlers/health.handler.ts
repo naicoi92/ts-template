@@ -1,8 +1,6 @@
 import { inject, injectable } from "tsyringe";
 import type { HealthCheckUseCase } from "@/application/use-cases/health-check.use-case";
 import type { IRequestHandler } from "@/domain/interfaces/http-routing.interface";
-import { EmptyParamsSchema } from "@/domain/schemas";
-import type { EmptyParams } from "@/domain/types";
 import { TOKENS } from "@/tokens";
 
 /**
@@ -14,10 +12,9 @@ import { TOKENS } from "@/tokens";
  * - Formats use case responses to HTTP responses
  */
 @injectable()
-export class HealthRequestHandler implements IRequestHandler<EmptyParams> {
+export class HealthRequestHandler implements IRequestHandler {
 	readonly pathname = "/health";
 	readonly method = "GET";
-	readonly paramsSchema = EmptyParamsSchema;
 
 	constructor(
 		@inject(TOKENS.HEALTH_CHECK_USE_CASE)
@@ -28,9 +25,11 @@ export class HealthRequestHandler implements IRequestHandler<EmptyParams> {
 	 * Handles health check requests
 	 * @param _request - The incoming HTTP request (unused)
 	 * @param _params - Empty parameters (type-safe from domain)
+	 * @param _query - Empty query parameters
+	 * @param _body - Empty body parameters
 	 * @returns Promise resolving to HTTP response with health status
 	 */
-	async handle(_request: Request, _params: EmptyParams): Promise<Response> {
+	async handle(): Promise<Response> {
 		// Execute health check use case
 		const healthResult = await this.healthCheckUseCase.execute();
 

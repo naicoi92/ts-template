@@ -1,8 +1,6 @@
 import { inject, injectable } from "tsyringe";
 import type { HelloWorldUseCase } from "@/application/use-cases/hello-world.use-case";
 import type { IRequestHandler } from "@/domain/interfaces/http-routing.interface";
-import { EmptyParamsSchema } from "@/domain/schemas";
-import type { EmptyParams } from "@/domain/types";
 import { TOKENS } from "@/tokens";
 
 /**
@@ -14,10 +12,9 @@ import { TOKENS } from "@/tokens";
  * - Formats use case responses to HTTP responses
  */
 @injectable()
-export class HelloWorldRequestHandler implements IRequestHandler<EmptyParams> {
+export class HelloWorldRequestHandler implements IRequestHandler {
 	readonly pathname = "/hello";
 	readonly method = "GET";
-	readonly paramsSchema = EmptyParamsSchema;
 
 	constructor(
 		@inject(TOKENS.HELLO_WORLD_USE_CASE)
@@ -27,10 +24,10 @@ export class HelloWorldRequestHandler implements IRequestHandler<EmptyParams> {
 	/**
 	 * Handles hello world requests
 	 * @param _request - The incoming HTTP request (unused)
-	 * @param _params - Empty parameters (type-safe from domain)
+	 * @param _data - Validated request data (all empty for hello endpoint)
 	 * @returns Promise resolving to HTTP response with hello message
 	 */
-	async handle(_request: Request, _params: EmptyParams): Promise<Response> {
+	async handle(): Promise<Response> {
 		// Execute hello world use case
 		const helloResult = this.helloWorldUseCase.execute();
 

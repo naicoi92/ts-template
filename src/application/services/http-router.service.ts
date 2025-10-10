@@ -1,33 +1,26 @@
-import { match } from "path-to-regexp";
-import { inject, injectAll, injectable } from "tsyringe";
-import { RouteNotFoundError } from "@/domain/errors/routing.error";
+import { inject, injectable } from "tsyringe";
+import type z from "zod";
 import type { IRequestHandler } from "@/domain/interfaces/http-routing.interface";
 import type { ILogger } from "@/domain/interfaces/logger.interface";
 import type { ISchemaValidator } from "@/domain/interfaces/validation.interface";
 import { TOKENS } from "@/tokens";
 import type { HttpErrorHandler } from "./error-handler.service";
-
-/**
- * Type-safe handler match result
- */
-type HandlerMatch<TParams = unknown> = {
-	handler: IRequestHandler<TParams>;
-	params: TParams;
-};
+import type { HandlerFactory } from "./handler-factory.service";
 
 /**
  * HTTP Router Service
  *
- * Single Responsibility: Routes HTTP requests to appropriate handlers
- * - Auto-discovers handlers via dependency injection
- * - Performs URL pattern matching and parameter validation
- * - Dispatches requests to matching handlers with full type safety
+ * Single Responsibility: Processes HTTP requests with full validation
+ * - Uses HandlerFactory to find appropriate handlers
+ * - Validates query parameters and request body
+ * - Executes handlers with validated data
+ * - Centralized error handling
  */
 @injectable()
 export class HttpRouter {
 	constructor(
-		@injectAll(TOKENS.REQUEST_HANDLER)
-		private readonly handlers: IRequestHandler[],
+		@inject(TOKENS.HANDLER_FACTORY)
+		private readonly handlerFactory: HandlerFactory,
 		@inject(TOKENS.LOGGER_SERVICE)
 		private readonly logger: ILogger,
 		@inject(TOKENS.HTTP_ERROR_HANDLER)
@@ -52,14 +45,17 @@ export class HttpRouter {
 			.debug("Processing HTTP request");
 
 		try {
-			// Find and validate handler for path and method
-			const handlerMatch = this.findHandler(url.pathname, request.method);
+			// Find handler for path and method (params validated by HandlerFactory)
+			const { handler, params } = this.handlerFactory.findHandler(
+				url.pathname,
+				request.method,
+			);
 
-			const response = await this.executeHandler(handlerMatch, request);
+			const response = await this.executeHandler(handler, request, url, params);
 
 			this.logger
 				.withData({
-					handler: handlerMatch.handler.constructor.name,
+					handler: handler.constructor.name,
 					status: response.status,
 				})
 				.debug("Request processed successfully");
@@ -78,77 +74,45 @@ export class HttpRouter {
 	}
 
 	/**
-	 * Finds a matching handler for the given pathname and method
-	 * @param pathname - The request pathname
-	 * @param method - The HTTP method (will be normalized to uppercase)
-	 * @returns Handler match with validated parameters
-	 * @throws RouteNotFoundError when no route matches
-	 */
-	private findHandler(pathname: string, method: string): HandlerMatch {
-		// Normalize HTTP method to uppercase for consistent comparison
-		const normalizedMethod = method.toUpperCase();
-
-		for (const handler of this.handlers) {
-			const matchFn = match(handler.pathname);
-			const matchResult = matchFn(pathname);
-
-			// Early continue if no match
-			if (!matchResult) {
-				continue;
-			}
-
-			// Check HTTP method match (handler.method is already uppercase by type definition)
-			if (handler.method !== normalizedMethod) {
-				continue;
-			}
-
-			// We have a matching route - validate and return
-			this.logger
-				.withData({
-					handler: handler.constructor.name,
-					pathname,
-					method: normalizedMethod,
-				})
-				.debug("Handler found for path and method");
-
-			// Validate parameters using SchemaValidationService
-			const validatedParams = this.schemaValidator.validate(
-				matchResult.params,
-				handler.paramsSchema,
-			);
-
-			return {
-				handler,
-				params: validatedParams,
-			};
-		}
-
-		// No handler found after checking all handlers
-		throw new RouteNotFoundError(pathname, normalizedMethod);
-	}
-
-	/**
-	 * Executes a handler with validated parameters and full type safety
-	 * @param handlerMatch - The matched handler with validated parameters
+	 * Executes a handler with validated params, query, and body
+	 * @param handlerMatch - The matched handler with all validated data
 	 * @param request - The incoming request
 	 * @returns Promise resolving to HTTP response
 	 */
-	private async executeHandler<TParams>(
-		handlerMatch: HandlerMatch<TParams>,
+	async executeHandler<TParams, TQuery, TBody>(
+		handler: IRequestHandler<TParams, TQuery, TBody>,
 		request: Request,
+		url: URL,
+		requestParams: unknown,
 	): Promise<Response> {
+		// Parse and validate query parameters
+		const params = this.validateParams<TParams>(
+			requestParams,
+			handler.paramsSchema,
+		);
+		// Parse and validate query parameters
+		const query = this.validateQueryParams<TQuery>(url, handler.querySchema);
+
+		// Parse and validate request body
+		const body = await this.validateRequestBody<TBody>(
+			request,
+			handler.bodySchema,
+		);
+
 		this.logger
 			.withData({
-				handler: handlerMatch.handler.constructor.name,
-				params: handlerMatch.params,
+				handler: handler.constructor.name,
+				query,
+				body,
 			})
 			.debug("Executing handler");
 
-		// Execute handler - errors will bubble up to handle method
-		const response = await handlerMatch.handler.handle(
-			request,
-			handlerMatch.params,
-		);
+		// Execute handler with all validated data - errors will bubble up to handle method
+		const response = await handler.handle(request, {
+			params,
+			query,
+			body,
+		});
 
 		return response;
 	}
@@ -179,5 +143,64 @@ export class HttpRouter {
 			requestMethod: request.method,
 			requestPath: url.pathname,
 		};
+	}
+
+	/**
+	 * Parses request body based on content type
+	 * @param request - The incoming HTTP request
+	 * @returns Promise resolving to parsed body data
+	 */
+	private async parseRequestBody(request: Request): Promise<unknown> {
+		const contentType = request.headers.get("content-type");
+
+		// Handle JSON body
+		if (contentType?.includes("application/json")) {
+			try {
+				return await request.json();
+			} catch (error) {
+				throw new Error(`Invalid JSON body: ${(error as Error).message}`);
+			}
+		}
+
+		// For other content types, return null for now
+		// Can be extended to handle form data, text, etc.
+		return null;
+	}
+
+	/**
+	 * Validates query parameters against a schema
+	 * @param url - The URL containing query parameters
+	 * @param schema - Optional schema for validation
+	 * @returns Validated query parameters
+	 */
+	private validateQueryParams<T>(url: URL, schema?: z.ZodSchema<T>): T {
+		if (!schema) {
+			return undefined as T;
+		}
+		const rawQuery = Object.fromEntries(url.searchParams.entries());
+		return this.schemaValidator.validate(rawQuery, schema);
+	}
+
+	/**
+	 * Validates request body against a schema
+	 * @param request - The incoming HTTP request
+	 * @param schema - Optional schema for validation
+	 * @returns Validated request body
+	 */
+	private async validateRequestBody<T>(
+		request: Request,
+		schema?: z.ZodSchema<T>,
+	): Promise<T> {
+		if (!schema) {
+			return undefined as T;
+		}
+		const rawBody = await this.parseRequestBody(request);
+		return this.schemaValidator.validate(rawBody, schema);
+	}
+	private validateParams<T>(params: unknown, schema?: z.ZodSchema<T>): T {
+		if (!schema) {
+			return undefined as T;
+		}
+		return this.schemaValidator.validate(params, schema);
 	}
 }

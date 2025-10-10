@@ -3,6 +3,7 @@ import { container } from "tsyringe";
 // Import Application services
 import { AppBootstrapService } from "@/application/services/app-bootstrap.service";
 import { HttpErrorHandler } from "@/application/services/error-handler.service";
+import { HandlerFactory } from "@/application/services/handler-factory.service";
 // Import HTTP Router
 import { HttpRouter } from "@/application/services/http-router.service";
 // Import use cases
@@ -14,7 +15,6 @@ import { HelloWorldUseCase } from "@/application/use-cases/hello-world.use-case"
 import { SchemaValidationService } from "@/domain/services/schema-validation.service";
 // Import config
 import { AppConfig } from "@/infrastructure/config/app.config";
-
 // Import repositories
 import { MemoryUserRepository } from "@/infrastructure/repositories/memory-user.repository";
 // Import Server
@@ -22,6 +22,7 @@ import { BunServer } from "@/infrastructure/server/bun.server";
 // Import Request Handlers (Clean Architecture)
 import { HealthRequestHandler } from "@/presentation/handlers/health.handler";
 import { HelloWorldRequestHandler } from "@/presentation/handlers/hello.handler";
+import { RouteNotFoundHandler } from "@/presentation/handlers/route-not-found.handler";
 import {
 	CreateUserRequestHandler,
 	GetUserRequestHandler,
@@ -46,6 +47,11 @@ container.registerSingleton(
 
 // Application services
 container.registerSingleton(TOKENS.HTTP_ERROR_HANDLER, HttpErrorHandler);
+container.registerSingleton(TOKENS.HANDLER_FACTORY, HandlerFactory);
+container.registerSingleton(
+	TOKENS.ROUTE_NOT_FOUND_HANDLER,
+	RouteNotFoundHandler,
+);
 container.registerSingleton(TOKENS.APP_BOOTSTRAP, AppBootstrapService);
 
 // Singleton repositories

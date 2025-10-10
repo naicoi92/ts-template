@@ -12,6 +12,7 @@ export const TOKENS = {
 	LOGGER_SERVICE: createToken("LoggerService"),
 	SCHEMA_VALIDATION_SERVICE: createToken("SchemaValidationService"),
 	HTTP_ERROR_HANDLER: createToken("HttpErrorHandler"),
+	HANDLER_FACTORY: createToken("HandlerFactory"),
 	APP_BOOTSTRAP: createToken("AppBootstrap"),
 
 	// Infrastructure tokens
@@ -25,6 +26,7 @@ export const TOKENS = {
 
 	// Request Handler tokens (Clean Architecture)
 	REQUEST_HANDLER: createToken("RequestHandler"),
+	ROUTE_NOT_FOUND_HANDLER: createToken("RouteNotFoundHandler"),
 
 	// HTTP Router token
 	HTTP_ROUTER: createToken("HttpRouter"),
