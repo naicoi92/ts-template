@@ -77,7 +77,7 @@ export class HandlerFactory {
 
 		return {
 			handler: this.routeNotFoundHandler,
-			params: { pathname, method: normalizedMethod },
+			params: {},
 		};
 	}
 }
