@@ -26,6 +26,7 @@ export const TOKENS = {
 
 	// Request Handler tokens (Clean Architecture)
 	REQUEST_HANDLER: createToken("RequestHandler"),
+	ROUTE_NOT_FOUND_HANDLER: createToken("RouteNotFoundHandler"),
 
 	// HTTP Router token
 	HTTP_ROUTER: createToken("HttpRouter"),

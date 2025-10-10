@@ -1,8 +1,8 @@
 import { match } from "path-to-regexp";
 import { inject, injectAll, injectable } from "tsyringe";
-import { RouteNotFoundError } from "@/domain/errors/routing.error";
 import type { IRequestHandler } from "@/domain/interfaces/http-routing.interface";
 import type { ILogger } from "@/domain/interfaces/logger.interface";
+import type { RouteNotFoundHandler } from "@/presentation/handlers/route-not-found.handler";
 import { TOKENS } from "@/tokens";
 
 /**
@@ -12,6 +12,7 @@ import { TOKENS } from "@/tokens";
  * - Auto-discovers handlers via dependency injection
  * - Performs URL pattern matching and parameter validation
  * - Does NOT execute handlers, only finds and validates them
+ * - Returns RouteNotFoundHandler when no route matches
  */
 @injectable()
 export class HandlerFactory {
@@ -20,14 +21,15 @@ export class HandlerFactory {
 		private readonly handlers: IRequestHandler[],
 		@inject(TOKENS.LOGGER_SERVICE)
 		private readonly logger: ILogger,
+		@inject(TOKENS.ROUTE_NOT_FOUND_HANDLER)
+		private readonly routeNotFoundHandler: RouteNotFoundHandler,
 	) {}
 
 	/**
 	 * Finds a matching handler for the given pathname and method
 	 * @param pathname - The request pathname
 	 * @param method - The HTTP method (will be normalized to uppercase)
-	 * @returns Handler match with validated parameters
-	 * @throws RouteNotFoundError when no route matches
+	 * @returns Handler match with validated parameters, or RouteNotFoundHandler if no match
 	 */
 	findHandler(
 		pathname: string,
@@ -66,6 +68,16 @@ export class HandlerFactory {
 		}
 
 		// No handler found after checking all handlers
-		throw new RouteNotFoundError(pathname, normalizedMethod);
+		this.logger
+			.withData({
+				pathname,
+				method: normalizedMethod,
+			})
+			.debug("No handler found, returning RouteNotFoundHandler");
+
+		return {
+			handler: this.routeNotFoundHandler,
+			params: { pathname, method: normalizedMethod },
+		};
 	}
 }
