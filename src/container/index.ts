@@ -1,2 +1,3 @@
-export * from "./register";
-export * from "./token";
+export { container } from "./register";
+
+export { containerToken } from "./token";

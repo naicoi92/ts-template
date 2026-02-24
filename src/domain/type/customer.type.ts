@@ -8,3 +8,4 @@ import type {
 export type CustomerDto = z.infer<typeof CustomerSchema>;
 export type CustomerSelectDto = z.infer<typeof CustomerSelectSchema>;
 export type CustomerCreateDto = z.infer<typeof CustomerCreateSchema>;
+export type CustomerInput = z.input<typeof CustomerCreateSchema>;
