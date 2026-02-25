@@ -1,14 +1,16 @@
 import type { CreateInvoiceUseCase } from "../../application/use-case/create-invoice.use-case";
 import type { Logger, RequestHandler } from "../../domain/interface";
-import { InvoiceCreateInputSchema } from "../../domain/schema";
-import type { InvoiceCreateInput } from "../../domain/type";
+import { InvoiceCreateDtoSchema } from "../../domain/schema";
+import type { InvoiceCreateDto } from "../../domain/type";
 import { ResponseFactory } from "../factory/response.factory";
 
 export class CreateInvoiceHandler
-	implements RequestHandler<undefined, undefined, InvoiceCreateInput>
+	implements RequestHandler<undefined, undefined, InvoiceCreateDto>
 {
-	readonly path = "/invoices";
-	readonly bodySchema = InvoiceCreateInputSchema;
+	readonly urlPattern = new URLPattern({
+		pathname: "/invoices",
+	});
+	readonly bodySchema = InvoiceCreateDtoSchema;
 
 	constructor(
 		private readonly _deps: {
@@ -18,7 +20,7 @@ export class CreateInvoiceHandler
 	) {}
 
 	async handle(data: {
-		body: InvoiceCreateInput;
+		body: InvoiceCreateDto;
 		request: Request;
 	}): Promise<Response> {
 		this.logger

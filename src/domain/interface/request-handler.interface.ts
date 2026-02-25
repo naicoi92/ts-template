@@ -34,8 +34,12 @@ import type { ValidatedRequestData } from "../type/validation.type";
  *   }
  * }
  */
-export interface RequestHandler<TParams = void, TQuery = void, TBody = void> {
-	readonly path: string;
+export interface RequestHandler<
+	TParams = undefined,
+	TQuery = undefined,
+	TBody = undefined,
+> {
+	readonly urlPattern: URLPattern;
 
 	/**
 	 * Zod schema for path parameter validation
@@ -103,24 +107,3 @@ export interface RequestHandler<TParams = void, TQuery = void, TBody = void> {
 export interface FetchHandler {
 	handle(request: Request): Promise<Response>;
 }
-
-/**
- * Type alias for handler with no validation
- * Useful for health checks and simple endpoints
- */
-export type SimpleHandler = RequestHandler<void, void, void>;
-
-/**
- * Type alias for handler with only body validation (common for POST endpoints)
- */
-export type BodyHandler<TBody> = RequestHandler<void, void, TBody>;
-
-/**
- * Type alias for handler with only path params (common for GET /resource/:id)
- */
-export type ParamsHandler<TParams> = RequestHandler<TParams, void, void>;
-
-/**
- * Type alias for handler with only query params (common for GET /resource?page=1)
- */
-export type QueryHandler<TQuery> = RequestHandler<void, TQuery, void>;

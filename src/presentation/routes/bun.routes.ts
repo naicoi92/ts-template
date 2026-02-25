@@ -1,7 +1,7 @@
 import type {
 	FetchHandler,
 	Logger,
-	SimpleHandler,
+	RequestHandler,
 } from "../../domain/interface";
 import type { BunRouter } from "../../domain/interface/server.interface";
 import { FetchAdapter } from "../adapter";
@@ -9,7 +9,7 @@ import { FetchAdapter } from "../adapter";
 export class BunRoutes implements BunRouter {
 	constructor(
 		private readonly _deps: {
-			createInvoiceHandler: SimpleHandler;
+			createInvoiceHandler: RequestHandler;
 			logger: Logger;
 		},
 	) {}
@@ -24,7 +24,7 @@ export class BunRoutes implements BunRouter {
 	private get createInvoiceHandler(): FetchHandler {
 		return this.createHandler(this._deps.createInvoiceHandler);
 	}
-	private createHandler(handler: SimpleHandler): FetchHandler {
+	private createHandler(handler: RequestHandler): FetchHandler {
 		return new FetchAdapter({ handler, logger: this.logger });
 	}
 	private get logger(): Logger {

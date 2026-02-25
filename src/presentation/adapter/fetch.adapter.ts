@@ -74,7 +74,8 @@ export class FetchAdapter<TParams, TQuery, TBody> implements FetchHandler {
 		if (!this.handler.paramsSchema) {
 			return undefined as TParams;
 		}
-		return this.handler.paramsSchema.parse(pathname);
+		const params = this.handler.urlPattern.exec(pathname)?.pathname;
+		return this.handler.paramsSchema.parse(params);
 	}
 
 	private async extractRequestBody(request: Request): Promise<unknown> {
