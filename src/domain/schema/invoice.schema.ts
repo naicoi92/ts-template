@@ -12,7 +12,7 @@ export const InvoiceSchema = z.object({
 
 export const InvoiceSelectDtoSchema = InvoiceSchema.partial();
 
-export const InvoiceCreateInputSchema = z.object({
+export const InvoiceCreateDtoSchema = z.object({
 	email: z.string().email("Invalid email format"),
 	orderId: z.string().min(1, "Order ID is required"),
 	amount: z.number().positive("Amount must be positive"),

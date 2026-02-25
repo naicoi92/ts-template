@@ -1,10 +1,10 @@
 import type z from "zod";
 import type {
-	InvoiceCreateInputSchema,
+	InvoiceCreateDtoSchema,
 	InvoiceSchema,
 	InvoiceSelectDtoSchema,
 } from "../schema";
 
 export type InvoiceDto = z.infer<typeof InvoiceSchema>;
 export type InvoiceSelectDto = z.infer<typeof InvoiceSelectDtoSchema>;
-export type InvoiceCreateInput = z.infer<typeof InvoiceCreateInputSchema>;
+export type InvoiceCreateDto = z.infer<typeof InvoiceCreateDtoSchema>;
