@@ -1,24 +1,26 @@
-import { asClass, asValue, createContainer } from "awilix";
+import { asClass, createContainer } from "awilix";
 import { CreateInvoiceUseCase } from "../application/use-case/create-invoice.use-case";
 import { AppConfig } from "../infrastructure/config/app.config";
-import { Logger as LoglayerLogger } from "../infrastructure/logger/loglayer.logger";
-import { KyselyCustomerRepository } from "../infrastructure/repositories/kysely-customer.repository";
-import { KyselyInvoiceRepository } from "../infrastructure/repositories/kysely-invoice.repository";
-import { InvoiceRouter } from "../infrastructure/router/invoice.router";
+import { KyselyDatabase } from "../infrastructure/database/kysely";
+import { LogLayerLogger } from "../infrastructure/logger";
+import {
+	KyselyCustomerRepository,
+	KyselyInvoiceRepository,
+} from "../infrastructure/repositories";
 import { BunServer } from "../infrastructure/server/bun.server";
 import { CreateInvoiceHandler } from "../presentation/handler/create-invoice.handler";
+import { BunRoutes } from "../presentation/routes/bun.routes";
 
 export const container = createContainer();
 
 container.register({
-	config: asValue(AppConfig.instance),
-	logger: asClass(LoglayerLogger).singleton(),
-	database: asClass(KyselyInvoiceRepository).singleton(),
+	config: asClass(AppConfig).singleton(),
+	logger: asClass(LogLayerLogger).singleton(),
+	database: asClass(KyselyDatabase).singleton(),
 	invoiceRepository: asClass(KyselyInvoiceRepository).singleton(),
 	customerRepository: asClass(KyselyCustomerRepository).singleton(),
-	invoiceRouter: asClass(InvoiceRouter).singleton(),
-	bunRoutes: asClass(BunRoutes).singleton(),
-	bunServer: asClass(BunServer).singleton(),
 	createInvoiceHandler: asClass(CreateInvoiceHandler).singleton(),
 	createInvoiceUseCase: asClass(CreateInvoiceUseCase).singleton(),
+	bunRoutes: asClass(BunRoutes).singleton(),
+	bunServer: asClass(BunServer).singleton(),
 });
