@@ -1,6 +1,5 @@
 import { asClass, asValue, createContainer } from "awilix";
 import { CreateInvoiceUseCase } from "../application/use-case/create-invoice.use-case";
-import type { Config, Logger, Server } from "../domain/interface";
 import { AppConfig } from "../infrastructure/config/app.config";
 import { Logger as LoglayerLogger } from "../infrastructure/logger/loglayer.logger";
 import { KyselyCustomerRepository } from "../infrastructure/repositories/kysely-customer.repository";
