@@ -10,6 +10,7 @@ export class BunRoutes implements BunRouter {
 	constructor(
 		private readonly _deps: {
 			createInvoiceHandler: RequestHandler;
+			getInvoiceHandler: RequestHandler;
 			logger: Logger;
 		},
 	) {}
@@ -19,10 +20,16 @@ export class BunRoutes implements BunRouter {
 			"/invoices": {
 				POST: (request: Request) => this.createInvoiceHandler.handle(request),
 			},
+			"/invoices/:orderId": {
+				GET: (request: Request) => this.getInvoiceHandler.handle(request),
+			},
 		};
 	}
 	private get createInvoiceHandler(): FetchHandler {
 		return this.createHandler(this._deps.createInvoiceHandler);
+	}
+	private get getInvoiceHandler(): FetchHandler {
+		return this.createHandler(this._deps.getInvoiceHandler);
 	}
 	private createHandler(handler: RequestHandler): FetchHandler {
 		return new FetchAdapter({ handler, logger: this.logger });

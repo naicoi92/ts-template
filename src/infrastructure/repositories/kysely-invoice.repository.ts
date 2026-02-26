@@ -27,8 +27,9 @@ export class KyselyInvoiceRepository implements InvoiceRepository {
 			.insertInto("invoices")
 			.values({
 				customerId: data.customerId,
-				amount: data.amount,
+				code: data.code,
 				orderId: data.orderId,
+				amount: data.amount,
 			})
 			.returningAll()
 			.executeTakeFirstOrThrow();
