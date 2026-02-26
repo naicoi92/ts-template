@@ -52,4 +52,8 @@ export class Invoice {
 	get isPaid(): boolean {
 		return this.status === InvoiceStatus.PAID;
 	}
+
+	isAmountMatch(amount: number): boolean {
+		return this.amount === amount;
+	}
 }

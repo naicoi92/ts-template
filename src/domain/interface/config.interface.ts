@@ -1,5 +1,4 @@
 import type { LogLevel } from "../enum";
-import type { ConfigDto } from "../type/config.type";
 
 export interface DatabaseConfig {
 	readonly url: string;
@@ -19,5 +18,5 @@ export interface Config {
 }
 
 export interface ConfigLoader {
-	load(): ConfigDto;
+	get(name: string): string;
 }

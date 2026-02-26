@@ -14,7 +14,7 @@ export class GetInvoiceHandler
 
 	constructor(
 		private readonly _deps: {
-			useCase: GetInvoiceUseCase;
+			getInvoiceUseCase: GetInvoiceUseCase;
 			logger: Logger;
 		},
 	) {}
@@ -29,7 +29,7 @@ export class GetInvoiceHandler
 			})
 			.info("Processing get invoice request");
 
-		const invoice = await this.useCase.execute(data.params.orderId);
+		const invoice = await this.getInvoiceUseCase.execute(data.params.orderId);
 
 		this.logger
 			.withData({
@@ -46,8 +46,8 @@ export class GetInvoiceHandler
 			isPaid: invoice.isPaid,
 		});
 	}
-	private get useCase(): GetInvoiceUseCase {
-		return this._deps.useCase;
+	private get getInvoiceUseCase(): GetInvoiceUseCase {
+		return this._deps.getInvoiceUseCase;
 	}
 	private get logger(): Logger {
 		return this._deps.logger;

@@ -17,10 +17,10 @@ export class BunRoutes implements BunRouter {
 
 	get routes() {
 		return {
-			"/invoices": {
+			[this._deps.createInvoiceHandler.urlPattern.pathname]: {
 				POST: (request: Request) => this.createInvoiceHandler.handle(request),
 			},
-			"/invoices/:orderId": {
+			[this._deps.getInvoiceHandler.urlPattern.pathname]: {
 				GET: (request: Request) => this.getInvoiceHandler.handle(request),
 			},
 		};

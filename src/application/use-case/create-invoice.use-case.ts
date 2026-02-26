@@ -5,8 +5,7 @@ import type {
 	InvoiceRepository,
 	Logger,
 } from "../../domain/interface";
-import { InvoiceCreateInputSchema } from "../../domain/schema";
-import type { InvoiceCreateInput } from "../../domain/type";
+import type { InvoiceCreateDto } from "../../domain/type";
 
 export class CreateInvoiceUseCase {
 	constructor(
@@ -18,26 +17,26 @@ export class CreateInvoiceUseCase {
 	) {
 		this.logger.debug("CreateInvoiceUseCase initialized");
 	}
-	async execute(input: InvoiceCreateInput): Promise<Invoice> {
-		const validatedInput = InvoiceCreateInputSchema.parse(input);
-		const invoice = await this.invoiceRepository.findByOrderId(
-			validatedInput.orderId,
-		);
+	async execute(input: InvoiceCreateDto): Promise<Invoice> {
+		const invoice = await this.invoiceRepository.findByOrderId(input.orderId);
 		if (invoice) {
-			if (invoice.amount !== validatedInput.amount)
+			if (invoice.isAmountMatch(input.amount))
 				throw new InvoiceAmountMisMatch(
-					validatedInput.orderId,
+					input.orderId,
 					invoice.amount,
-					validatedInput.amount,
+					input.amount,
 				);
 			return invoice;
 		}
 		const customer = await this.customerRepository.findOrCreateByEmail(
-			validatedInput.email,
+			input.email,
 		);
+		const code = Date.now().toString();
 		return await this.invoiceRepository.create({
-			orderId: validatedInput.orderId,
-			amount: validatedInput.amount,
+			code,
+			email: input.email,
+			orderId: input.orderId,
+			amount: input.amount,
 			customerId: customer.id,
 		});
 	}

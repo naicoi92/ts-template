@@ -1,11 +1,13 @@
+import { container } from "../../container";
 import type { Config, Server } from "../../domain/interface";
-import type { BunRoutes } from "../../presentation/routes";
+import { BunRoutes } from "../../presentation/routes";
 
 export class BunServer implements Server {
 	#server?: Bun.Server<unknown>;
-	constructor(
-		private readonly _deps: { config: Config; bunRoutes: BunRoutes },
-	) {}
+	#bunRoutes: BunRoutes;
+	constructor(private readonly _deps: { config: Config }) {
+		this.#bunRoutes = container.build(BunRoutes);
+	}
 	async start(): Promise<void> {
 		this.#server = Bun.serve({
 			port: this.port,
@@ -19,6 +21,6 @@ export class BunServer implements Server {
 		return this._deps.config.server.port;
 	}
 	private get routes() {
-		return this._deps.bunRoutes.routes;
+		return this.#bunRoutes.routes;
 	}
 }

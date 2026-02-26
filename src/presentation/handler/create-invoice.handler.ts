@@ -7,14 +7,12 @@ import { ResponseFactory } from "../factory/response.factory";
 export class CreateInvoiceHandler
 	implements RequestHandler<undefined, undefined, InvoiceCreateDto>
 {
-	readonly urlPattern = new URLPattern({
-		pathname: "/invoices",
-	});
+	readonly urlPattern = new URLPattern({ pathname: "/invoices" });
 	readonly bodySchema = InvoiceCreateDtoSchema;
 
 	constructor(
 		private readonly _deps: {
-			useCase: CreateInvoiceUseCase;
+			createInvoiceUseCase: CreateInvoiceUseCase;
 			logger: Logger;
 		},
 	) {}
@@ -29,25 +27,25 @@ export class CreateInvoiceHandler
 			})
 			.info("Processing create invoice request");
 
-		const invoice = await this.useCase.execute(data.body);
+		const invoice = await this.createInvoiceUseCase.execute(data.body);
 
 		this.logger
 			.withData({
-				invoiceId: invoice.id,
+				invoiceId: invoice.invoiceId,
 				orderId: invoice.orderId,
 			})
 			.info("Invoice created successfully");
 
 		return ResponseFactory.created({
-			id: invoice.id,
+			id: invoice.invoiceId,
 			orderId: invoice.orderId,
 			amount: invoice.amount,
 			customerId: invoice.customerId,
 			email: invoice.email,
 		});
 	}
-	private get useCase(): CreateInvoiceUseCase {
-		return this._deps.useCase;
+	private get createInvoiceUseCase(): CreateInvoiceUseCase {
+		return this._deps.createInvoiceUseCase;
 	}
 	private get logger(): Logger {
 		return this._deps.logger;

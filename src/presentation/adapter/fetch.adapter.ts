@@ -1,3 +1,4 @@
+import type z from "zod";
 import { RequestValidationError } from "../../domain/error/validation.error";
 import type {
 	FetchHandler,
@@ -15,13 +16,21 @@ export class FetchAdapter<TParams, TQuery, TBody> implements FetchHandler {
 	) {}
 
 	async handle(request: Request): Promise<Response> {
+		this.logger.withData({ request }).debug("Parsing request");
 		try {
 			const url = new URL(request.url);
+			this.logger.withData({ url }).debug("Parsing request");
 			const params = this.parseParams(url.pathname);
+			this.logger.withData({ params }).debug("Parsed params");
 			const query = this.parseQueries(url.searchParams);
+			this.logger.withData({ query }).debug("Parsed queries");
 			const body = await this.parseBody(request);
+			this.logger.withData({ body }).debug("Parsed body");
 			return await this.handler.handle({ request, params, query, body });
 		} catch (error) {
+			this.logger
+				.withData({ error })
+				.error("Unexpected error in validation adapter");
 			if (error instanceof RequestValidationError) {
 				this.logger
 					.withData({
@@ -32,7 +41,6 @@ export class FetchAdapter<TParams, TQuery, TBody> implements FetchHandler {
 					.warn("Request validation failed");
 				return ResponseFactory.validationError(error.errors);
 			}
-
 			if (error instanceof SyntaxError) {
 				this.logger
 					.withData({
@@ -57,25 +65,30 @@ export class FetchAdapter<TParams, TQuery, TBody> implements FetchHandler {
 		if (!this.handler.querySchema) {
 			return undefined as TQuery;
 		}
+		this.logger.withData({ searchParams }).debug("Parsing queries");
 		const rawQuery = Object.fromEntries(searchParams.entries());
-		return this.handler.querySchema.parse(rawQuery);
+		return this.schemaParse(rawQuery, this.handler.querySchema);
 	}
 	private async parseBody(request: Request): Promise<TBody> {
 		if (!this.handler.bodySchema) {
 			return undefined as TBody;
 		}
+		this.logger.withData({ request }).debug("Parsing body");
 		if (!this.methodHasBody(request.method)) {
 			return undefined as TBody;
 		}
-		const rawBody = await this.extractRequestBody(request);
-		return this.handler.bodySchema.parse(rawBody);
+		const body = await this.extractRequestBody(request);
+		return this.schemaParse(body, this.handler.bodySchema);
 	}
 	private parseParams(pathname: string): TParams {
 		if (!this.handler.paramsSchema) {
 			return undefined as TParams;
 		}
-		const params = this.handler.urlPattern.exec(pathname)?.pathname;
-		return this.handler.paramsSchema.parse(params);
+		console.log(pathname);
+		this.logger.withData({ pathname }).debug("Parsing params");
+		const params = this.handler.urlPattern.exec({ pathname });
+		this.logger.withData({ params }).debug("Parsed params");
+		return this.schemaParse(params?.pathname.groups, this.handler.paramsSchema);
 	}
 
 	private async extractRequestBody(request: Request): Promise<unknown> {
@@ -101,6 +114,18 @@ export class FetchAdapter<TParams, TQuery, TBody> implements FetchHandler {
 
 	private methodHasBody(method: string): boolean {
 		return ["POST", "PUT", "PATCH"].includes(method);
+	}
+
+	private schemaParse<T>(data: unknown, schema: z.ZodSchema<T>): T {
+		const result = schema.safeParse(data);
+		if (result.success) return result.data;
+		this.logger
+			.withData({
+				fields: result.error.flatten(),
+			})
+			.withError(result.error)
+			.error("Invalid request body");
+		throw result.error;
 	}
 
 	private get handler(): RequestHandler<TParams, TQuery, TBody> {
