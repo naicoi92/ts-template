@@ -9,6 +9,5 @@ export class LogConsoleTransport extends ConsoleTransport {
 			appendObjectData: false,
 			level: config.log.level,
 		});
-		if (this.enabled) console.debug("LogConsoleTransport initialized");
 	}
 }

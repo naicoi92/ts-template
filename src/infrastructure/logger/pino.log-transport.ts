@@ -14,6 +14,5 @@ export class LogPinoTransport extends PinoTransport {
 			),
 		});
 		this.logger.level = config.log.level;
-		if (this.enabled) console.debug("LogPinoTransport initialized");
 	}
 }

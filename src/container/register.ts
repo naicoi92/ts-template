@@ -3,7 +3,11 @@ import { CreateInvoiceUseCase } from "../application/use-case/create-invoice.use
 import { GetInvoiceUseCase } from "../application/use-case/get-invoice.use-case";
 import { AppConfig } from "../infrastructure/config/app.config";
 import { KyselyDatabase } from "../infrastructure/database/kysely";
-import { LogLayerLogger } from "../infrastructure/logger";
+import {
+	LogConsoleTransport,
+	LogLayerLogger,
+	LogPinoTransport,
+} from "../infrastructure/logger";
 import {
 	KyselyCustomerRepository,
 	KyselyInvoiceRepository,
@@ -17,6 +21,10 @@ export const container = createContainer();
 container.register({
 	config: asClass(AppConfig).singleton(),
 	logger: asClass(LogLayerLogger).singleton(),
+	logTransports: asFunction(() => [
+		container.build(LogPinoTransport),
+		container.build(LogConsoleTransport),
+	]).singleton(),
 	kysely: asClass(KyselyDatabase).singleton(),
 	invoiceRepository: asClass(KyselyInvoiceRepository).singleton(),
 	customerRepository: asClass(KyselyCustomerRepository).singleton(),
