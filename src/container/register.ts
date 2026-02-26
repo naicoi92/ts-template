@@ -1,4 +1,4 @@
-import { asClass, createContainer } from "awilix";
+import { asClass, asFunction, createContainer } from "awilix";
 import { CreateInvoiceUseCase } from "../application/use-case/create-invoice.use-case";
 import { GetInvoiceUseCase } from "../application/use-case/get-invoice.use-case";
 import { AppConfig } from "../infrastructure/config/app.config";
@@ -25,4 +25,8 @@ container.register({
 	getInvoiceHandler: asClass(GetInvoiceHandler).singleton(),
 	getInvoiceUseCase: asClass(GetInvoiceUseCase).singleton(),
 	server: asClass(BunServer).singleton(),
+	handlers: asFunction((fn) => [
+		fn.build(CreateInvoiceHandler),
+		fn.build(GetInvoiceHandler),
+	]).singleton(),
 });

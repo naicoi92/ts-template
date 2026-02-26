@@ -86,7 +86,9 @@ export class FetchAdapter<TParams, TQuery, TBody> implements FetchHandler {
 		}
 		console.log(pathname);
 		this.logger.withData({ pathname }).debug("Parsing params");
-		const params = this.handler.urlPattern.exec({ pathname });
+		const params = new URLPattern({ pathname: this.handler.pathname }).exec({
+			pathname,
+		});
 		this.logger.withData({ params }).debug("Parsed params");
 		return this.schemaParse(params?.pathname.groups, this.handler.paramsSchema);
 	}

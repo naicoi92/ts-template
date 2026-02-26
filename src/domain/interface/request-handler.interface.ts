@@ -39,7 +39,7 @@ export interface RequestHandler<
 	TQuery = undefined,
 	TBody = undefined,
 > {
-	readonly urlPattern: URLPattern;
+	readonly pathname: string;
 
 	/**
 	 * Zod schema for path parameter validation
