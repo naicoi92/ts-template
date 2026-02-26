@@ -20,13 +20,11 @@ container.register({
 	kysely: asClass(KyselyDatabase).singleton(),
 	invoiceRepository: asClass(KyselyInvoiceRepository).singleton(),
 	customerRepository: asClass(KyselyCustomerRepository).singleton(),
-	createInvoiceHandler: asClass(CreateInvoiceHandler).singleton(),
 	createInvoiceUseCase: asClass(CreateInvoiceUseCase).singleton(),
-	getInvoiceHandler: asClass(GetInvoiceHandler).singleton(),
 	getInvoiceUseCase: asClass(GetInvoiceUseCase).singleton(),
 	server: asClass(BunServer).singleton(),
-	handlers: asFunction((fn) => [
-		fn.build(CreateInvoiceHandler),
-		fn.build(GetInvoiceHandler),
+	handlers: asFunction(() => [
+		container.build(CreateInvoiceHandler),
+		container.build(GetInvoiceHandler),
 	]).singleton(),
 });

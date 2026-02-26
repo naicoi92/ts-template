@@ -41,6 +41,8 @@ export interface RequestHandler<
 > {
 	readonly pathname: string;
 
+	readonly method: string;
+
 	/**
 	 * Zod schema for path parameter validation
 	 * Optional: only define if the endpoint has path params (e.g., /users/:id)

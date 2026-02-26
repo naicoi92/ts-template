@@ -20,6 +20,9 @@ export class FetchAdapter<TParams, TQuery, TBody> implements FetchHandler {
 		try {
 			const url = new URL(request.url);
 			this.logger.withData({ url }).debug("Parsing request");
+			if (!this.hasMethod(request.method)) {
+				throw new Error(`Invalid method: ${request.method}`);
+			}
 			const params = this.parseParams(url.pathname);
 			this.logger.withData({ params }).debug("Parsed params");
 			const query = this.parseQueries(url.searchParams);
@@ -84,7 +87,6 @@ export class FetchAdapter<TParams, TQuery, TBody> implements FetchHandler {
 		if (!this.handler.paramsSchema) {
 			return undefined as TParams;
 		}
-		console.log(pathname);
 		this.logger.withData({ pathname }).debug("Parsing params");
 		const params = new URLPattern({ pathname: this.handler.pathname }).exec({
 			pathname,
@@ -112,6 +114,10 @@ export class FetchAdapter<TParams, TQuery, TBody> implements FetchHandler {
 			}
 		}
 		return null;
+	}
+
+	private hasMethod(method: string): boolean {
+		return this.handler.method === method;
 	}
 
 	private methodHasBody(method: string): boolean {

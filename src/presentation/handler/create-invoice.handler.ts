@@ -7,7 +7,8 @@ import { ResponseFactory } from "../factory/response.factory";
 export class CreateInvoiceHandler
 	implements RequestHandler<undefined, undefined, InvoiceCreateDto>
 {
-	readonly urlPattern = new URLPattern({ pathname: "/invoices" });
+	readonly pathname = "/invoices";
+	readonly method = "POST";
 	readonly bodySchema = InvoiceCreateDtoSchema;
 
 	constructor(

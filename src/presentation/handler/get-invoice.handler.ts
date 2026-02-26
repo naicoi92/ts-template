@@ -7,9 +7,8 @@ import { ResponseFactory } from "../factory/response.factory";
 export class GetInvoiceHandler
 	implements RequestHandler<InvoiceParamsDto, undefined, undefined>
 {
-	readonly urlPattern = new URLPattern({
-		pathname: "/invoices/:orderId",
-	});
+	readonly pathname = "/invoices/:orderId";
+	readonly method = "GET";
 	readonly paramsSchema = InvoiceParamsDtoSchema;
 
 	constructor(

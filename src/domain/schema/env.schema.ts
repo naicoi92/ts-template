@@ -20,5 +20,5 @@ export const EnvSchema = z.object({
 		.string()
 		.transform((val) => val === "1")
 		.default(false),
-	DATABASE_URL: z.url(),
+	DATABASE_URL: z.string(),
 });

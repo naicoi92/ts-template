@@ -1,4 +1,4 @@
-import { fromPairs, map } from "lodash-es";
+import { fromPairs, keys, map } from "lodash-es";
 import type {
 	FetchHandler,
 	Logger,
@@ -16,12 +16,20 @@ export class BunRoutes implements BunRouter {
 	) {}
 
 	get routes() {
-		return fromPairs(
+		const routes = fromPairs(
 			map(this.handlers, (handler) => [
 				handler.pathname,
 				(request: Request) => this.createHandler(handler).handle(request),
 			]),
 		);
+
+		this.logger
+			.withData({
+				keys: keys(routes),
+			})
+			.info("Registered routes");
+
+		return routes;
 	}
 	private createHandler(handler: RequestHandler): FetchHandler {
 		return new FetchAdapter({ handler, logger: this.logger });
