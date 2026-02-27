@@ -1,1 +1,1 @@
-export * from "./fetch.adapter";
+export * from "./request.adapter";

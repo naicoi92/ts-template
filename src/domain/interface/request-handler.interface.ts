@@ -1,5 +1,4 @@
 import type { z } from "zod";
-import type { ValidatedRequestData } from "../type/validation.type";
 
 /**
  * HTTP Request Handler Interface
@@ -16,7 +15,7 @@ import type { ValidatedRequestData } from "../type/validation.type";
  *
  * @example
  * // Handler with body validation only
- * class CreateInvoiceHandler implements RequestHandler<void, void, InvoiceCreateInput> {
+ * class CreateInvoiceHandler implements Handler<void, void, InvoiceCreateInput> {
  *   readonly bodySchema = InvoiceCreateInputSchema;
  *
  *   async handle({ body, request }) {
@@ -26,7 +25,7 @@ import type { ValidatedRequestData } from "../type/validation.type";
  *
  * @example
  * // Handler with path params
- * class GetInvoiceHandler implements RequestHandler<{ invoiceId: string }, void, void> {
+ * class GetInvoiceHandler implements Handler<{ invoiceId: string }, void, void> {
  *   readonly paramsSchema = z.object({ invoiceId: z.string().uuid() });
  *
  *   async handle({ params }) {
@@ -34,7 +33,7 @@ import type { ValidatedRequestData } from "../type/validation.type";
  *   }
  * }
  */
-export interface RequestHandler<
+export interface Handler<
 	TParams = undefined,
 	TQuery = undefined,
 	TBody = undefined,
@@ -90,7 +89,7 @@ export interface RequestHandler<
 	 * @param data.request - Original HTTP request (for headers, method, etc.)
 	 * @returns HTTP Response
 	 */
-	handle(data: ValidatedRequestData<TParams, TQuery, TBody>): Promise<Response>;
+	handle(data: RequestData<TParams, TQuery, TBody>): Promise<Response>;
 }
 
 /**
@@ -100,12 +99,25 @@ export interface RequestHandler<
  * Used for health checks, static files, or when custom parsing is needed.
  *
  * @example
- * class HealthCheckHandler implements FetchHandler {
+ * class HealthCheckHandler implements RequestHandler {
  *   async handle(request: Request) {
  *     return Response.json({ status: "ok" });
  *   }
  * }
  */
-export interface FetchHandler {
+export interface RequestHandler {
 	handle(request: Request): Promise<Response>;
+}
+
+/**
+ * Validated request data passed to handler
+ * Types are inferred from Zod schemas
+ */
+export interface RequestData<TParams, TQuery, TBody> {
+	/** Validated path parameters */
+	readonly params: TParams;
+	/** Validated query parameters */
+	readonly query: TQuery;
+	/** Validated request body */
+	readonly body: TBody;
 }

@@ -6,5 +6,5 @@ export interface Server {
 }
 
 export interface BunRouter {
-	get routes(): Record<string, Record<string, BunHandler<string>>>;
+	get routes(): Record<string, BunHandler>;
 }
