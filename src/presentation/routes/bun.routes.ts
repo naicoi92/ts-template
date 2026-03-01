@@ -1,10 +1,5 @@
 import { fromPairs, keys, map } from "lodash-es";
-import type {
-	BunRouter,
-	Handler,
-	Logger,
-	RequestHandler,
-} from "../../domain/interface";
+import type { Handler, Logger, RequestHandler } from "../../domain/interface";
 import { RequestAdapter } from "../adapter";
 
 /**
@@ -13,7 +8,7 @@ import { RequestAdapter } from "../adapter";
  * Route registration for Bun.serve
  * All handlers must implement Handler interface
  */
-export class BunRoutes implements BunRouter {
+export class BunRoutes {
 	constructor(
 		private readonly _deps: {
 			handlers: Handler[];
