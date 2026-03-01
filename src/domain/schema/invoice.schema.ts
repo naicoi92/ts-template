@@ -3,7 +3,7 @@ import { InvoiceStatus } from "../enum";
 
 export const InvoiceSchema = z.object({
 	invoiceId: z.number(),
-	code: z.string().default(Date.now().toString(36)),
+	code: z.string().min(1, "Invoice code is required"),
 	customerId: z.number(),
 	email: z.email(),
 	orderId: z.string().min(1, "Order ID is required"),

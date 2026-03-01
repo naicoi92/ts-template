@@ -28,18 +28,3 @@ export interface ValidationErrorDetail {
 export interface ValidationErrorList {
 	readonly errors: readonly ValidationErrorDetail[];
 }
-
-/**
- * Validated request data passed to handler
- * Types are inferred from Zod schemas
- */
-export interface ValidatedRequestData<TParams, TQuery, TBody> {
-	/** Validated path parameters */
-	readonly params: TParams;
-	/** Validated query parameters */
-	readonly query: TQuery;
-	/** Validated request body */
-	readonly body: TBody;
-	/** Original HTTP request */
-	readonly request: Request;
-}

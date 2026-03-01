@@ -1,13 +1,14 @@
-import { container } from "../../container";
-import type { Config, Logger, Server } from "../../domain/interface";
-import { BunRoutes } from "../../presentation/routes";
-
+import type { BunRouter, Config, Logger, Server } from "../../domain/interface";
 export class BunServer implements Server {
 	#server?: Bun.Server<unknown>;
-	#bunRoutes: BunRoutes;
-	constructor(private readonly _deps: { config: Config; logger: Logger }) {
-		this.#bunRoutes = container.build(BunRoutes);
-	}
+
+	constructor(
+		private readonly _deps: {
+			config: Config;
+			logger: Logger;
+			routes: BunRouter;
+		},
+	) {}
 	async start(): Promise<void> {
 		this.logger.withData({ port: this.port }).info("Starting server");
 
@@ -31,7 +32,7 @@ export class BunServer implements Server {
 		return this._deps.config.server.port;
 	}
 	private get routes() {
-		return this.#bunRoutes.routes;
+		return this._deps.routes.routes;
 	}
 
 	private get logger(): Logger {

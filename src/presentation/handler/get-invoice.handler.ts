@@ -1,11 +1,11 @@
 import type { GetInvoiceUseCase } from "../../application/use-case/get-invoice.use-case";
-import type { Logger, RequestHandler } from "../../domain/interface";
+import type { Handler, Logger } from "../../domain/interface";
 import { InvoiceParamsDtoSchema } from "../../domain/schema";
 import type { InvoiceParamsDto } from "../../domain/type";
 import { ResponseFactory } from "../factory/response.factory";
 
 export class GetInvoiceHandler
-	implements RequestHandler<InvoiceParamsDto, undefined, undefined>
+	implements Handler<InvoiceParamsDto, undefined, undefined>
 {
 	readonly pathname = "/invoices/:orderId";
 	readonly method = "GET";

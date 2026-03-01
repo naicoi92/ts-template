@@ -1,11 +1,11 @@
 import type { CreateInvoiceUseCase } from "../../application/use-case/create-invoice.use-case";
-import type { Logger, RequestHandler } from "../../domain/interface";
+import type { Handler, Logger } from "../../domain/interface";
 import { InvoiceCreateDtoSchema } from "../../domain/schema";
 import type { InvoiceCreateDto } from "../../domain/type";
 import { ResponseFactory } from "../factory/response.factory";
 
 export class CreateInvoiceHandler
-	implements RequestHandler<undefined, undefined, InvoiceCreateDto>
+	implements Handler<undefined, undefined, InvoiceCreateDto>
 {
 	readonly pathname = "/invoices";
 	readonly method = "POST";

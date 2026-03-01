@@ -1,65 +1,54 @@
 import type z from "zod";
 import { RequestValidationError } from "../../domain/error/validation.error";
-import type {
-	FetchHandler,
-	Logger,
-	RequestHandler,
-} from "../../domain/interface";
+import type { Handler, Logger, RequestHandler } from "../../domain/interface";
 import { ResponseFactory } from "../factory/response.factory";
 
-export class FetchAdapter<TParams, TQuery, TBody> implements FetchHandler {
+export class RequestAdapter<TParams, TQuery, TBody> implements RequestHandler {
 	constructor(
 		private readonly _deps: {
-			handler: RequestHandler<TParams, TQuery, TBody>;
+			handler: Handler<TParams, TQuery, TBody>;
 			logger: Logger;
 		},
 	) {}
 
 	async handle(request: Request): Promise<Response> {
-		this.logger.withData({ request }).debug("Parsing request");
 		try {
 			const url = new URL(request.url);
-			this.logger.withData({ url }).debug("Parsing request");
+
 			if (!this.hasMethod(request.method)) {
 				throw new Error(`Invalid method: ${request.method}`);
 			}
+
 			const params = this.parseParams(url.pathname);
-			this.logger.withData({ params }).debug("Parsed params");
 			const query = this.parseQueries(url.searchParams);
-			this.logger.withData({ query }).debug("Parsed queries");
 			const body = await this.parseBody(request);
-			this.logger.withData({ body }).debug("Parsed body");
-			return await this.handler.handle({ request, params, query, body });
-		} catch (error) {
+
+			// Single log for successful parsing
 			this.logger
-				.withData({ error })
-				.error("Unexpected error in validation adapter");
+				.withData({
+					pathname: url.pathname,
+					method: request.method,
+					hasParams: !!params,
+					hasQuery: !!query,
+					hasBody: !!body,
+				})
+				.debug("Request parsed");
+
+			return await this.handler.handle({ params, query, body });
+		} catch (error) {
 			if (error instanceof RequestValidationError) {
 				this.logger
-					.withData({
-						errors: error.errors,
-						method: request.method,
-						url: request.url,
-					})
+					.withData({ errors: error.errors })
 					.warn("Request validation failed");
 				return ResponseFactory.validationError(error.errors);
 			}
 			if (error instanceof SyntaxError) {
-				this.logger
-					.withData({
-						method: request.method,
-						url: request.url,
-					})
-					.warn("Invalid request body");
+				this.logger.warn("Invalid request body");
 				return ResponseFactory.badRequest("Invalid request body");
 			}
 
 			this.logger
-				.withData({
-					error: error instanceof Error ? error.message : String(error),
-					method: request.method,
-					url: request.url,
-				})
+				.withError(error instanceof Error ? error : new Error(String(error)))
 				.error("Unexpected error in validation adapter");
 			throw error;
 		}
@@ -68,7 +57,6 @@ export class FetchAdapter<TParams, TQuery, TBody> implements FetchHandler {
 		if (!this.handler.querySchema) {
 			return undefined as TQuery;
 		}
-		this.logger.withData({ searchParams }).debug("Parsing queries");
 		const rawQuery = Object.fromEntries(searchParams.entries());
 		return this.schemaParse(rawQuery, this.handler.querySchema);
 	}
@@ -76,7 +64,6 @@ export class FetchAdapter<TParams, TQuery, TBody> implements FetchHandler {
 		if (!this.handler.bodySchema) {
 			return undefined as TBody;
 		}
-		this.logger.withData({ request }).debug("Parsing body");
 		if (!this.methodHasBody(request.method)) {
 			return undefined as TBody;
 		}
@@ -87,11 +74,9 @@ export class FetchAdapter<TParams, TQuery, TBody> implements FetchHandler {
 		if (!this.handler.paramsSchema) {
 			return undefined as TParams;
 		}
-		this.logger.withData({ pathname }).debug("Parsing params");
 		const params = new URLPattern({ pathname: this.handler.pathname }).exec({
 			pathname,
 		});
-		this.logger.withData({ params }).debug("Parsed params");
 		return this.schemaParse(params?.pathname.groups, this.handler.paramsSchema);
 	}
 
@@ -127,16 +112,10 @@ export class FetchAdapter<TParams, TQuery, TBody> implements FetchHandler {
 	private schemaParse<T>(data: unknown, schema: z.ZodSchema<T>): T {
 		const result = schema.safeParse(data);
 		if (result.success) return result.data;
-		this.logger
-			.withData({
-				fields: result.error.flatten(),
-			})
-			.withError(result.error)
-			.error("Invalid request body");
 		throw result.error;
 	}
 
-	private get handler(): RequestHandler<TParams, TQuery, TBody> {
+	private get handler(): Handler<TParams, TQuery, TBody> {
 		return this._deps.handler;
 	}
 	private get logger(): Logger {

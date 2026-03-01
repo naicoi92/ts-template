@@ -2,21 +2,26 @@ import type { Invoice } from "../../domain/entity";
 import { InvoiceAmountMisMatch } from "../../domain/error";
 import type {
 	CustomerRepository,
+	InvoiceCodeGenerator,
 	InvoiceRepository,
 	Logger,
 } from "../../domain/interface";
 import type { InvoiceCreateDto } from "../../domain/type";
 
 export class CreateInvoiceUseCase {
+	private readonly _invoiceCodeGenerator: InvoiceCodeGenerator;
+
 	constructor(
 		private _deps: {
 			logger: Logger;
 			invoiceRepository: InvoiceRepository;
 			customerRepository: CustomerRepository;
+			invoiceCodeGenerator: InvoiceCodeGenerator;
 		},
 	) {
-		this.logger.debug("CreateInvoiceUseCase initialized");
+		this._invoiceCodeGenerator = _deps.invoiceCodeGenerator;
 	}
+
 	async execute(input: InvoiceCreateDto): Promise<Invoice> {
 		this.logger
 			.withData({ orderId: input.orderId, email: input.email })
@@ -26,7 +31,7 @@ export class CreateInvoiceUseCase {
 			input.orderId,
 		);
 		if (existingInvoice) {
-			if (existingInvoice.isAmountMatch(input.amount)) {
+			if (!existingInvoice.isAmountMatch(input.amount)) {
 				this.logger
 					.withData({
 						orderId: input.orderId,
@@ -56,7 +61,7 @@ export class CreateInvoiceUseCase {
 			input.email,
 		);
 
-		const code = Date.now().toString();
+		const code = this._invoiceCodeGenerator.generate();
 		const invoice = await this.invoiceRepository.create({
 			code,
 			email: input.email,
@@ -71,13 +76,20 @@ export class CreateInvoiceUseCase {
 
 		return invoice;
 	}
+
 	private get logger(): Logger {
 		return this._deps.logger;
 	}
+
 	private get invoiceRepository(): InvoiceRepository {
 		return this._deps.invoiceRepository;
 	}
+
 	private get customerRepository(): CustomerRepository {
 		return this._deps.customerRepository;
+	}
+
+	private get invoiceCodeGenerator(): InvoiceCodeGenerator {
+		return this._deps.invoiceCodeGenerator;
 	}
 }

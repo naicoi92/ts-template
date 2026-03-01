@@ -1,16 +1,17 @@
 import { fromPairs, keys, map } from "lodash-es";
-import type {
-	FetchHandler,
-	Logger,
-	RequestHandler,
-} from "../../domain/interface";
-import type { BunRouter } from "../../domain/interface/server.interface";
-import { FetchAdapter } from "../adapter";
+import type { Handler, Logger, RequestHandler } from "../../domain/interface";
+import { RequestAdapter } from "../adapter";
 
-export class BunRoutes implements BunRouter {
+/**
+ * Bun Routes
+ *
+ * Route registration for Bun.serve
+ * All handlers must implement Handler interface
+ */
+export class BunRoutes {
 	constructor(
 		private readonly _deps: {
-			handlers: RequestHandler[];
+			handlers: Handler[];
 			logger: Logger;
 		},
 	) {}
@@ -19,7 +20,7 @@ export class BunRoutes implements BunRouter {
 		const routes = fromPairs(
 			map(this.handlers, (handler) => [
 				handler.pathname,
-				(request: Request) => this.createHandler(handler).handle(request),
+				(request: Request) => this.createAdapter(handler).handle(request),
 			]),
 		);
 
@@ -31,13 +32,19 @@ export class BunRoutes implements BunRouter {
 
 		return routes;
 	}
-	private createHandler(handler: RequestHandler): FetchHandler {
-		return new FetchAdapter({ handler, logger: this.logger });
+
+	/**
+	 * Create RequestAdapter for handler
+	 */
+	private createAdapter(handler: Handler): RequestHandler {
+		return new RequestAdapter({ handler, logger: this.logger });
 	}
+
 	private get logger(): Logger {
 		return this._deps.logger;
 	}
-	private get handlers(): RequestHandler[] {
+
+	private get handlers(): Handler[] {
 		return this._deps.handlers;
 	}
 }
