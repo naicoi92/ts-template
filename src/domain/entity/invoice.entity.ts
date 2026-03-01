@@ -1,5 +1,5 @@
-import { InvoiceFieldNotFoundError } from "../error";
 import { InvoiceStatus } from "../enum";
+import { InvoiceFieldNotFoundError } from "../error";
 import type { InvoiceSelectDto } from "../type";
 
 export class Invoice {
@@ -31,7 +31,8 @@ export class Invoice {
 	}
 
 	get customerId(): number {
-		if (!this._data.customerId) throw new InvoiceFieldNotFoundError("customerId");
+		if (!this._data.customerId)
+			throw new InvoiceFieldNotFoundError("customerId");
 		return this._data.customerId;
 	}
 

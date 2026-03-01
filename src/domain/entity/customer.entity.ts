@@ -5,7 +5,8 @@ export class Customer {
 	constructor(private _data: CustomerSelectDto) {}
 
 	get customerId(): number {
-		if (!this._data.customerId) throw new CustomerFieldNotFoundError("customerId");
+		if (!this._data.customerId)
+			throw new CustomerFieldNotFoundError("customerId");
 		return this._data.customerId;
 	}
 
@@ -15,12 +16,14 @@ export class Customer {
 	}
 
 	get createdAt(): Date {
-		if (!this._data.createdAt) throw new CustomerFieldNotFoundError("createdAt");
+		if (!this._data.createdAt)
+			throw new CustomerFieldNotFoundError("createdAt");
 		return this._data.createdAt;
 	}
 
 	get updatedAt(): Date {
-		if (!this._data.updatedAt) throw new CustomerFieldNotFoundError("updatedAt");
+		if (!this._data.updatedAt)
+			throw new CustomerFieldNotFoundError("updatedAt");
 		return this._data.updatedAt;
 	}
 }

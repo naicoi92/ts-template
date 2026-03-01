@@ -20,11 +20,6 @@ interface ApiErrorResponse {
 }
 
 /**
- * API Response type (success or error)
- */
-type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
-
-/**
  * Response Factory
  *
  * Factory Pattern: Creates consistent HTTP responses across all handlers.
@@ -46,6 +41,7 @@ type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
  * return ResponseFactory.notFound("Invoice");
  * // => { success: false, error: "Invoice not found" }
  */
+
 export class ResponseFactory {
 	/**
 	 * Create a successful response (200 OK)

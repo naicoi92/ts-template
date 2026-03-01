@@ -1,7 +1,11 @@
 import type z from "zod";
 import { RequestValidationError } from "../../domain/error/validation.error";
 import type { Handler, Logger, RequestHandler } from "../../domain/interface";
-import { InvalidJsonBodyError, InvalidRequestMethodError, InvalidTextBodyError } from "../error";
+import {
+	InvalidJsonBodyError,
+	InvalidRequestMethodError,
+	InvalidTextBodyError,
+} from "../error";
 import { ResponseFactory } from "../factory/response.factory";
 
 export class RequestAdapter<TParams, TQuery, TBody> implements RequestHandler {
