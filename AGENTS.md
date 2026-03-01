@@ -1,8 +1,7 @@
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-02-26
-**Commit:** 738aef3
-**Branch:** main
+**Generated:** 2026-03-01
+**Commit:** 9bd46a7
 
 ## OVERVIEW
 
@@ -91,7 +90,7 @@ export class Entity {
 
 ```bash
 # Development
-bun ./src/index.ts              # Run server (needs implementation)
+bun ./src/index.ts              # Run server
 bun --hot ./src/index.ts        # Run with HMR
 
 # Testing
@@ -111,7 +110,7 @@ bun install                     # Install deps (auto-loads .env)
 
 ## NOTES
 
-- **Entry point missing**: `src/index.ts` is empty - needs bootstrap implementation
+- **Entry point**: `src/index.ts` bootstraps container, starts server, handles graceful shutdown (SIGINT/SIGTERM)
 - **Handler incomplete**: `CreateInvoiceHandler.handle()` throws "not implemented"
 - **Config loader**: `EnvConfigLoader.load()` not implemented
 - **No CI/CD**: No GitHub Actions, Makefile, or Docker setup
