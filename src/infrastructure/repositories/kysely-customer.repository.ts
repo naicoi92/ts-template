@@ -65,7 +65,7 @@ export class KyselyCustomerRepository implements CustomerRepository {
 		try {
 			const customer = await this.findByEmail(email);
 			this.logger
-				.withData({ email, customerId: customer.id })
+				.withData({ email, customerId: customer.customerId })
 				.debug("Existing customer found");
 			return customer;
 		} catch (error) {

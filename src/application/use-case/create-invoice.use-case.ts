@@ -67,7 +67,7 @@ export class CreateInvoiceUseCase {
 			email: input.email,
 			orderId: input.orderId,
 			amount: input.amount,
-			customerId: customer.id,
+			customerId: customer.customerId,
 		});
 
 		this.logger

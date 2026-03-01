@@ -18,10 +18,7 @@ export class GetInvoiceHandler
 		},
 	) {}
 
-	async handle(data: {
-		params: InvoiceParamsDto;
-		request: Request;
-	}): Promise<Response> {
+	async handle(data: { params: InvoiceParamsDto }): Promise<Response> {
 		this.logger
 			.withData({
 				orderId: data.params.orderId,

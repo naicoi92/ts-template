@@ -18,10 +18,7 @@ export class CreateInvoiceHandler
 		},
 	) {}
 
-	async handle(data: {
-		body: InvoiceCreateDto;
-		request: Request;
-	}): Promise<Response> {
+	async handle(data: { body: InvoiceCreateDto }): Promise<Response> {
 		this.logger
 			.withData({
 				orderId: data.body.orderId,

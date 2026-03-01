@@ -21,7 +21,7 @@ export class HealthHandler implements Handler<void, void, void> {
 		},
 	) {}
 
-	async handle(_data: { request: Request }): Promise<Response> {
+	async handle(): Promise<Response> {
 		const health = await this._deps.healthCheckService.check();
 
 		if (health.status === "healthy") {

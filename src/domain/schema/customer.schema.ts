@@ -1,7 +1,7 @@
 import z from "zod";
 
 export const CustomerSchema = z.object({
-	id: z.number(),
+	customerId: z.number(),
 	email: z.email(),
 	createdAt: z.date().default(new Date()),
 	updatedAt: z.date().default(new Date()),

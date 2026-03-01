@@ -1,4 +1,5 @@
-import type { BunRouter, Config, Logger, Server } from "../../domain/interface";
+import type { Config, Logger, Server } from "../../domain/interface";
+import type { BunRoutes } from "../../presentation/routes";
 export class BunServer implements Server {
 	#server?: Bun.Server<unknown>;
 
@@ -6,7 +7,7 @@ export class BunServer implements Server {
 		private readonly _deps: {
 			config: Config;
 			logger: Logger;
-			routes: BunRouter;
+			routes: BunRoutes;
 		},
 	) {}
 	async start(): Promise<void> {
