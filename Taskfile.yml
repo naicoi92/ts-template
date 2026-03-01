@@ -1,0 +1,164 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+
+vars:
+  APP_NAME: qr-payment
+  ENTRYPOINT: ./src/index.ts
+  OUTDIR: ./dist
+  BIOME_VERSION: "2.4.4"
+
+env:
+  NODE_ENV: development
+
+dotenv: [".env", ".env.local"]
+
+tasks:
+  default:
+    desc: "Show available tasks"
+    cmds:
+      - task --list
+
+  # ===========================================
+  # Development
+  # ===========================================
+
+  dev:
+    desc: "Start development server with hot reload"
+    watch: true
+    deps: [install]
+    cmds:
+      - bun --hot {{.ENTRYPOINT}}
+
+  start:
+    desc: "Start production server"
+    deps: [install]
+    cmds:
+      - bun {{.ENTRYPOINT}}
+
+  # ===========================================
+  # Installation
+  # ===========================================
+
+  install:
+    desc: "Install dependencies"
+    sources:
+      - package.json
+      - bun.lockb
+    generates:
+      - node_modules/.package-lock.json
+    cmds:
+      - bun install
+
+  install:ci:
+    desc: "Install dependencies for CI (frozen lockfile)"
+    cmds:
+      - bun install --frozen-lockfile
+
+  # ===========================================
+  # Build
+  # ===========================================
+
+  build:
+    desc: "Build for production"
+    sources:
+      - "src/**/*.ts"
+      - package.json
+    generates:
+      - "{{.OUTDIR}}/index.js"
+    deps: [install]
+    cmds:
+      - bun build {{.ENTRYPOINT}} --outdir {{.OUTDIR}} --target bun --minify --sourcemap
+
+  # ===========================================
+  # Testing
+  # ===========================================
+
+  test:
+    desc: "Run tests"
+    sources:
+      - "src/**/*.ts"
+    deps: [install]
+    cmds:
+      - bun test {{.CLI_ARGS}}
+
+  test:watch:
+    desc: "Run tests in watch mode"
+    watch: true
+    cmds:
+      - bun test --watch
+
+  # ===========================================
+  # Linting & Formatting
+  # ===========================================
+
+  lint:
+    desc: "Run Biome linter"
+    sources:
+      - "src/**/*.ts"
+    deps: [install]
+    cmds:
+      - bunx biome check . {{.CLI_ARGS}}
+
+  lint:fix:
+    desc: "Fix linting issues"
+    deps: [install]
+    cmds:
+      - bunx biome check . --write
+
+  format:
+    desc: "Format code with Biome"
+    sources:
+      - "src/**/*.ts"
+    deps: [install]
+    cmds:
+      - bunx biome format . --write
+
+  # ===========================================
+  # Type Checking
+  # ===========================================
+
+  typecheck:
+    desc: "Run TypeScript type checking"
+    sources:
+      - "src/**/*.ts"
+      - tsconfig.json
+    deps: [install]
+    cmds:
+      - bunx tsc --noEmit
+
+  # ===========================================
+  # CI Tasks
+  # ===========================================
+
+  ci:lint:
+    desc: "Run linter in CI mode (uses biome ci command)"
+    deps: [install]
+    cmds:
+      - biome ci .
+
+  ci:test:
+    desc: "Run tests in CI"
+    deps: [install]
+    cmds:
+      - bun test --timeout=10000
+
+  ci:build:
+    desc: "Build in CI"
+    deps: [install]
+    cmds:
+      - bun build {{.ENTRYPOINT}} --outdir {{.OUTDIR}} --target bun
+
+  ci:
+    desc: "Run all CI tasks"
+    deps: [ci:lint, typecheck, ci:test, ci:build]
+
+  # ===========================================
+  # Cleanup
+  # ===========================================
+
+  clean:
+    desc: "Clean build artifacts"
+    cmds:
+      - rm -rf {{.OUTDIR}}
+      - rm -rf node_modules
+      - rm -rf .task
