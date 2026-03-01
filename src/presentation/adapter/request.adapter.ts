@@ -1,6 +1,7 @@
 import type z from "zod";
 import { RequestValidationError } from "../../domain/error/validation.error";
 import type { Handler, Logger, RequestHandler } from "../../domain/interface";
+import { InvalidJsonBodyError, InvalidRequestMethodError, InvalidTextBodyError } from "../error";
 import { ResponseFactory } from "../factory/response.factory";
 
 export class RequestAdapter<TParams, TQuery, TBody> implements RequestHandler {
@@ -16,7 +17,7 @@ export class RequestAdapter<TParams, TQuery, TBody> implements RequestHandler {
 			const url = new URL(request.url);
 
 			if (!this.hasMethod(request.method)) {
-				throw new Error(`Invalid method: ${request.method}`);
+				throw new InvalidRequestMethodError(request.method);
 			}
 
 			const params = this.parseParams(url.pathname);
@@ -86,7 +87,7 @@ export class RequestAdapter<TParams, TQuery, TBody> implements RequestHandler {
 			try {
 				return await request.json();
 			} catch (error) {
-				throw new Error(`Invalid JSON body: ${(error as Error).message}`);
+				throw new InvalidJsonBodyError((error as Error).message);
 			}
 		}
 		if (contentType?.includes("application/x-www-form-urlencoded")) {
@@ -95,7 +96,7 @@ export class RequestAdapter<TParams, TQuery, TBody> implements RequestHandler {
 				const bodyParams = new URLSearchParams(bodyString);
 				return Object.fromEntries(bodyParams.entries());
 			} catch (error) {
-				throw new Error(`Invalid TEXT body: ${(error as Error).message}`);
+				throw new InvalidTextBodyError((error as Error).message);
 			}
 		}
 		return null;
