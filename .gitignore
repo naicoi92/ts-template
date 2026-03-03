@@ -46,3 +46,4 @@ bun-debug.log*
 # Temporary files
 tmp
 temp
+.task
