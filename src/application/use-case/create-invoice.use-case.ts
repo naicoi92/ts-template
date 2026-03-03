@@ -1,7 +1,6 @@
 import type { Invoice } from "../../domain/entity";
 import { InvoiceAmountMisMatch } from "../../domain/error";
 import type {
-	CustomerRepository,
 	InvoiceCodeGenerator,
 	InvoiceRepository,
 	Logger,
@@ -17,7 +16,6 @@ export class CreateInvoiceUseCase implements UseCase<
 		private _deps: {
 			logger: Logger;
 			invoiceRepository: InvoiceRepository;
-			customerRepository: CustomerRepository;
 			invoiceCodeGenerator: InvoiceCodeGenerator;
 		},
 	) {}
@@ -60,7 +58,7 @@ export class CreateInvoiceUseCase implements UseCase<
 			code,
 			orderId: input.orderId,
 			amount: input.amount,
-			customerId: customer.customerId,
+			customerId: input.customerId,
 		});
 
 		this.logger
@@ -84,10 +82,6 @@ export class CreateInvoiceUseCase implements UseCase<
 
 	private get invoiceRepository(): InvoiceRepository {
 		return this._deps.invoiceRepository;
-	}
-
-	private get customerRepository(): CustomerRepository {
-		return this._deps.customerRepository;
 	}
 
 	private get invoiceCodeGenerator(): InvoiceCodeGenerator {

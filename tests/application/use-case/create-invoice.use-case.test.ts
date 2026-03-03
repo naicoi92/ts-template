@@ -25,7 +25,6 @@ describe("CreateInvoiceUseCase", () => {
 		useCase = new CreateInvoiceUseCase({
 			logger,
 			invoiceRepository: invoiceRepo,
-			customerRepository: customerRepo,
 			invoiceCodeGenerator: codeGenerator,
 		});
 	});
