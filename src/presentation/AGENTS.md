@@ -1,15 +1,16 @@
 # PRESENTATION LAYER
 
-HTTP interface: handlers, adapters, routes, factories. Transforms HTTP requests → domain commands, domain responses → HTTP responses.
+HTTP interface: handlers, adapters, routes, render. Transforms HTTP requests → domain commands, domain responses → HTTP responses.
 
 ## STRUCTURE
 
 ```
 presentation/
-├── handler/    # Request handlers (CreateInvoiceHandler)
-├── adapter/    # Request adapters (FetchAdapter - validates & transforms)
-├── factory/    # Response factories (ResponseFactory - consistent envelope)
-└── routes/     # Route definitions (BunRoutes)
+├── handler/    # Request handlers (CreateInvoiceHandler, GetInvoiceHandler)
+├── adapter/    # RequestAdapter - validates & transforms requests
+├── render/     # JsonRender - response rendering
+├── routes/     # BunRoutes - route registration
+└── error/      # Presentation-specific errors (InvalidRequestMethodError)
 ```
 
 ## WHERE TO LOOK
@@ -18,69 +19,83 @@ presentation/
 |------|----------|
 | Add endpoint handler | `handler/*.handler.ts` |
 | Add route | `routes/bun.routes.ts` |
-| Add response type | `factory/response.factory.ts` |
-| Add request adapter | `adapter/*.adapter.ts` |
+| Add response rendering | `render/json.render.ts` |
+| Add request adapter | `adapter/request.adapter.ts` |
 
 ## PATTERNS
 
 ### Handler Pattern
 ```typescript
 // handler/create-invoice.handler.ts
-export class CreateInvoiceHandler implements RequestHandler<TParams, TQuery, TBody> {
-  readonly urlPattern = new URLPattern({ pathname: "/invoices" });
-  readonly bodySchema = InvoiceCreateDtoSchema;  // Zod schema
+export class CreateInvoiceHandler implements Handler<TResponse, TParams, TQuery, TBody> {
+  readonly pathname = "/invoices";  // NOT urlPattern!
+  readonly method = "POST";
+  readonly bodySchema = InvoiceCreateDtoSchema;     // Zod schema
+  readonly responseSchema = CreateInvoiceResponseSchema;
 
-  constructor(private readonly _deps: { useCase: CreateInvoiceUseCase; logger: Logger }) {}
-  
-  async handle(data: { body: TBody; request: Request }): Promise<Response> {
-    const result = await this.useCase.execute(data.body);
-    return ResponseFactory.created(result);
+  constructor(private readonly _deps: { createInvoiceUseCase: CreateInvoiceUseCase; logger: Logger }) {}
+
+  async handle(data: { body: TBody }): Promise<TResponse> {
+    const invoice = await this.createInvoiceUseCase.execute(data.body);
+    return {}; // Returns typed response, NOT Response object
   }
 }
 ```
 
-### Adapter Pattern (Validation Layer)
+### Adapter Pattern (RequestAdapter)
 ```typescript
-// adapter/fetch.adapter.ts
-export class FetchAdapter<TParams, TQuery, TBody> implements FetchHandler {
+// adapter/request.adapter.ts
+export class RequestAdapter<TResponse, TParams, TQuery, TBody>
+  implements RequestHandler<Request, Response> {
+
   async handle(request: Request): Promise<Response> {
-    // 1. Parse params, query, body using handler schemas
-    // 2. Validate via Zod schemas (bodySchema, querySchema, paramsSchema)
-    // 3. Call handler.handle({ request, params, query, body })
-    // 4. Catch RequestValidationError → return 400
+    // 1. Check method matches handler.method
+    // 2. Parse params via URLPattern from handler.pathname
+    // 3. Parse query/body via Zod schemas
+    // 4. Call handler.handle({ params, query, body })
+    // 5. Validate response via handler.responseSchema
+    // 6. Return render.data(response) or render.error(error)
   }
 }
 ```
 
-### Response Factory
+### Render Pattern
 ```typescript
-// factory/response.factory.ts
-// All responses use envelope pattern:
-// Success: { success: true, data: T }
-// Error:   { success: false, error: string, details?: ValidationErrorDetail[] }
-
-ResponseFactory.created(data)      // 201 - POST success
-ResponseFactory.success(data)      // 200 - GET success
-ResponseFactory.notFound("Invoice") // 404
-ResponseFactory.validationError(errors) // 400 with details
+// render/json.render.ts
+export class JsonRender<I = void> implements ResponseRender<I, Response> {
+  data(data: I): Promise<Response> {
+    return Promise.resolve(Response.json(data));
+  }
+  
+  error(error: unknown): Promise<Response> {
+    // Currently logs and throws "Method not implemented"
+    // TODO: Implement proper error responses
+  }
+}
 ```
 
 ### Route Definition
 ```typescript
 // routes/bun.routes.ts
-export class BunRoutes implements BunRouter {
+export class BunRoutes {
+  constructor(private _deps: { handlers: Handler[]; logger: Logger }) {}
+
   get routes() {
-    return {
-      "/invoices": { POST: (req) => this.createInvoiceHandler.handle(req) },
-    };
+    // Maps each handler.pathname to RequestAdapter
+    return fromPairs(
+      map(this.handlers, (handler) => [
+        handler.pathname,
+        (request: Request) => this.createAdapter(handler).handle(request),
+      ])
+    );
   }
 }
 ```
 
 ## RULES
 
-- **Use ResponseFactory** - Never construct Response directly in handlers
-- **Validate via schemas** - Handler declares `bodySchema`/`querySchema`, adapter validates
+- **Handler returns typed data** - NOT Response object, render handles that
+- **Each pathname must be unique** - BunRoutes maps one handler per path
+- **Validate via schemas** - Handler declares `bodySchema`/`querySchema`/`paramsSchema`/`responseSchema`
 - **Inject use cases** - Handlers depend on application layer, never infrastructure
-- **URLPattern matching** - Each handler declares its own `urlPattern`
 - **Private getters for deps** - Follow DI pattern: `private get logger() { return this._deps.logger; }`

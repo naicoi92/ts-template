@@ -15,8 +15,8 @@ qr-payment/
 ├── src/
 │   ├── domain/          # Core business logic (entities, interfaces, types, schemas, errors, enums)
 │   ├── application/     # Use cases orchestrate business rules
-│   ├── infrastructure/  # External concerns (DB, server, config, logger, routers)
-│   ├── presentation/    # HTTP handlers, adapters, routes
+│   ├── infrastructure/  # External concerns (DB, server, config, logger, services)
+│   ├── presentation/    # HTTP layer (handlers, adapters, routes, render)
 │   └── container/       # DI container registration
 ├── tests/               # Test suites (mirrors src structure)
 ├── biome.json           # Linting + formatting (Biome)
@@ -29,13 +29,13 @@ qr-payment/
 
 | Task | Location | Notes |
 |------|----------|-------|
-| Add business entity | `src/domain/entity/` | Extend Entity pattern, validate in constructor |
+| Add business entity | `src/domain/entity/` | Extend Entity pattern, getters throw `*FieldNotFoundError` |
 | Add repository interface | `src/domain/interface/` | Define contract, impl in `infrastructure/repositories/` |
 | Add use case | `src/application/use-case/` | Orchestrate domain objects |
-| Add HTTP endpoint | `src/infrastructure/router/` + `src/presentation/handler/` | Router defines routes, Handler processes requests |
+| Add HTTP endpoint | `src/presentation/handler/` + `src/presentation/routes/` | Handler declares pathname/method, routes wires them |
 | Change DB query | `src/infrastructure/repositories/` | Kysely implementation |
-| Add config | `src/domain/type/config.type.ts` + `src/infrastructure/config/` | Type + loader pattern |
-| Register new dependency | `src/container/register.ts` | Use `asClass()` or `asValue()` |
+| Add config | `src/domain/schema/env.schema.ts` + `src/infrastructure/config/` | Zod env schema + AppConfig |
+| Register new dependency | `src/container/register.ts` | Use `asClass()` or `asFunction()` |
 | Add tests | `tests/` | Mirror src structure, use mocks/fixtures |
 | Add mock | `tests/mocks/` | Create mock implementing domain interface |
 | Add fixture | `tests/fixtures/` | Test data builders |
@@ -48,7 +48,8 @@ qr-payment/
 - `*.schema.ts` - Zod schemas (e.g., `invoice.schema.ts`)
 - `*.entity.ts` - Domain entities (e.g., `invoice.entity.ts`)
 - `*.handler.ts` - Request handlers (e.g., `create-invoice.handler.ts`)
-- `*.adapter.ts` - Adapters (e.g., `fetch.adapter.ts`)
+- `*.adapter.ts` - Request adapters (e.g., `request.adapter.ts`)
+- `*.render.ts` - Response renderers (e.g., `json.render.ts`)
 - `*.use-case.ts` - Application use cases
 - `*.repository.ts` - Repository implementations
 - File names: kebab-case | Classes: PascalCase | Properties: camelCase
@@ -62,10 +63,14 @@ private get logger() { return this._deps.logger; }
 
 ### Entity Pattern
 ```typescript
-export class Entity {
-  constructor(private _data: Dto) { this.validate(); }
-  private validate() { /* throw if invalid */ }
-  get property() { return this._data.property; }
+// Entities accept partial DTOs, getters enforce required fields
+export class Invoice {
+  constructor(private _data: InvoiceSelectDto) {} // No validate() call
+  
+  get invoiceId(): number {
+    if (!this._data.invoiceId) throw new InvoiceFieldNotFoundError("invoiceId");
+    return this._data.invoiceId;
+  }
 }
 ```
 
@@ -123,8 +128,7 @@ bun install                     # Install deps (auto-loads .env)
 ## NOTES
 
 - **Entry point**: `src/index.ts` bootstraps container, starts server, handles graceful shutdown (SIGINT/SIGTERM)
-- **Handler incomplete**: `CreateInvoiceHandler.handle()` throws "not implemented"
-- **Config loader**: `EnvConfigLoader.load()` not implemented
 - **CI/CD**: GitHub Actions workflow with lint → typecheck → test → build pipeline
 - **Task runner**: Taskfile.yml for build/test/lint automation
 - **Inngest dependency**: Present but no worker/processor files yet
+- **Known gap**: `JsonRender.error()` in `src/presentation/render/json.render.ts` throws "Method not implemented"
