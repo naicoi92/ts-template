@@ -1,3 +1,4 @@
+import { ServiceUnhealthyError } from "../../domain/error";
 import type { Handler, HealthCheckService } from "../../domain/interface";
 import { HealthResponseSchema } from "../../domain/schema";
 import type { HealthResponse } from "../../domain/type";
@@ -26,7 +27,7 @@ export class HealthHandler
 
 	async handle(): Promise<HealthResponse> {
 		const health = await this.healthCheckService.check();
-		if (health.status !== "healthy") throw new Error("Service unhealthy");
+		if (health.status !== "healthy") throw new ServiceUnhealthyError(health);
 		return {
 			status: health.status,
 			timestamp: health.timestamp,

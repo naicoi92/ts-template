@@ -1,3 +1,4 @@
+import { HealthCheckDependencyError } from "../../domain/error";
 import type { HealthCheckService } from "../../domain/interface";
 import type { HealthStatus } from "../../domain/type";
 import type { KyselyDatabase } from "../database";
@@ -19,6 +20,18 @@ export class DatabaseHealthCheckService implements HealthCheckService {
 				timestamp: new Date().toISOString(),
 			};
 		} catch (error) {
+			if (error instanceof HealthCheckDependencyError) {
+				return {
+					status: "unhealthy",
+					timestamp: new Date().toISOString(),
+					error: error.message,
+					details: {
+						dependency: error.dependency,
+						cause: error.causeMessage,
+					},
+				};
+			}
+
 			return {
 				status: "unhealthy",
 				timestamp: new Date().toISOString(),
@@ -27,11 +40,15 @@ export class DatabaseHealthCheckService implements HealthCheckService {
 		}
 	}
 	private async checkDatabase() {
-		await this.kysely
-			.selectFrom("invoices")
-			.select("invoiceId")
-			.limit(1)
-			.execute();
+		try {
+			await this.kysely
+				.selectFrom("invoices")
+				.select("invoiceId")
+				.limit(1)
+				.execute();
+		} catch (error) {
+			throw new HealthCheckDependencyError("database", error);
+		}
 	}
 	private get kysely(): KyselyDatabase {
 		return this._deps.kysely;

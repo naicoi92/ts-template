@@ -3,6 +3,7 @@ import {
 	InvoiceAmountMisMatch,
 	InvoiceNotFoundError,
 	RequestValidationError,
+	ServiceUnhealthyError,
 } from "../../domain/error";
 import type { Logger, ResponseRender } from "../../domain/interface";
 import {
@@ -34,6 +35,10 @@ export class JsonRender<I = void> implements ResponseRender<I, Response> {
 		{
 			status: 405,
 			errorClasses: [InvalidRequestMethodError],
+		},
+		{
+			status: 503,
+			errorClasses: [ServiceUnhealthyError],
 		},
 		{
 			status: 400,
@@ -99,6 +104,15 @@ export class JsonRender<I = void> implements ResponseRender<I, Response> {
 	}
 
 	private formatErrorBody(error: unknown): ErrorResponse {
+		if (error instanceof ServiceUnhealthyError) {
+			return {
+				error: {
+					message: error.message,
+					details: error.toJSON(),
+				},
+			};
+		}
+
 		if (error instanceof RequestValidationError) {
 			return {
 				error: {
