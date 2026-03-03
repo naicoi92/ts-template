@@ -1,7 +1,6 @@
 import type { Invoice } from "../../domain/entity";
 import { InvoiceAmountMisMatch } from "../../domain/error";
 import type {
-	CustomerRepository,
 	InvoiceCodeGenerator,
 	InvoiceRepository,
 	Logger,
@@ -13,15 +12,12 @@ export class CreateInvoiceUseCase {
 		private _deps: {
 			logger: Logger;
 			invoiceRepository: InvoiceRepository;
-			customerRepository: CustomerRepository;
 			invoiceCodeGenerator: InvoiceCodeGenerator;
 		},
 	) {}
 
 	async execute(input: InvoiceCreateDto): Promise<Invoice> {
-		this.logger
-			.withData({ orderId: input.orderId, email: input.email })
-			.info("Creating invoice");
+		this.logger.withData({ orderId: input.orderId }).info("Creating invoice");
 
 		const existingInvoice = await this.invoiceRepository.findByOrderId(
 			input.orderId,
@@ -50,20 +46,12 @@ export class CreateInvoiceUseCase {
 			return existingInvoice;
 		}
 
-		this.logger
-			.withData({ email: input.email })
-			.info("Finding or creating customer");
-		const customer = await this.customerRepository.findOrCreateByEmail(
-			input.email,
-		);
-
 		const code = this.invoiceCodeGenerator.generate();
 		const invoice = await this.invoiceRepository.create({
 			code,
-			email: input.email,
 			orderId: input.orderId,
 			amount: input.amount,
-			customerId: customer.customerId,
+			customerId: input.customerId,
 		});
 
 		this.logger
@@ -79,10 +67,6 @@ export class CreateInvoiceUseCase {
 
 	private get invoiceRepository(): InvoiceRepository {
 		return this._deps.invoiceRepository;
-	}
-
-	private get customerRepository(): CustomerRepository {
-		return this._deps.customerRepository;
 	}
 
 	private get invoiceCodeGenerator(): InvoiceCodeGenerator {

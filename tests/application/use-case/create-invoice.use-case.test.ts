@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { Invoice, Customer } from "../../../src/domain/entity";
+import { Invoice } from "../../../src/domain/entity";
 import { InvoiceAmountMisMatch, InvoiceNotFoundError } from "../../../src/domain/error";
 import { CreateInvoiceUseCase } from "../../../src/application/use-case/create-invoice.use-case";
 import {
@@ -9,7 +9,7 @@ import {
 	createMockLogger,
 	resetAllMocks,
 } from "../../mocks/index.ts";
-import { invoiceFixtures, customerFixtures, invoiceCreateFixtures } from "../../fixtures";
+import { invoiceFixtures, invoiceCreateFixtures } from "../../fixtures";
 
 describe("CreateInvoiceUseCase", () => {
 	const logger = createMockLogger();
@@ -25,7 +25,6 @@ describe("CreateInvoiceUseCase", () => {
 		useCase = new CreateInvoiceUseCase({
 			logger,
 			invoiceRepository: invoiceRepo,
-			customerRepository: customerRepo,
 			invoiceCodeGenerator: codeGenerator,
 		});
 	});
@@ -47,7 +46,6 @@ describe("CreateInvoiceUseCase", () => {
 			invoiceRepo.seedInvoice(existingInvoice);
 
 			const input = {
-				email: existingData.email!,
 				orderId: existingData.orderId!,
 				amount: existingData.amount!,
 				code: existingData.code!,
@@ -67,7 +65,6 @@ describe("CreateInvoiceUseCase", () => {
 			invoiceRepo.seedInvoice(existingInvoice);
 
 			const input = {
-				email: existingData.email!,
 				orderId: existingData.orderId!,
 				amount: existingData.amount! + 1000,
 				code: existingData.code!,
@@ -78,27 +75,6 @@ describe("CreateInvoiceUseCase", () => {
 			expect(logger.hasLog("error", "Invoice amount mismatch")).toBe(true);
 		});
 
-		test("should reuse existing customer when invoice exists", async () => {
-			const existingData = invoiceFixtures.complete();
-			const existingInvoice = new Invoice(existingData);
-			invoiceRepo.seedInvoice(existingInvoice);
-			
-			const existingCustomer = new Customer(customerFixtures.complete());
-			customerRepo.seedCustomer(existingCustomer);
-
-			const input = {
-				email: existingData.email!,
-				orderId: existingData.orderId!,
-				amount: existingData.amount!,
-				code: existingData.code!,
-				customerId: existingData.customerId!,
-			};
-
-			await useCase.execute(input);
-
-			expect(customerRepo.getAllCustomers().length).toBe(1);
-		});
-
 		test("should use existing code for existing invoice", async () => {
 			const existingData = invoiceFixtures.complete();
 			const existingInvoice = new Invoice(existingData);
@@ -106,7 +82,6 @@ describe("CreateInvoiceUseCase", () => {
 			codeGenerator.setCodes(["CUSTOM-CODE-123"]);
 
 			const input = {
-				email: existingData.email!,
 				orderId: existingData.orderId!,
 				amount: existingData.amount!,
 				code: existingData.code!,

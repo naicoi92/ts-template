@@ -23,7 +23,6 @@ export class MockInvoiceRepository implements InvoiceRepository {
 			invoiceId,
 			code: data.code,
 			customerId: data.customerId,
-			email: data.email,
 			orderId: data.orderId,
 			amount: data.amount,
 			status: InvoiceStatus.PENDING,

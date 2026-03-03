@@ -6,7 +6,6 @@ export const invoiceFixtures = {
 		invoiceId: 1,
 		code: "INV-2024-001",
 		customerId: 1,
-		email: "customer@example.com",
 		orderId: "ORDER-001",
 		amount: 100000,
 		status: InvoiceStatus.PENDING,
@@ -18,7 +17,6 @@ export const invoiceFixtures = {
 		invoiceId: 2,
 		code: "INV-2024-002",
 		customerId: 1,
-		email: "customer@example.com",
 		orderId: "ORDER-002",
 		amount: 250000,
 		status: InvoiceStatus.PAID,
@@ -28,7 +26,6 @@ export const invoiceFixtures = {
 
 	minimal: (): InvoiceSelectDto => ({
 		orderId: "ORDER-MINIMAL",
-		email: "minimal@example.com",
 		amount: 50000,
 	}),
 };
@@ -37,7 +34,6 @@ export const invoiceCreateFixtures = {
 	valid: () => ({
 		code: "INV-NEW-001",
 		customerId: 1,
-		email: "new@example.com",
 		orderId: "ORDER-NEW",
 		amount: 75000,
 	}),
