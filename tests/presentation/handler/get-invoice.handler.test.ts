@@ -62,9 +62,9 @@ describe("GetInvoiceHandler", () => {
 			const invoice = new Invoice(invoiceData);
 			invoiceRepo.seedInvoice(invoice);
 
-			await handler.handle({
-				params: { orderId: invoiceData.orderId! },
-			});
+            await handler.handle({
+                params: { orderId: invoiceData.orderId! },
+            });
 
 			expect(logger.hasLog("info", "Initializing GetInvoiceUseCase")).toBe(true);
 		});
@@ -74,9 +74,9 @@ describe("GetInvoiceHandler", () => {
 			const invoice = new Invoice(invoiceData);
 			invoiceRepo.seedInvoice(invoice);
 
-			await handler.handle({
-				params: { orderId: invoiceData.orderId! },
-			});
+            await handler.handle({
+                params: { orderId: invoiceData.orderId! },
+            });
 
 			expect(logger.hasLog("info", "Fetching invoice by orderId")).toBe(true);
 		});
