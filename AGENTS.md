@@ -1,11 +1,12 @@
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-03-01
-**Commit:** 9bd46a7
+**Generated:** 2026-03-03
+**Commit:** effa4dd
+**Branch:** main
 
 ## OVERVIEW
 
-QR Payment backend service. Clean Architecture + DDD. Bun runtime, TypeScript, Kysely ORM, PostgreSQL. AWILIX DI container.
+QR Payment backend service. Clean Architecture + DDD. Bun runtime, TypeScript, Kysely ORM, PostgreSQL. AWILIX DI container. Task runner for CI/CD.
 
 ## STRUCTURE
 
@@ -17,9 +18,11 @@ qr-payment/
 │   ├── infrastructure/  # External concerns (DB, server, config, logger, routers)
 │   ├── presentation/    # HTTP handlers, adapters, routes
 │   └── container/       # DI container registration
-├── biome.json           # Linting + formatting (Biome, not ESLint/Prettier)
+├── tests/               # Test suites (mirrors src structure)
+├── biome.json           # Linting + formatting (Biome)
 ├── tsconfig.json        # TypeScript strict mode, bundler resolution
-└── package.json         # No scripts - use `bun` directly
+├── Taskfile.yml         # Task runner (build, test, lint commands)
+└── package.json         # Dependencies
 ```
 
 ## WHERE TO LOOK
@@ -33,6 +36,9 @@ qr-payment/
 | Change DB query | `src/infrastructure/repositories/` | Kysely implementation |
 | Add config | `src/domain/type/config.type.ts` + `src/infrastructure/config/` | Type + loader pattern |
 | Register new dependency | `src/container/register.ts` | Use `asClass()` or `asValue()` |
+| Add tests | `tests/` | Mirror src structure, use mocks/fixtures |
+| Add mock | `tests/mocks/` | Create mock implementing domain interface |
+| Add fixture | `tests/fixtures/` | Test data builders |
 
 ## CONVENTIONS
 
@@ -104,6 +110,12 @@ bun build ./src/index.ts        # Production build
 bunx biome check .              # Lint
 bunx biome format . --write     # Format
 
+# Task runner (alternative)
+task dev                        # Dev server with HMR
+task test                       # Run tests
+task build                      # Production build
+task ci                         # Run all CI tasks
+
 # Install
 bun install                     # Install deps (auto-loads .env)
 ```
@@ -113,6 +125,6 @@ bun install                     # Install deps (auto-loads .env)
 - **Entry point**: `src/index.ts` bootstraps container, starts server, handles graceful shutdown (SIGINT/SIGTERM)
 - **Handler incomplete**: `CreateInvoiceHandler.handle()` throws "not implemented"
 - **Config loader**: `EnvConfigLoader.load()` not implemented
-- **No CI/CD**: No GitHub Actions, Makefile, or Docker setup
-- **No tests yet**: Project structure ready but test files not created
+- **CI/CD**: GitHub Actions workflow with lint → typecheck → test → build pipeline
+- **Task runner**: Taskfile.yml for build/test/lint automation
 - **Inngest dependency**: Present but no worker/processor files yet
