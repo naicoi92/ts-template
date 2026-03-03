@@ -15,11 +15,6 @@ export class Invoice {
 		return this._data.code;
 	}
 
-	get email(): string {
-		if (!this._data.email) throw new InvoiceFieldNotFoundError("email");
-		return this._data.email;
-	}
-
 	get orderId(): string {
 		if (!this._data.orderId) throw new InvoiceFieldNotFoundError("orderId");
 		return this._data.orderId;

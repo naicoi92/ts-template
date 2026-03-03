@@ -1,5 +1,5 @@
 export * from "./customer.error";
 export * from "./entity-validation.error";
+export * from "./health.error";
 export * from "./invoice.error";
-
 export * from "./validation.error";

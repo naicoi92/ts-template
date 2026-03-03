@@ -1,7 +1,6 @@
-import type { Kysely } from "kysely";
 import type { HealthCheckService } from "../../domain/interface";
 import type { HealthStatus } from "../../domain/type";
-import type { Database } from "../database/types";
+import type { KyselyDatabase } from "../database";
 
 /**
  * Database Health Check Service
@@ -9,17 +8,12 @@ import type { Database } from "../database/types";
  * Checks database connectivity and health status
  */
 export class DatabaseHealthCheckService implements HealthCheckService {
-	constructor(private readonly _kysely: Kysely<Database>) {}
+	constructor(private readonly _deps: { kysely: KyselyDatabase }) {}
 
 	async check(): Promise<HealthStatus> {
 		try {
 			// Simple query to check database connectivity
-			await this._kysely
-				.selectFrom("invoices")
-				.select("invoiceId")
-				.limit(1)
-				.execute();
-
+			await Promise.all([this.checkDatabase()]);
 			return {
 				status: "healthy",
 				timestamp: new Date().toISOString(),
@@ -28,9 +22,18 @@ export class DatabaseHealthCheckService implements HealthCheckService {
 			return {
 				status: "unhealthy",
 				timestamp: new Date().toISOString(),
-				error:
-					error instanceof Error ? error.message : "Database connection failed",
+				error: error instanceof Error ? error.message : String(error),
 			};
 		}
+	}
+	private async checkDatabase() {
+		await this.kysely
+			.selectFrom("invoices")
+			.select("invoiceId")
+			.limit(1)
+			.execute();
+	}
+	private get kysely(): KyselyDatabase {
+		return this._deps.kysely;
 	}
 }

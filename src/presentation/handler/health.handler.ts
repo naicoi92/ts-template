@@ -25,11 +25,14 @@ export class HealthHandler
 	) {}
 
 	async handle(): Promise<HealthResponse> {
-		const health = await this._deps.healthCheckService.check();
+		const health = await this.healthCheckService.check();
 		if (health.status !== "healthy") throw new Error("Service unhealthy");
 		return {
 			status: health.status,
 			timestamp: health.timestamp,
 		};
+	}
+	private get healthCheckService(): HealthCheckService {
+		return this._deps.healthCheckService;
 	}
 }
