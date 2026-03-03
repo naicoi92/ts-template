@@ -3,6 +3,7 @@ import {
 	InvoiceAmountMisMatch,
 	InvoiceNotFoundError,
 	RequestValidationError,
+	ServiceUnhealthyError,
 } from "../../domain/error";
 import type { Logger, ResponseRender } from "../../domain/interface";
 import { ErrorMapper } from "./error.mapper";
