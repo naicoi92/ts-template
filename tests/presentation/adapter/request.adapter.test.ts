@@ -14,6 +14,8 @@ import {
 interface MockResponseRender<TResponse> extends ResponseRender<TResponse, Response> {
 	data: ReturnType<typeof mock>;
 	error: ReturnType<typeof mock>;
+	created: ReturnType<typeof mock>;
+	noContent: ReturnType<typeof mock>;
 }
 
 function createMockResponseRender<TResponse>(): MockResponseRender<TResponse> {
@@ -28,6 +30,24 @@ function createMockResponseRender<TResponse>(): MockResponseRender<TResponse> {
 				status: 500,
 				headers: { "Content-Type": "application/json" },
 			}));
+		}),
+		created: mock<(data: TResponse, headers?: Record<string, string>) => Promise<Response>>(
+			(data, headers) => {
+				return Promise.resolve(
+					new Response(JSON.stringify(data), {
+						status: 201,
+						headers: { "Content-Type": "application/json", ...headers },
+					}),
+				);
+			},
+		),
+		noContent: mock<(headers?: Record<string, string>) => Promise<Response>>((headers) => {
+			return Promise.resolve(
+				new Response(null, {
+					status: 204,
+					headers,
+				}),
+			);
 		}),
 	};
 }

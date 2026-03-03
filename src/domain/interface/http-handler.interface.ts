@@ -137,6 +137,12 @@ export interface RequestHandler<I, T> {
 }
 
 export interface ResponseRender<I, T> {
-	data(data: I): Promise<T>;
+	data(
+		data: I,
+		statusCode?: number,
+		headers?: Record<string, string>,
+	): Promise<T>;
 	error(error: unknown): Promise<T>;
+	created(data: I, headers?: Record<string, string>): Promise<T>;
+	noContent(headers?: Record<string, string>): Promise<T>;
 }
