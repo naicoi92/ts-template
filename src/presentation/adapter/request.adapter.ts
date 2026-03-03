@@ -1,34 +1,41 @@
 import type z from "zod";
-import { RequestValidationError } from "../../domain/error/validation.error";
-import type { Handler, Logger, RequestHandler } from "../../domain/interface";
+import {
+	formatZodError,
+	RequestValidationError,
+} from "../../domain/error/validation.error";
+import type {
+	Handler,
+	Logger,
+	RequestHandler,
+	ResponseRender,
+} from "../../domain/interface";
+import type { ValidationErrorSource } from "../../domain/type/validation.type";
 import {
 	InvalidJsonBodyError,
 	InvalidRequestMethodError,
 	InvalidTextBodyError,
 } from "../error";
-import { ResponseFactory } from "../factory/response.factory";
 
-export class RequestAdapter<TParams, TQuery, TBody> implements RequestHandler {
+export class RequestAdapter<TResponse, TParams, TQuery, TBody>
+	implements RequestHandler<Request, Response>
+{
 	constructor(
 		private readonly _deps: {
-			handler: Handler<TParams, TQuery, TBody>;
 			logger: Logger;
+			handler: Handler<TResponse, TParams, TQuery, TBody>;
+			render: ResponseRender<TResponse, Response>;
 		},
 	) {}
 
 	async handle(request: Request): Promise<Response> {
 		try {
 			const url = new URL(request.url);
-
 			if (!this.hasMethod(request.method)) {
 				throw new InvalidRequestMethodError(request.method);
 			}
-
 			const params = this.parseParams(url.pathname);
 			const query = this.parseQueries(url.searchParams);
 			const body = await this.parseBody(request);
-
-			// Single log for successful parsing
 			this.logger
 				.withData({
 					pathname: url.pathname,
@@ -38,24 +45,15 @@ export class RequestAdapter<TParams, TQuery, TBody> implements RequestHandler {
 					hasBody: !!body,
 				})
 				.debug("Request parsed");
-
-			return await this.handler.handle({ params, query, body });
+			const data = await this.handler.handle({ params, query, body });
+			const response = this.schemaParse(
+				data,
+				this.handler.responseSchema,
+				"response",
+			);
+			return this.render.data(response);
 		} catch (error) {
-			if (error instanceof RequestValidationError) {
-				this.logger
-					.withData({ errors: error.errors })
-					.warn("Request validation failed");
-				return ResponseFactory.validationError(error.errors);
-			}
-			if (error instanceof SyntaxError) {
-				this.logger.warn("Invalid request body");
-				return ResponseFactory.badRequest("Invalid request body");
-			}
-
-			this.logger
-				.withError(error instanceof Error ? error : new Error(String(error)))
-				.error("Unexpected error in validation adapter");
-			throw error;
+			return this.render.error(error);
 		}
 	}
 	private parseQueries(searchParams: URLSearchParams): TQuery {
@@ -63,7 +61,7 @@ export class RequestAdapter<TParams, TQuery, TBody> implements RequestHandler {
 			return undefined as TQuery;
 		}
 		const rawQuery = Object.fromEntries(searchParams.entries());
-		return this.schemaParse(rawQuery, this.handler.querySchema);
+		return this.schemaParse(rawQuery, this.handler.querySchema, "query");
 	}
 	private async parseBody(request: Request): Promise<TBody> {
 		if (!this.handler.bodySchema) {
@@ -73,7 +71,7 @@ export class RequestAdapter<TParams, TQuery, TBody> implements RequestHandler {
 			return undefined as TBody;
 		}
 		const body = await this.extractRequestBody(request);
-		return this.schemaParse(body, this.handler.bodySchema);
+		return this.schemaParse(body, this.handler.bodySchema, "body");
 	}
 	private parseParams(pathname: string): TParams {
 		if (!this.handler.paramsSchema) {
@@ -82,7 +80,11 @@ export class RequestAdapter<TParams, TQuery, TBody> implements RequestHandler {
 		const params = new URLPattern({ pathname: this.handler.pathname }).exec({
 			pathname,
 		});
-		return this.schemaParse(params?.pathname.groups, this.handler.paramsSchema);
+		return this.schemaParse(
+			params?.pathname.groups,
+			this.handler.paramsSchema,
+			"params",
+		);
 	}
 
 	private async extractRequestBody(request: Request): Promise<unknown> {
@@ -114,16 +116,23 @@ export class RequestAdapter<TParams, TQuery, TBody> implements RequestHandler {
 		return ["POST", "PUT", "PATCH"].includes(method);
 	}
 
-	private schemaParse<T>(data: unknown, schema: z.ZodSchema<T>): T {
+	private schemaParse<T>(
+		data: unknown,
+		schema: z.ZodSchema<T>,
+		source: ValidationErrorSource,
+	): T {
 		const result = schema.safeParse(data);
 		if (result.success) return result.data;
-		throw result.error;
+		throw new RequestValidationError(formatZodError(result.error, source));
 	}
 
-	private get handler(): Handler<TParams, TQuery, TBody> {
+	private get handler(): Handler<TResponse, TParams, TQuery, TBody> {
 		return this._deps.handler;
 	}
 	private get logger(): Logger {
 		return this._deps.logger;
+	}
+	private get render(): ResponseRender<TResponse, Response> {
+		return this._deps.render;
 	}
 }

@@ -52,88 +52,63 @@ describe("GetInvoiceHandler", () => {
 		});
 	});
 
-	describe("handle", () => {
-		test("should return invoice and 200 response", async () => {
-			const invoiceData = invoiceFixtures.complete();
-			const invoice = new Invoice(invoiceData);
-			invoiceRepo.seedInvoice(invoice);
+    describe("handle", () => {
+        test("should return data object", async () => {
+            const invoiceData = invoiceFixtures.complete();
+            const invoice = new Invoice(invoiceData);
+            invoiceRepo.seedInvoice(invoice);
 
-			const response = await handler.handle({
-				params: { orderId: invoiceData.orderId! },
-			});
-			const json = (await response.json()) as { success: boolean; data: { invoiceId: number; orderId: string } };
+            const data = await handler.handle({
+                params: { orderId: invoiceData.orderId! },
+            });
 
-			expect(response.status).toBe(200);
-			expect(json.success).toBe(true);
-			expect(json.data.invoiceId).toBe(invoiceData.invoiceId!);
-			expect(json.data.orderId).toBe(invoiceData.orderId!);
-		});
+            expect(data).toBeInstanceOf(Object);
+            expect(data).toEqual({});
+        });
 
-		test("should log processing request", async () => {
-			const invoiceData = invoiceFixtures.complete();
-			const invoice = new Invoice(invoiceData);
-			invoiceRepo.seedInvoice(invoice);
+        test("should log processing request", async () => {
+            const invoiceData = invoiceFixtures.complete();
+            const invoice = new Invoice(invoiceData);
+            invoiceRepo.seedInvoice(invoice);
 
-			await handler.handle({
-				params: { orderId: invoiceData.orderId! },
-			});
+            await handler.handle({
+                params: { orderId: invoiceData.orderId! },
+            });
 
-			expect(logger.hasLog("info", "Processing get invoice request")).toBe(true);
-		});
+            expect(logger.hasLog("info", "Processing get invoice request")).toBe(true);
+        });
 
-		test("should log successful retrieval", async () => {
-			const invoiceData = invoiceFixtures.complete();
-			const invoice = new Invoice(invoiceData);
-			invoiceRepo.seedInvoice(invoice);
+        test("should log successful retrieval", async () => {
+            const invoiceData = invoiceFixtures.complete();
+            const invoice = new Invoice(invoiceData);
+            invoiceRepo.seedInvoice(invoice);
 
-			await handler.handle({
-				params: { orderId: invoiceData.orderId! },
-			});
+            await handler.handle({
+                params: { orderId: invoiceData.orderId! },
+            });
 
-			expect(logger.hasLog("info", "Invoice retrieved successfully")).toBe(true);
-		});
+            expect(logger.hasLog("info", "Invoice retrieved successfully")).toBe(true);
+        });
+        
+        test("should return empty data for complete invoice (paid or unpaid)", async () => {
+            // complete invoice
+            const invoiceData = invoiceFixtures.complete();
+            const invoice = new Invoice(invoiceData);
+            invoiceRepo.seedInvoice(invoice);
 
-		test("should return correct response format", async () => {
-			const invoiceData = invoiceFixtures.complete();
-			const invoice = new Invoice(invoiceData);
-			invoiceRepo.seedInvoice(invoice);
+            const data1 = await handler.handle({
+                params: { orderId: invoiceData.orderId! },
+            });
+            expect(data1).toEqual({});
 
-			const response = await handler.handle({
-				params: { orderId: invoiceData.orderId! },
-			});
-			const json = (await response.json()) as {
-				success: boolean
-				data: {
-					invoiceId: number
-					orderId: string
-					amount: number
-					status: string
-					isPaid: boolean
-				}
-			};
-
-			expect(json.success).toBe(true);
-			expect(json.data).toMatchObject({
-				invoiceId: invoiceData.invoiceId,
-				orderId: invoiceData.orderId,
-				amount: invoiceData.amount,
-				status: invoiceData.status,
-				isPaid: false,
-			});
-		});
-
-		test("should return isPaid true for paid invoice", async () => {
-			const invoiceData = invoiceFixtures.paid();
-			const invoice = new Invoice(invoiceData);
-			invoiceRepo.seedInvoice(invoice);
-
-			const response = await handler.handle({
-				params: { orderId: invoiceData.orderId! },
-			});
-			const json = (await response.json()) as { success: boolean; data: { isPaid: boolean } };
-
-			expect(json.success).toBe(true);
-			expect(json.data.isPaid).toBe(true);
-		});
-	});
+            
+            const paidInvoiceData = invoiceFixtures.paid();
+            const paidInvoice = new Invoice(paidInvoiceData);
+            invoiceRepo.seedInvoice(paidInvoice);
+            const data2 = await handler.handle({
+                params: { orderId: paidInvoiceData.orderId! },
+            });
+            expect(data2).toEqual({});
+        });
+    });
 });

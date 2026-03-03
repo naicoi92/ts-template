@@ -9,8 +9,6 @@ import type {
 import type { InvoiceCreateDto } from "../../domain/type";
 
 export class CreateInvoiceUseCase {
-	private readonly _invoiceCodeGenerator: InvoiceCodeGenerator;
-
 	constructor(
 		private _deps: {
 			logger: Logger;
@@ -18,9 +16,7 @@ export class CreateInvoiceUseCase {
 			customerRepository: CustomerRepository;
 			invoiceCodeGenerator: InvoiceCodeGenerator;
 		},
-	) {
-		this._invoiceCodeGenerator = _deps.invoiceCodeGenerator;
-	}
+	) {}
 
 	async execute(input: InvoiceCreateDto): Promise<Invoice> {
 		this.logger
@@ -61,7 +57,7 @@ export class CreateInvoiceUseCase {
 			input.email,
 		);
 
-		const code = this._invoiceCodeGenerator.generate();
+		const code = this.invoiceCodeGenerator.generate();
 		const invoice = await this.invoiceRepository.create({
 			code,
 			email: input.email,

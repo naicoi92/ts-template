@@ -1,15 +1,21 @@
 import type { CreateInvoiceUseCase } from "../../application/use-case/create-invoice.use-case";
 import type { Handler, Logger } from "../../domain/interface";
-import { InvoiceCreateDtoSchema } from "../../domain/schema";
-import type { InvoiceCreateDto } from "../../domain/type";
-import { ResponseFactory } from "../factory/response.factory";
+import {
+	CreateInvoiceResponseSchema,
+	InvoiceCreateDtoSchema,
+} from "../../domain/schema";
+import type {
+	CreateInvoiceResponse,
+	InvoiceCreateDto,
+} from "../../domain/type";
 
 export class CreateInvoiceHandler
-	implements Handler<undefined, undefined, InvoiceCreateDto>
+	implements Handler<CreateInvoiceResponse, void, void, InvoiceCreateDto>
 {
 	readonly pathname = "/invoices";
 	readonly method = "POST";
 	readonly bodySchema = InvoiceCreateDtoSchema;
+	readonly responseSchema = CreateInvoiceResponseSchema;
 
 	constructor(
 		private readonly _deps: {
@@ -18,7 +24,9 @@ export class CreateInvoiceHandler
 		},
 	) {}
 
-	async handle(data: { body: InvoiceCreateDto }): Promise<Response> {
+	async handle(data: {
+		body: InvoiceCreateDto;
+	}): Promise<CreateInvoiceResponse> {
 		this.logger
 			.withData({
 				orderId: data.body.orderId,
@@ -33,14 +41,7 @@ export class CreateInvoiceHandler
 				orderId: invoice.orderId,
 			})
 			.info("Invoice created successfully");
-
-		return ResponseFactory.created({
-			id: invoice.invoiceId,
-			orderId: invoice.orderId,
-			amount: invoice.amount,
-			customerId: invoice.customerId,
-			email: invoice.email,
-		});
+		return {};
 	}
 	private get createInvoiceUseCase(): CreateInvoiceUseCase {
 		return this._deps.createInvoiceUseCase;

@@ -1,5 +1,6 @@
 import type { Handler, HealthCheckService } from "../../domain/interface";
-import { ResponseFactory } from "../factory/response.factory";
+import { HealthResponseSchema } from "../../domain/schema";
+import type { HealthResponse } from "../../domain/type";
 
 /**
  * Health Check Handler
@@ -10,10 +11,12 @@ import { ResponseFactory } from "../factory/response.factory";
  * GET /health
  * Response: { success: true, data: { status: "healthy" | "unhealthy", timestamp: "..." } }
  */
-export class HealthHandler implements Handler<void, void, void> {
+export class HealthHandler
+	implements Handler<HealthResponse, void, void, void>
+{
 	readonly pathname = "/health";
 	readonly method = "GET";
-	// No schemas needed for health check
+	readonly responseSchema = HealthResponseSchema;
 
 	constructor(
 		private readonly _deps: {
@@ -21,16 +24,12 @@ export class HealthHandler implements Handler<void, void, void> {
 		},
 	) {}
 
-	async handle(): Promise<Response> {
+	async handle(): Promise<HealthResponse> {
 		const health = await this._deps.healthCheckService.check();
-
-		if (health.status === "healthy") {
-			return ResponseFactory.success({
-				status: "healthy",
-				timestamp: health.timestamp,
-			});
-		}
-
-		return ResponseFactory.error(health.error ?? "Service unhealthy", 503);
+		if (health.status !== "healthy") throw new Error("Service unhealthy");
+		return {
+			status: health.status,
+			timestamp: health.timestamp,
+		};
 	}
 }

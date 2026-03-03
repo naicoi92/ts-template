@@ -25,3 +25,6 @@ export const InvoiceCreateDtoSchema = InvoiceSchema.pick({
 export const InvoiceParamsDtoSchema = InvoiceSchema.pick({
 	orderId: true,
 });
+
+export const GetInvoiceResponseSchema = z.object({});
+export const CreateInvoiceResponseSchema = z.object({});

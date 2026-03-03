@@ -1,6 +1,18 @@
 import type { z } from "zod";
 
 /**
+ * Validated request data passed to handler
+ * Types are inferred from Zod schemas
+ */
+export interface RequestData<TParams, TQuery, TBody> {
+	/** Validated path parameters */
+	readonly params: TParams;
+	/** Validated query parameters */
+	readonly query: TQuery;
+	/** Validated request body */
+	readonly body: TBody;
+}
+/**
  * HTTP Request Handler Interface
  *
  * Handlers are responsible for:
@@ -9,14 +21,16 @@ import type { z } from "zod";
  * 3. Calling the appropriate use case
  * 4. Returning HTTP response
  *
+ * @template TResponse - Type of response body (e.g., { id: string, status: string })
  * @template TParams - Type of path parameters (e.g., { id: string } for /users/:id)
  * @template TQuery - Type of query parameters (e.g., { page: number, limit: number })
  * @template TBody - Type of request body (e.g., { name: string, email: string })
  *
  * @example
  * // Handler with body validation only
- * class CreateInvoiceHandler implements Handler<void, void, InvoiceCreateInput> {
+ * class CreateInvoiceHandler implements Handler<InvoiceDto, void, InvoiceCreateInput> {
  *   readonly bodySchema = InvoiceCreateInputSchema;
+ *   readonly responseSchema = InvoiceDtoSchema;
  *
  *   async handle({ body, request }) {
  *     // body is typed as InvoiceCreateInput (already validated)
@@ -25,7 +39,7 @@ import type { z } from "zod";
  *
  * @example
  * // Handler with path params
- * class GetInvoiceHandler implements Handler<{ invoiceId: string }, void, void> {
+ * class GetInvoiceHandler implements Handler<{ invoiceId: string }, void, void, InvoiceDto> {
  *   readonly paramsSchema = z.object({ invoiceId: z.string().uuid() });
  *
  *   async handle({ params }) {
@@ -34,9 +48,10 @@ import type { z } from "zod";
  * }
  */
 export interface Handler<
-	TParams = undefined,
-	TQuery = undefined,
-	TBody = undefined,
+	TResponse = void,
+	TParams = void,
+	TQuery = void,
+	TBody = void,
 > {
 	readonly pathname: string;
 
@@ -77,6 +92,18 @@ export interface Handler<
 	readonly bodySchema?: z.ZodSchema<TBody>;
 
 	/**
+	 * Zod schema for response body validation
+	 * Optional: use when you want to validate output before sending
+	 *
+	 * @example
+	 * readonly responseSchema = z.object({
+	 *   id: z.string().uuid(),
+	 *   status: z.enum(["pending", "paid", "cancelled"]),
+	 * });
+	 */
+	readonly responseSchema: z.ZodSchema<TResponse>;
+
+	/**
 	 * Handle the validated HTTP request
 	 *
 	 * This method receives already-validated data from ValidationAdapter.
@@ -89,7 +116,7 @@ export interface Handler<
 	 * @param data.request - Original HTTP request (for headers, method, etc.)
 	 * @returns HTTP Response
 	 */
-	handle(data: RequestData<TParams, TQuery, TBody>): Promise<Response>;
+	handle(data: RequestData<TParams, TQuery, TBody>): Promise<TResponse>;
 }
 
 /**
@@ -105,19 +132,11 @@ export interface Handler<
  *   }
  * }
  */
-export interface RequestHandler {
-	handle(request: Request): Promise<Response>;
+export interface RequestHandler<I, T> {
+	handle(request: I): Promise<T>;
 }
 
-/**
- * Validated request data passed to handler
- * Types are inferred from Zod schemas
- */
-export interface RequestData<TParams, TQuery, TBody> {
-	/** Validated path parameters */
-	readonly params: TParams;
-	/** Validated query parameters */
-	readonly query: TQuery;
-	/** Validated request body */
-	readonly body: TBody;
+export interface ResponseRender<I, T> {
+	data(data: I): Promise<T>;
+	error(error: unknown): Promise<T>;
 }
