@@ -5,7 +5,7 @@ import {
 	RequestValidationError,
 	ServiceUnhealthyError,
 } from "../../domain/error";
-import type { Logger, ResponseRender } from "../../domain/interface";
+import type { ResponseRender } from "../../domain/interface";
 import { InvalidJsonBodyError, InvalidRequestMethodError, InvalidTextBodyError } from "../error";
 
 interface ErrorResponse {
@@ -47,11 +47,7 @@ export class JsonRender<I = void> implements ResponseRender<I, Response> {
 		},
 	];
 
-	constructor(
-		private readonly _deps: {
-			logger: Logger;
-		},
-	) {}
+	constructor() {}
 
 	data(data: I, statusCode: number = 200, headers?: Record<string, string>): Promise<Response> {
 		const response = Response.json(data, {
@@ -64,7 +60,6 @@ export class JsonRender<I = void> implements ResponseRender<I, Response> {
 	error(error: unknown): Promise<Response> {
 		const errorStatus = this.getErrorStatus(error);
 		const errorBody = this.formatErrorBody(error);
-		this.logger.withError(error as Error).error("Error occurred");
 		const response = Response.json(errorBody, {
 			status: errorStatus,
 		});
@@ -127,9 +122,5 @@ export class JsonRender<I = void> implements ResponseRender<I, Response> {
 				message: String(error),
 			},
 		};
-	}
-
-	private get logger(): Logger {
-		return this._deps.logger;
 	}
 }

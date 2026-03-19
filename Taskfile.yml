@@ -24,14 +24,11 @@ tasks:
 
   dev:
     desc: "Start development server with hot reload"
-    watch: true
-    deps: [install]
     cmds:
-      - bun --hot {{.ENTRYPOINT}}
+      - bun --reload {{.ENTRYPOINT}}
 
   start:
     desc: "Start production server"
-    deps: [install]
     cmds:
       - bun {{.ENTRYPOINT}}
 

@@ -18,15 +18,16 @@ export class UseCaseLogProxy<I, O> implements UseCase<I, O> {
 			return result;
 		} catch (error) {
 			this.logger
-				.withError(error instanceof Error ? error : new Error(String(error)))
 				.withData({ input, executionTime: this.executionTime })
+				.withError(error instanceof Error ? error : new Error(String(error)))
 				.error("execute use case failed");
 			throw error;
 		}
 	}
 
-	get executionTime(): number {
-		return Date.now() - this.timeBegin;
+	get executionTime(): string {
+		const executionTime = Date.now() - this.timeBegin;
+		return `${executionTime}ms`;
 	}
 
 	private get useCase(): UseCase<I, O> {

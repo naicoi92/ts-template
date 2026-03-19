@@ -27,7 +27,7 @@
 	},
 	"type": "module",
 	"scripts": {
-		"dev": "bun --hot ./src/index.ts",
+		"dev": "bun run ./src/index.ts",
 		"start": "bun ./src/index.ts",
 		"build": "bun build ./src/index.ts --outdir ./dist --target bun",
 		"lint": "oxlint",

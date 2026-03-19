@@ -1,5 +1,5 @@
-import { type Kysely, NoResultError } from "kysely";
 import { Customer } from "../../domain/entity";
+import { type Kysely, NoResultError } from "kysely";
 import { CustomerNotFoundError } from "../../domain/error";
 import type { CustomerRepository, Logger } from "../../domain/interface";
 import type { CustomerCreateDto } from "../../domain/type";
@@ -53,28 +53,6 @@ export class KyselyCustomerRepository implements CustomerRepository {
 			.info("Customer created");
 
 		return new Customer(result);
-	}
-	async findOrCreateByEmail(email: string): Promise<Customer> {
-		this.logger.withData({ email }).debug("Finding or creating customer");
-
-		try {
-			const customer = await this.findByEmail(email);
-			this.logger
-				.withData({ email, customerId: customer.customerId })
-				.debug("Existing customer found");
-			return customer;
-		} catch (error) {
-			const isNotFoundError = error instanceof CustomerNotFoundError;
-			if (!isNotFoundError) {
-				this.logger
-					.withError(error as Error)
-					.withData({ email })
-					.error("Unexpected error finding customer");
-				throw error;
-			}
-			this.logger.withData({ email }).info("Creating new customer");
-			return await this.create({ email });
-		}
 	}
 	private get kysely(): Kysely<Database> {
 		return this._deps.kysely;
