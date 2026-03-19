@@ -38,8 +38,4 @@ export class JsonRender<I = void> implements ResponseRender<I, Response> {
 	private get errorMapper(): ErrorMapper {
 		return this._deps.errorMapper;
 	}
-
-	private get logger(): Logger {
-		return this._deps.logger;
-	}
 }
