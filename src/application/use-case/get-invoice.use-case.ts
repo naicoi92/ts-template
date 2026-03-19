@@ -29,7 +29,6 @@ export class GetInvoiceUseCase implements UseCase<string, GetInvoiceOutputDto> {
 	}
 
 	private get logger(): Logger {
-		console.log(this._deps.logger);
 		return this._deps.logger;
 	}
 	private get invoiceRepository(): InvoiceRepository {
