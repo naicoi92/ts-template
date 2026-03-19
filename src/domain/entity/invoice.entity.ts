@@ -26,8 +26,7 @@ export class Invoice {
 	}
 
 	get customerId(): number {
-		if (!this._data.customerId)
-			throw new InvoiceFieldNotFoundError("customerId");
+		if (!this._data.customerId) throw new InvoiceFieldNotFoundError("customerId");
 		return this._data.customerId;
 	}
 

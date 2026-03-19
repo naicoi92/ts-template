@@ -6,11 +6,7 @@ import {
 	ServiceUnhealthyError,
 } from "../../domain/error";
 import type { Logger, ResponseRender } from "../../domain/interface";
-import {
-	InvalidJsonBodyError,
-	InvalidRequestMethodError,
-	InvalidTextBodyError,
-} from "../error";
+import { InvalidJsonBodyError, InvalidRequestMethodError, InvalidTextBodyError } from "../error";
 
 interface ErrorResponse {
 	error: {
@@ -57,11 +53,7 @@ export class JsonRender<I = void> implements ResponseRender<I, Response> {
 		},
 	) {}
 
-	data(
-		data: I,
-		statusCode: number = 200,
-		headers?: Record<string, string>,
-	): Promise<Response> {
+	data(data: I, statusCode: number = 200, headers?: Record<string, string>): Promise<Response> {
 		const response = Response.json(data, {
 			status: statusCode,
 			headers,

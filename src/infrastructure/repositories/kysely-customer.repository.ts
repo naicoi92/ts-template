@@ -22,16 +22,11 @@ export class KyselyCustomerRepository implements CustomerRepository {
 					this.logger.withData({ email }).warn("Customer not found");
 					throw new CustomerNotFoundError(email);
 				}
-				this.logger
-					.withError(error)
-					.withData({ email })
-					.error("Failed to find customer");
+				this.logger.withError(error).withData({ email }).error("Failed to find customer");
 				throw error;
 			});
 
-		this.logger
-			.withData({ email, customerId: data.customerId })
-			.debug("Customer found");
+		this.logger.withData({ email, customerId: data.customerId }).debug("Customer found");
 
 		return new Customer(data);
 	}

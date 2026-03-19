@@ -18,9 +18,7 @@ export class BunServer implements Server {
 			routes: this.routes,
 		});
 
-		this.logger
-			.withData({ port: this.port })
-			.info("Server started successfully");
+		this.logger.withData({ port: this.port }).info("Server started successfully");
 	}
 	async stop(): Promise<void> {
 		this.logger.info("Stopping server");

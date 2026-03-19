@@ -1,24 +1,13 @@
 import type z from "zod";
-import {
-	formatZodError,
-	RequestValidationError,
-} from "../../domain/error/validation.error";
-import type {
-	Handler,
-	Logger,
-	RequestHandler,
-	ResponseRender,
-} from "../../domain/interface";
+import { formatZodError, RequestValidationError } from "../../domain/error/validation.error";
+import type { Handler, Logger, RequestHandler, ResponseRender } from "../../domain/interface";
 import type { ValidationErrorSource } from "../../domain/type/validation.type";
-import {
-	InvalidJsonBodyError,
-	InvalidRequestMethodError,
-	InvalidTextBodyError,
-} from "../error";
+import { InvalidJsonBodyError, InvalidRequestMethodError, InvalidTextBodyError } from "../error";
 
-export class RequestAdapter<TResponse, TParams, TQuery, TBody>
-	implements RequestHandler<Request, Response>
-{
+export class RequestAdapter<TResponse, TParams, TQuery, TBody> implements RequestHandler<
+	Request,
+	Response
+> {
 	constructor(
 		private readonly _deps: {
 			logger: Logger;
@@ -46,11 +35,7 @@ export class RequestAdapter<TResponse, TParams, TQuery, TBody>
 				})
 				.debug("Request parsed");
 			const data = await this.handler.handle({ params, query, body });
-			const response = this.schemaParse(
-				data,
-				this.handler.responseSchema,
-				"response",
-			);
+			const response = this.schemaParse(data, this.handler.responseSchema, "response");
 			return this.render.data(response);
 		} catch (error) {
 			return this.render.error(error);
@@ -80,11 +65,7 @@ export class RequestAdapter<TResponse, TParams, TQuery, TBody>
 		const params = new URLPattern({ pathname: this.handler.pathname }).exec({
 			pathname,
 		});
-		return this.schemaParse(
-			params?.pathname.groups,
-			this.handler.paramsSchema,
-			"params",
-		);
+		return this.schemaParse(params?.pathname.groups, this.handler.paramsSchema, "params");
 	}
 
 	private async extractRequestBody(request: Request): Promise<unknown> {

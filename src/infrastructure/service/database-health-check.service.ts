@@ -13,8 +13,7 @@ export class DatabaseHealthCheckService implements HealthCheckService {
 
 	async check(): Promise<HealthStatus> {
 		try {
-			// Simple query to check database connectivity
-			await Promise.all([this.checkDatabase()]);
+			await this.checkDatabase();
 			return {
 				status: "healthy",
 				timestamp: new Date().toISOString(),
@@ -41,11 +40,7 @@ export class DatabaseHealthCheckService implements HealthCheckService {
 	}
 	private async checkDatabase() {
 		try {
-			await this.kysely
-				.selectFrom("invoices")
-				.select("invoiceId")
-				.limit(1)
-				.execute();
+			await this.kysely.selectFrom("invoices").select("invoiceId").limit(1).execute();
 		} catch (error) {
 			throw new HealthCheckDependencyError("database", error);
 		}

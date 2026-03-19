@@ -3,9 +3,7 @@ import { z } from "zod";
 import { RequestAdapter } from "../../../src/presentation/adapter/request.adapter";
 import type { Handler, ResponseRender } from "../../../src/domain/interface";
 import { createMockLogger } from "../../mocks/index";
-import {
-	RequestValidationError,
-} from "../../../src/domain/error";
+import { RequestValidationError } from "../../../src/domain/error";
 import {
 	InvalidJsonBodyError,
 	InvalidRequestMethodError,
@@ -21,15 +19,19 @@ interface MockResponseRender<TResponse> extends ResponseRender<TResponse, Respon
 function createMockResponseRender<TResponse>(): MockResponseRender<TResponse> {
 	return {
 		data: mock<(data: TResponse) => Promise<Response>>((data) => {
-			return Promise.resolve(new Response(JSON.stringify(data), {
-				headers: { "Content-Type": "application/json" },
-			}));
+			return Promise.resolve(
+				new Response(JSON.stringify(data), {
+					headers: { "Content-Type": "application/json" },
+				}),
+			);
 		}),
 		error: mock<(error: unknown) => Promise<Response>>((error) => {
-			return Promise.resolve(new Response(JSON.stringify({ error: String(error) }), {
-				status: 500,
-				headers: { "Content-Type": "application/json" },
-			}));
+			return Promise.resolve(
+				new Response(JSON.stringify({ error: String(error) }), {
+					status: 500,
+					headers: { "Content-Type": "application/json" },
+				}),
+			);
 		}),
 		created: mock<(data: TResponse, headers?: Record<string, string>) => Promise<Response>>(
 			(data, headers) => {
@@ -52,20 +54,23 @@ function createMockResponseRender<TResponse>(): MockResponseRender<TResponse> {
 	};
 }
 
-interface MockHandler<TResponse, TParams, TQuery, TBody> extends Handler<TResponse, TParams, TQuery, TBody> {
+interface MockHandler<TResponse, TParams, TQuery, TBody> extends Handler<
+	TResponse,
+	TParams,
+	TQuery,
+	TBody
+> {
 	handle: ReturnType<typeof mock>;
 }
 
-function createMockHandler<TResponse, TParams, TQuery, TBody>(
-	options: {
-		pathname: string;
-		method: string;
-		paramsSchema?: z.ZodSchema<TParams>;
-		querySchema?: z.ZodSchema<TQuery>;
-		bodySchema?: z.ZodSchema<TBody>;
-		responseSchema?: z.ZodSchema<TResponse>;
-	},
-): MockHandler<TResponse, TParams, TQuery, TBody> {
+function createMockHandler<TResponse, TParams, TQuery, TBody>(options: {
+	pathname: string;
+	method: string;
+	paramsSchema?: z.ZodSchema<TParams>;
+	querySchema?: z.ZodSchema<TQuery>;
+	bodySchema?: z.ZodSchema<TBody>;
+	responseSchema?: z.ZodSchema<TResponse>;
+}): MockHandler<TResponse, TParams, TQuery, TBody> {
 	return {
 		pathname: options.pathname,
 		method: options.method,
@@ -150,7 +155,12 @@ describe("RequestAdapter", () => {
 	describe("Body parsing", () => {
 		test("should parse JSON body and call handler with parsed data", async () => {
 			const bodySchema = z.object({ name: z.string(), amount: z.number() });
-			const mockBodyHandler = createMockHandler<{ id: string }, void, void, { name: string; amount: number }>({
+			const mockBodyHandler = createMockHandler<
+				{ id: string },
+				void,
+				void,
+				{ name: string; amount: number }
+			>({
 				pathname: "/invoices",
 				method: "POST",
 				bodySchema,
@@ -177,11 +187,13 @@ describe("RequestAdapter", () => {
 
 		test("should call render.error() when JSON body is invalid", async () => {
 			const bodySchema = z.object({ name: z.string() });
-			const mockBodyHandler = createMockHandler<{ id: string }, void, void, { name: string }>({
-				pathname: "/invoices",
-				method: "POST",
-				bodySchema,
-			});
+			const mockBodyHandler = createMockHandler<{ id: string }, void, void, { name: string }>(
+				{
+					pathname: "/invoices",
+					method: "POST",
+					bodySchema,
+				},
+			);
 			const bodyRender = createMockResponseRender<{ id: string }>();
 			const bodyAdapter = new RequestAdapter({
 				logger,
@@ -204,11 +216,13 @@ describe("RequestAdapter", () => {
 
 		test("should call render.error() when body validation fails for empty string", async () => {
 			const bodySchema = z.object({ name: z.string().min(1) });
-			const mockBodyHandler = createMockHandler<{ id: string }, void, void, { name: string }>({
-				pathname: "/invoices",
-				method: "POST",
-				bodySchema,
-			});
+			const mockBodyHandler = createMockHandler<{ id: string }, void, void, { name: string }>(
+				{
+					pathname: "/invoices",
+					method: "POST",
+					bodySchema,
+				},
+			);
 			const bodyRender = createMockResponseRender<{ id: string }>();
 			const bodyAdapter = new RequestAdapter({
 				logger,
@@ -231,7 +245,12 @@ describe("RequestAdapter", () => {
 
 		test("should parse form-urlencoded body", async () => {
 			const bodySchema = z.object({ email: z.string(), name: z.string() });
-			const mockBodyHandler = createMockHandler<{ id: string }, void, void, { email: string; name: string }>({
+			const mockBodyHandler = createMockHandler<
+				{ id: string },
+				void,
+				void,
+				{ email: string; name: string }
+			>({
 				pathname: "/forms",
 				method: "POST",
 				bodySchema,
@@ -267,7 +286,12 @@ describe("RequestAdapter", () => {
 				page: z.coerce.number(),
 				limit: z.coerce.number(),
 			});
-			const mockQueryHandler = createMockHandler<{ id: string }, void, { page: number; limit: number }, void>({
+			const mockQueryHandler = createMockHandler<
+				{ id: string },
+				void,
+				{ page: number; limit: number },
+				void
+			>({
 				pathname: "/invoices",
 				method: "GET",
 				querySchema,
@@ -278,7 +302,9 @@ describe("RequestAdapter", () => {
 				render: createMockResponseRender(),
 			});
 
-			const request = new Request("http://localhost/invoices?page=2&limit=10", { method: "GET" });
+			const request = new Request("http://localhost/invoices?page=2&limit=10", {
+				method: "GET",
+			});
 			await queryAdapter.handle(request);
 
 			expect(mockQueryHandler.handle).toHaveBeenCalledTimes(1);
@@ -290,7 +316,12 @@ describe("RequestAdapter", () => {
 			const querySchema = z.object({
 				page: z.coerce.number().min(1),
 			});
-			const mockQueryHandler = createMockHandler<{ id: string }, void, { page: number }, void>({
+			const mockQueryHandler = createMockHandler<
+				{ id: string },
+				void,
+				{ page: number },
+				void
+			>({
 				pathname: "/invoices",
 				method: "GET",
 				querySchema,
@@ -314,18 +345,23 @@ describe("RequestAdapter", () => {
 	describe("Params parsing", () => {
 		test("should parse path parameters and call handler with parsed data", async () => {
 			const paramsSchema = z.object({ id: z.string().uuid() });
-			const mockParamsHandler = createMockHandler<{ id: string }, { id: string }, void, void>({
-				pathname: "/invoices/:id",
-				method: "GET",
-				paramsSchema,
-			});
+			const mockParamsHandler = createMockHandler<{ id: string }, { id: string }, void, void>(
+				{
+					pathname: "/invoices/:id",
+					method: "GET",
+					paramsSchema,
+				},
+			);
 			const paramsAdapter = new RequestAdapter({
 				logger,
 				handler: mockParamsHandler,
 				render: createMockResponseRender(),
 			});
 
-			const request = new Request("http://localhost/invoices/550e8400-e29b-41d4-a716-446655440000", { method: "GET" });
+			const request = new Request(
+				"http://localhost/invoices/550e8400-e29b-41d4-a716-446655440000",
+				{ method: "GET" },
+			);
 			await paramsAdapter.handle(request);
 
 			expect(mockParamsHandler.handle).toHaveBeenCalledTimes(1);
@@ -335,11 +371,13 @@ describe("RequestAdapter", () => {
 
 		test("should call render.error() when params validation fails", async () => {
 			const paramsSchema = z.object({ id: z.string().uuid() });
-			const mockParamsHandler = createMockHandler<{ id: string }, { id: string }, void, void>({
-				pathname: "/invoices/:id",
-				method: "GET",
-				paramsSchema,
-			});
+			const mockParamsHandler = createMockHandler<{ id: string }, { id: string }, void, void>(
+				{
+					pathname: "/invoices/:id",
+					method: "GET",
+					paramsSchema,
+				},
+			);
 			const paramsRender = createMockResponseRender<{ id: string }>();
 			const paramsAdapter = new RequestAdapter({
 				logger,
@@ -347,7 +385,9 @@ describe("RequestAdapter", () => {
 				render: paramsRender,
 			});
 
-			const request = new Request("http://localhost/invoices/invalid-uuid", { method: "GET" });
+			const request = new Request("http://localhost/invoices/invalid-uuid", {
+				method: "GET",
+			});
 			await paramsAdapter.handle(request);
 
 			expect(paramsRender.error).toHaveBeenCalledTimes(1);
@@ -362,7 +402,12 @@ describe("RequestAdapter", () => {
 				id: z.string(),
 				status: z.enum(["pending", "paid", "cancelled"]),
 			});
-			const mockValidHandler = createMockHandler<{ id: string; status: string }, void, void, void>({
+			const mockValidHandler = createMockHandler<
+				{ id: string; status: string },
+				void,
+				void,
+				void
+			>({
 				pathname: "/invoices",
 				method: "GET",
 				responseSchema,
@@ -387,13 +432,21 @@ describe("RequestAdapter", () => {
 				id: z.string(),
 				status: z.enum(["pending", "paid", "cancelled"]),
 			});
-			const mockInvalidHandler = createMockHandler<{ id: string; status: string }, void, void, void>({
+			const mockInvalidHandler = createMockHandler<
+				{ id: string; status: string },
+				void,
+				void,
+				void
+			>({
 				pathname: "/invoices",
 				method: "GET",
 				responseSchema,
 			});
 			mockInvalidHandler.handle.mockImplementation(() =>
-				Promise.resolve({ id: "INV-001", status: "invalid-status" as unknown as "pending" }),
+				Promise.resolve({
+					id: "INV-001",
+					status: "invalid-status" as unknown as "pending",
+				}),
 			);
 			const invalidRender = createMockResponseRender<{ id: string; status: string }>();
 			const invalidAdapter = new RequestAdapter({

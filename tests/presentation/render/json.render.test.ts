@@ -1,8 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-	InvoiceNotFoundError,
-	RequestValidationError,
-} from "../../../src/domain/error";
+import { InvoiceNotFoundError, RequestValidationError } from "../../../src/domain/error";
 import { JsonRender } from "../../../src/presentation/render";
 import { InvalidRequestMethodError } from "../../../src/presentation/error";
 import { createMockLogger } from "../../mocks";
@@ -20,11 +17,7 @@ describe("JsonRender", () => {
 	test("supports status code and optional headers on data", async () => {
 		const render = new JsonRender<{ id: string }>({ logger: createMockLogger() });
 
-		const response = await render.data(
-			{ id: "INV-001" },
-			202,
-			{ "X-Request-Id": "req-1" },
-		);
+		const response = await render.data({ id: "INV-001" }, 202, { "X-Request-Id": "req-1" });
 
 		expect(response.status).toBe(202);
 		expect(response.headers.get("X-Request-Id")).toBe("req-1");
@@ -34,10 +27,7 @@ describe("JsonRender", () => {
 	test("supports created helper", async () => {
 		const render = new JsonRender<{ id: string }>({ logger: createMockLogger() });
 
-		const response = await render.created(
-			{ id: "INV-001" },
-			{ "X-Created": "true" },
-		);
+		const response = await render.created({ id: "INV-001" }, { "X-Created": "true" });
 
 		expect(response.status).toBe(201);
 		expect(response.headers.get("X-Created")).toBe("true");

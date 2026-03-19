@@ -1,10 +1,5 @@
 import { fromPairs, keys, map } from "lodash-es";
-import type {
-	Handler,
-	Logger,
-	RequestHandler,
-	ResponseRender,
-} from "../../domain/interface";
+import type { Handler, Logger, RequestHandler, ResponseRender } from "../../domain/interface";
 import { RequestAdapter } from "../adapter";
 import { JsonRender } from "../render";
 

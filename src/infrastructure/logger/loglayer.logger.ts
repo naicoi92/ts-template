@@ -34,16 +34,20 @@ export class LogLayerLogger implements Logger {
 		this.logBuilder.error(message);
 	}
 
-	withData(metadata: Record<string, unknown>): Logger {
+	withTraceId(prefix: string): Logger {
 		return new LogLayerLogger(this.deps).withLogBuilder(
-			this.logLayer.withMetadata(metadata),
+			this.logLayer.withContext({
+				traceId: `${prefix}-${Date.now()}`,
+			}),
 		);
 	}
 
+	withData(metadata: Record<string, unknown>): Logger {
+		return new LogLayerLogger(this.deps).withLogBuilder(this.logLayer.withMetadata(metadata));
+	}
+
 	withError(error: Error): Logger {
-		return new LogLayerLogger(this.deps).withLogBuilder(
-			this.logLayer.withError(error),
-		);
+		return new LogLayerLogger(this.deps).withLogBuilder(this.logLayer.withError(error));
 	}
 
 	withLogBuilder(logBuilder: ILogBuilder) {

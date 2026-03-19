@@ -34,35 +34,35 @@ This template provides a solid foundation for building scalable, maintainable ba
 
 1. **Use this template**
 
-   Click the "Use this template" button on GitHub or:
+    Click the "Use this template" button on GitHub or:
 
-   ```bash
-   # Using degit (recommended)
-   npx degit yourusername/bun-clean-architecture-starter my-project
-   
-   # Or clone directly
-   git clone https://github.com/yourusername/bun-clean-architecture-starter.git my-project
-   cd my-project
-   ```
+    ```bash
+    # Using degit (recommended)
+    npx degit yourusername/bun-clean-architecture-starter my-project
+
+    # Or clone directly
+    git clone https://github.com/yourusername/bun-clean-architecture-starter.git my-project
+    cd my-project
+    ```
 
 2. **Install dependencies**
 
-   ```bash
-   bun install
-   ```
+    ```bash
+    bun install
+    ```
 
 3. **Configure environment**
 
-   ```bash
-   cp .env.example .env
-   # Edit .env with your database credentials
-   ```
+    ```bash
+    cp .env.example .env
+    # Edit .env with your database credentials
+    ```
 
 4. **Run development server**
 
-   ```bash
-   bun run dev
-   ```
+    ```bash
+    bun run dev
+    ```
 
 ## 📁 Project Structure
 
@@ -100,18 +100,18 @@ src/
 
 ## 🛠️ Available Scripts
 
-| Script | Description |
-|--------|-------------|
-| `bun run dev` | Start development server with hot reload |
-| `bun run start` | Start production server |
-| `bun run build` | Build for production |
-| `bun run lint` | Run Biome linter |
-| `bun run lint:fix` | Fix linting issues |
-| `bun run format` | Format code with Biome |
-| `bun run typecheck` | Run TypeScript type checking |
-| `bun run test` | Run tests |
-| `bun run test:watch` | Run tests in watch mode |
-| `bun run clean` | Clean build artifacts |
+| Script               | Description                              |
+| -------------------- | ---------------------------------------- |
+| `bun run dev`        | Start development server with hot reload |
+| `bun run start`      | Start production server                  |
+| `bun run build`      | Build for production                     |
+| `bun run lint`       | Run Biome linter                         |
+| `bun run lint:fix`   | Fix linting issues                       |
+| `bun run format`     | Format code with Biome                   |
+| `bun run typecheck`  | Run TypeScript type checking             |
+| `bun run test`       | Run tests                                |
+| `bun run test:watch` | Run tests in watch mode                  |
+| `bun run clean`      | Clean build artifacts                    |
 
 ## 📝 Key Patterns
 
@@ -122,15 +122,17 @@ Entities are rich domain objects with validation:
 ```typescript
 // src/domain/entity/invoice.entity.ts
 export class Invoice {
-  constructor(private _data: InvoiceDto) {
-    this.validate();
-  }
-  
-  private validate() {
-    if (!this._data.orderId) throw new Error("orderId required");
-  }
-  
-  get id() { return this._data.id; }
+	constructor(private _data: InvoiceDto) {
+		this.validate();
+	}
+
+	private validate() {
+		if (!this._data.orderId) throw new Error("orderId required");
+	}
+
+	get id() {
+		return this._data.id;
+	}
 }
 ```
 
@@ -141,8 +143,8 @@ Define contracts in domain layer, implement in infrastructure:
 ```typescript
 // src/domain/interface/invoice-repository.interface.ts
 export interface InvoiceRepository {
-  findByOrderId(orderId: string): Promise<Invoice | null>;
-  create(data: InvoiceCreateDto): Promise<Invoice>;
+	findByOrderId(orderId: string): Promise<Invoice | null>;
+	create(data: InvoiceCreateDto): Promise<Invoice>;
 }
 ```
 
@@ -151,9 +153,9 @@ export interface InvoiceRepository {
 Constructor injection with Awilix:
 
 ```typescript
-constructor(private _deps: { 
-  logger: Logger; 
-  repo: Repository 
+constructor(private _deps: {
+  logger: Logger;
+  repo: Repository
 }) {}
 
 private get logger() { return this._deps.logger; }
@@ -166,10 +168,10 @@ Environment variables are validated with Zod:
 ```typescript
 // src/domain/schema/env.schema.ts
 export const EnvSchema = z.object({
-  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
-  PORT: z.string().transform(Number).default(4001),
-  DATABASE_URL: z.string(),
-  LOG_LEVEL: z.enum(LogLevel).default(LogLevel.INFO),
+	NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+	PORT: z.string().transform(Number).default(4001),
+	DATABASE_URL: z.string(),
+	LOG_LEVEL: z.enum(LogLevel).default(LogLevel.INFO),
 });
 ```
 

@@ -16,89 +16,96 @@ infrastructure/
 
 ## WHERE TO LOOK
 
-| Task | Location |
-|------|----------|
-| Add DB table | `database/types.ts` - add to Database interface |
-| Implement repository | `repositories/kysely-*.repository.ts` |
-| Configure logging | `logger/loglayer.logger.ts` |
-| Add env variable | `domain/schema/env.schema.ts` + `config/app.config.ts` |
-| Change server config | `server/bun.server.ts` |
-| Add infra service | `service/*.service.ts` |
+| Task                 | Location                                               |
+| -------------------- | ------------------------------------------------------ |
+| Add DB table         | `database/types.ts` - add to Database interface        |
+| Implement repository | `repositories/kysely-*.repository.ts`                  |
+| Configure logging    | `logger/loglayer.logger.ts`                            |
+| Add env variable     | `domain/schema/env.schema.ts` + `config/app.config.ts` |
+| Change server config | `server/bun.server.ts`                                 |
+| Add infra service    | `service/*.service.ts`                                 |
 
 ## PATTERNS
 
 ### Repository Implementation
+
 ```typescript
 // repositories/kysely-invoice.repository.ts
 export class KyselyInvoiceRepository implements InvoiceRepository {
-  constructor(private _deps: { kysely: Kysely<Database>; logger: Logger }) {}
+	constructor(private _deps: { kysely: Kysely<Database>; logger: Logger }) {}
 
-  async findByOrderId(orderId: string): Promise<Invoice> { // NOT null!
-    const data = await this.kysely
-      .selectFrom("invoices")
-      .where("orderId", "=", orderId)
-      .selectAll()
-      .executeTakeFirstOrThrow()
-      .catch((error) => {
-        if (error instanceof NoResultError) {
-          throw new InvoiceNotFoundError(orderId);
-        }
-        throw error;
-      });
-    return new Invoice(data);
-  }
+	async findByOrderId(orderId: string): Promise<Invoice> {
+		// NOT null!
+		const data = await this.kysely
+			.selectFrom("invoices")
+			.where("orderId", "=", orderId)
+			.selectAll()
+			.executeTakeFirstOrThrow()
+			.catch((error) => {
+				if (error instanceof NoResultError) {
+					throw new InvoiceNotFoundError(orderId);
+				}
+				throw error;
+			});
+		return new Invoice(data);
+	}
 }
 ```
 
 ### Kysely Database
+
 ```typescript
 // database/kysely.ts
 export class KyselyDatabase extends Kysely<Database> {
-  constructor(readonly _deps: { config: Config; logger: Logger }) {
-    super({ 
-      dialect: new KyselyPostgresDialect({ config }), 
-      log: ["error", "query"] 
-    });
-  }
+	constructor(readonly _deps: { config: Config; logger: Logger }) {
+		super({
+			dialect: new KyselyPostgresDialect({ config }),
+			log: ["error", "query"],
+		});
+	}
 }
 ```
 
 ### Config (Direct Zod Parsing)
+
 ```typescript
 // config/app.config.ts
 export class AppConfig implements Config {
-  #envConfig: EnvConfigDto;
-  constructor() {
-    this.#envConfig = EnvSchema.parse(process.env); // Direct Zod parsing
-  }
-  get server(): ServerConfig { return { port: this.#envConfig.PORT }; }
+	#envConfig: EnvConfigDto;
+	constructor() {
+		this.#envConfig = EnvSchema.parse(process.env); // Direct Zod parsing
+	}
+	get server(): ServerConfig {
+		return { port: this.#envConfig.PORT };
+	}
 }
 ```
 
 ### Server Pattern
+
 ```typescript
 // server/bun.server.ts
 export class BunServer implements Server {
-  constructor(private _deps: { config: Config; logger: Logger; routes: BunRoutes }) {}
+	constructor(private _deps: { config: Config; logger: Logger; routes: BunRoutes }) {}
 
-  async start(): Promise<void> {
-    this.#server = Bun.serve({
-      port: this.config.server.port,
-      routes: this.routes.routes, // From BunRoutes
-    });
-  }
+	async start(): Promise<void> {
+		this.#server = Bun.serve({
+			port: this.config.server.port,
+			routes: this.routes.routes, // From BunRoutes
+		});
+	}
 }
 ```
 
 ## DEPENDENCIES
 
-| Package | Purpose |
-|---------|---------|
-| `kysely` | Type-safe SQL query builder |
-| `pg` | Postgres driver (used by Kysely dialect) |
-| `loglayer` | Structured logging abstraction |
-| `pino` / `pino-pretty` | Log transport |
-| `awilix` | DI container (registered in `container/register.ts`) |
+| Package                | Purpose                                              |
+| ---------------------- | ---------------------------------------------------- |
+| `kysely`               | Type-safe SQL query builder                          |
+| `pg`                   | Postgres driver (used by Kysely dialect)             |
+| `loglayer`             | Structured logging abstraction                       |
+| `pino` / `pino-pretty` | Log transport                                        |
+| `awilix`               | DI container (registered in `container/register.ts`) |
 
 ## RULES
 

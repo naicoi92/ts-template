@@ -1,9 +1,4 @@
-import type {
-	Config,
-	DatabaseConfig,
-	LogConfig,
-	ServerConfig,
-} from "../../domain/interface";
+import type { Config, DatabaseConfig, LogConfig, ServerConfig } from "../../domain/interface";
 import { EnvSchema } from "../../domain/schema";
 import type { EnvConfigDto } from "../../domain/type";
 

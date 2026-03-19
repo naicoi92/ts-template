@@ -25,6 +25,7 @@ describe("CreateInvoiceUseCase", () => {
 		useCase = new CreateInvoiceUseCase({
 			logger,
 			invoiceRepository: invoiceRepo,
+			customerRepository: customerRepo,
 			invoiceCodeGenerator: codeGenerator,
 		});
 	});
@@ -46,10 +47,9 @@ describe("CreateInvoiceUseCase", () => {
 			invoiceRepo.seedInvoice(existingInvoice);
 
 			const input = {
+				email: "existing@example.com",
 				orderId: existingData.orderId!,
 				amount: existingData.amount!,
-				code: existingData.code!,
-				customerId: existingData.customerId!,
 			};
 
 			const result = await useCase.execute(input);
@@ -65,10 +65,9 @@ describe("CreateInvoiceUseCase", () => {
 			invoiceRepo.seedInvoice(existingInvoice);
 
 			const input = {
+				email: "existing@example.com",
 				orderId: existingData.orderId!,
 				amount: existingData.amount! + 1000,
-				code: existingData.code!,
-				customerId: existingData.customerId!,
 			};
 
 			await expect(useCase.execute(input)).rejects.toThrow(InvoiceAmountMisMatch);
@@ -82,10 +81,9 @@ describe("CreateInvoiceUseCase", () => {
 			codeGenerator.setCodes(["CUSTOM-CODE-123"]);
 
 			const input = {
+				email: "existing@example.com",
 				orderId: existingData.orderId!,
 				amount: existingData.amount!,
-				code: existingData.code!,
-				customerId: existingData.customerId!,
 			};
 
 			const result = await useCase.execute(input);

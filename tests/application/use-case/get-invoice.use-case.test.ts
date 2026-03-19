@@ -2,11 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { Invoice } from "../../../src/domain/entity";
 import { InvoiceNotFoundError } from "../../../src/domain/error";
 import { GetInvoiceUseCase } from "../../../src/application/use-case/get-invoice.use-case";
-import {
-	createMockInvoiceRepository,
-	createMockLogger,
-	resetAllMocks,
-} from "../../mocks/index.ts";
+import { createMockInvoiceRepository, createMockLogger, resetAllMocks } from "../../mocks/index.ts";
 import { createMockCustomerRepository, createMockInvoiceCodeGenerator } from "../../mocks/index.ts";
 import { invoiceFixtures } from "../../fixtures";
 

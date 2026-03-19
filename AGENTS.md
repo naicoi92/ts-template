@@ -27,22 +27,23 @@ qr-payment/
 
 ## WHERE TO LOOK
 
-| Task | Location | Notes |
-|------|----------|-------|
-| Add business entity | `src/domain/entity/` | Extend Entity pattern, getters throw `*FieldNotFoundError` |
-| Add repository interface | `src/domain/interface/` | Define contract, impl in `infrastructure/repositories/` |
-| Add use case | `src/application/use-case/` | Orchestrate domain objects |
-| Add HTTP endpoint | `src/presentation/handler/` + `src/presentation/routes/` | Handler declares pathname/method, routes wires them |
-| Change DB query | `src/infrastructure/repositories/` | Kysely implementation |
-| Add config | `src/domain/schema/env.schema.ts` + `src/infrastructure/config/` | Zod env schema + AppConfig |
-| Register new dependency | `src/container/register.ts` | Use `asClass()` or `asFunction()` |
-| Add tests | `tests/` | Mirror src structure, use mocks/fixtures |
-| Add mock | `tests/mocks/` | Create mock implementing domain interface |
-| Add fixture | `tests/fixtures/` | Test data builders |
+| Task                     | Location                                                         | Notes                                                      |
+| ------------------------ | ---------------------------------------------------------------- | ---------------------------------------------------------- |
+| Add business entity      | `src/domain/entity/`                                             | Extend Entity pattern, getters throw `*FieldNotFoundError` |
+| Add repository interface | `src/domain/interface/`                                          | Define contract, impl in `infrastructure/repositories/`    |
+| Add use case             | `src/application/use-case/`                                      | Orchestrate domain objects                                 |
+| Add HTTP endpoint        | `src/presentation/handler/` + `src/presentation/routes/`         | Handler declares pathname/method, routes wires them        |
+| Change DB query          | `src/infrastructure/repositories/`                               | Kysely implementation                                      |
+| Add config               | `src/domain/schema/env.schema.ts` + `src/infrastructure/config/` | Zod env schema + AppConfig                                 |
+| Register new dependency  | `src/container/register.ts`                                      | Use `asClass()` or `asFunction()`                          |
+| Add tests                | `tests/`                                                         | Mirror src structure, use mocks/fixtures                   |
+| Add mock                 | `tests/mocks/`                                                   | Create mock implementing domain interface                  |
+| Add fixture              | `tests/fixtures/`                                                | Test data builders                                         |
 
 ## CONVENTIONS
 
 ### File Naming
+
 - `*.interface.ts` - Domain interfaces (e.g., `logger.interface.ts`)
 - `*.type.ts` - Type aliases and DTOs (e.g., `invoice.type.ts`)
 - `*.schema.ts` - Zod schemas (e.g., `invoice.schema.ts`)
@@ -55,6 +56,7 @@ qr-payment/
 - File names: kebab-case | Classes: PascalCase | Properties: camelCase
 
 ### Dependency Injection Pattern
+
 ```typescript
 // Constructor receives _deps object, private getters expose dependencies
 constructor(private _deps: { logger: Logger; repo: Repository }) {}
@@ -62,19 +64,21 @@ private get logger() { return this._deps.logger; }
 ```
 
 ### Entity Pattern
+
 ```typescript
 // Entities accept partial DTOs, getters enforce required fields
 export class Invoice {
-  constructor(private _data: InvoiceSelectDto) {} // No validate() call
-  
-  get invoiceId(): number {
-    if (!this._data.invoiceId) throw new InvoiceFieldNotFoundError("invoiceId");
-    return this._data.invoiceId;
-  }
+	constructor(private _data: InvoiceSelectDto) {} // No validate() call
+
+	get invoiceId(): number {
+		if (!this._data.invoiceId) throw new InvoiceFieldNotFoundError("invoiceId");
+		return this._data.invoiceId;
+	}
 }
 ```
 
 ### TypeScript Config
+
 - `module: Preserve`, `moduleResolution: bundler` - Bundler-optimized
 - `verbatimModuleSyntax: true` - Preserve import syntax
 - `noEmit: true` - Type-check only
@@ -82,20 +86,21 @@ export class Invoice {
 - `noUnusedLocals: false` / `noUnusedParameters: false` - Intentionally relaxed
 
 ### Formatting (Biome)
+
 - Indent: tabs
 - Quotes: double
 - Organize imports: auto
 
 ## ANTI-PATTERNS (THIS PROJECT)
 
-| Pattern | Reason |
-|---------|--------|
-| `as any` / `@ts-ignore` | Never suppress types |
-| Express/Fastify | Use `Bun.serve()` only |
-| `dotenv` package | Bun auto-loads `.env` |
-| `node:*` imports | Use Bun APIs (`bun:sqlite`, `Bun.file`, `Bun.$`) |
-| `ioredis` | Use `Bun.redis` |
-| `pg` client directly | Use Kysely abstraction |
+| Pattern                 | Reason                                           |
+| ----------------------- | ------------------------------------------------ |
+| `as any` / `@ts-ignore` | Never suppress types                             |
+| Express/Fastify         | Use `Bun.serve()` only                           |
+| `dotenv` package        | Bun auto-loads `.env`                            |
+| `node:*` imports        | Use Bun APIs (`bun:sqlite`, `Bun.file`, `Bun.$`) |
+| `ioredis`               | Use `Bun.redis`                                  |
+| `pg` client directly    | Use Kysely abstraction                           |
 
 ## COMMANDS
 

@@ -1,6 +1,14 @@
 export { MockLogger, createMockLogger } from "./logger.mock";
-export { MockCustomerRepository, MockInvoiceRepository, createMockCustomerRepository, createMockInvoiceRepository } from "./repository.mock";
-export { MockInvoiceCodeGenerator, createMockInvoiceCodeGenerator } from "./invoice-code-generator.mock";
+export {
+	MockCustomerRepository,
+	MockInvoiceRepository,
+	createMockCustomerRepository,
+	createMockInvoiceRepository,
+} from "./repository.mock";
+export {
+	MockInvoiceCodeGenerator,
+	createMockInvoiceCodeGenerator,
+} from "./invoice-code-generator.mock";
 export { MockConfig, createMockConfig } from "./config.mock";
 
 import type { MockLogger } from "./logger.mock";

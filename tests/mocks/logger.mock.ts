@@ -73,9 +73,7 @@ export class MockLogger implements Logger {
 	}
 
 	hasLog(level: string, message: string): boolean {
-		return this.logs.some(
-			(log) => log.level === level && log.message.includes(message),
-		);
+		return this.logs.some((log) => log.level === level && log.message.includes(message));
 	}
 }
 

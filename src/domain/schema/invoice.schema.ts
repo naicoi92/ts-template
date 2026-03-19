@@ -20,9 +20,17 @@ export const InvoiceCreateDtoSchema = InvoiceSchema.pick({
 	orderId: true,
 	amount: true,
 });
+
 export const InvoiceParamsDtoSchema = InvoiceSchema.pick({
 	orderId: true,
 });
 
-export const GetInvoiceResponseSchema = z.object({});
-export const CreateInvoiceResponseSchema = z.object({});
+export const GetInvoiceOutputDtoSchema = z.object({});
+
+export const CreateInvoiceInputDtoSchema = z.object({
+	email: z.email(),
+	orderId: z.string(),
+	amount: z.number(),
+});
+
+export const CreateInvoiceOutputDtoSchema = z.object({});

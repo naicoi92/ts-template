@@ -22,16 +22,11 @@ export class KyselyInvoiceRepository implements InvoiceRepository {
 					this.logger.withData({ orderId }).warn("Invoice not found");
 					throw new InvoiceNotFoundError(orderId);
 				}
-				this.logger
-					.withError(error)
-					.withData({ orderId })
-					.error("Failed to find invoice");
+				this.logger.withError(error).withData({ orderId }).error("Failed to find invoice");
 				throw error;
 			});
 
-		this.logger
-			.withData({ orderId, invoiceId: data.invoiceId })
-			.debug("Invoice found");
+		this.logger.withData({ orderId, invoiceId: data.invoiceId }).debug("Invoice found");
 
 		return new Invoice(data);
 	}

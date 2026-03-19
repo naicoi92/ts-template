@@ -32,8 +32,7 @@ export const invoiceFixtures = {
 
 export const invoiceCreateFixtures = {
 	valid: () => ({
-		code: "INV-NEW-001",
-		customerId: 1,
+		email: "new@example.com",
 		orderId: "ORDER-NEW",
 		amount: 75000,
 	}),
