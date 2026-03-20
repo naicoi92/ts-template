@@ -1,7 +1,7 @@
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-03-03
-**Commit:** effa4dd
+**Generated:** 2026-03-20
+**Commit:** 8fc32a6
 **Branch:** main
 
 ## OVERVIEW
@@ -19,7 +19,7 @@ qr-payment/
 │   ├── presentation/    # HTTP layer (handlers, adapters, routes, render)
 │   └── container/       # DI container registration
 ├── tests/               # Test suites (mirrors src structure)
-├── biome.json           # Linting + formatting (Biome)
+├── oxlint.json          # Linting config (Oxlint)
 ├── tsconfig.json        # TypeScript strict mode, bundler resolution
 ├── Taskfile.yml         # Task runner (build, test, lint commands)
 └── package.json         # Dependencies
@@ -44,52 +44,26 @@ qr-payment/
 
 ### File Naming
 
-- `*.interface.ts` - Domain interfaces (e.g., `logger.interface.ts`)
-- `*.type.ts` - Type aliases and DTOs (e.g., `invoice.type.ts`)
-- `*.schema.ts` - Zod schemas (e.g., `invoice.schema.ts`)
-- `*.entity.ts` - Domain entities (e.g., `invoice.entity.ts`)
-- `*.handler.ts` - Request handlers (e.g., `create-invoice.handler.ts`)
-- `*.adapter.ts` - Request adapters (e.g., `request.adapter.ts`)
-- `*.render.ts` - Response renderers (e.g., `json.render.ts`)
-- `*.use-case.ts` - Application use cases
-- `*.repository.ts` - Repository implementations
-- File names: kebab-case | Classes: PascalCase | Properties: camelCase
+- `*.interface.ts` - Domain interfaces | `*.type.ts` - DTOs | `*.schema.ts` - Zod schemas
+- `*.entity.ts` - Domain entities | `*.handler.ts` - HTTP handlers | `*.use-case.ts` - Use cases
+- `*.repository.ts` - Repository impls | `*.adapter.ts` - Request adapters | `*.render.ts` - Response renderers
+- kebab-case files | PascalCase classes | camelCase properties
 
-### Dependency Injection Pattern
+### Core Patterns (see child AGENTS.md for details)
 
-```typescript
-// Constructor receives _deps object, private getters expose dependencies
-constructor(private _deps: { logger: Logger; repo: Repository }) {}
-private get logger() { return this._deps.logger; }
-```
+| Pattern | Location | Key Points |
+|---------|----------|------------|
+| Entity | `src/domain/AGENTS.md` | Partial DTOs, getters throw `*FieldNotFoundError` |
+| Repository | `src/domain/AGENTS.md` | Interface in domain, impl in infrastructure |
+| Use Case | `src/application/AGENTS.md` | Implements `UseCase<I, O>`, orchestrates domain |
+| Handler | `src/presentation/AGENTS.md` | Returns typed data, NOT Response object |
+| DI | All layers | `constructor(private _deps: {...}) {}` + private getters |
 
-### Entity Pattern
+### TypeScript & Formatting
 
-```typescript
-// Entities accept partial DTOs, getters enforce required fields
-export class Invoice {
-	constructor(private _data: InvoiceSelectDto) {} // No validate() call
-
-	get invoiceId(): number {
-		if (!this._data.invoiceId) throw new InvoiceFieldNotFoundError("invoiceId");
-		return this._data.invoiceId;
-	}
-}
-```
-
-### TypeScript Config
-
-- `module: Preserve`, `moduleResolution: bundler` - Bundler-optimized
-- `verbatimModuleSyntax: true` - Preserve import syntax
-- `noEmit: true` - Type-check only
-- `strict: true` + `noUncheckedIndexedAccess: true`
-- `noUnusedLocals: false` / `noUnusedParameters: false` - Intentionally relaxed
-
-### Formatting (Biome)
-
-- Indent: tabs
-- Quotes: double
-- Organize imports: auto
+- `strict: true` + `noUncheckedIndexedAccess: true` | `noEmit: true`
+- `module: Preserve` | `moduleResolution: bundler` | `verbatimModuleSyntax: true`
+- Oxlint/oxfmt: tabs indent, double quotes
 
 ## ANTI-PATTERNS (THIS PROJECT)
 
@@ -117,8 +91,8 @@ bun test <file>                 # Run specific test
 bun build ./src/index.ts        # Production build
 
 # Code quality
-bunx biome check .              # Lint
-bunx biome format . --write     # Format
+oxlint .                        # Lint
+oxfmt . --write                 # Format
 
 # Task runner (alternative)
 task dev                        # Dev server with HMR
@@ -137,3 +111,4 @@ bun install                     # Install deps (auto-loads .env)
 - **Task runner**: Taskfile.yml for build/test/lint automation
 - **Inngest dependency**: Present but no worker/processor files yet
 - **Known gap**: `JsonRender.error()` in `src/presentation/render/json.render.ts` throws "Method not implemented"
+- **Ox toolchain**: Uses oxlint/oxfmt (Ox toolchain) for linting and formatting

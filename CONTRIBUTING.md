@@ -80,7 +80,7 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 | Command             | Description                      |
 | ------------------- | -------------------------------- |
 | `bun run dev`       | Start dev server with hot reload |
-| `bun run lint`      | Run Biome linter                 |
+| `bun run lint`      | Run oxlint linter                 |
 | `bun run lint:fix`  | Fix linting issues               |
 | `bun run format`    | Format code                      |
 | `bun run typecheck` | Run TypeScript checks            |

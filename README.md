@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Bun](https://img.shields.io/badge/Runtime-Bun-black?logo=bun)](https://bun.sh)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Biome](https://img.shields.io/badge/Linter-Biome-60a5fa?logo=biome)](https://biomejs.dev/)
+[![Oxlint](https://img.shields.io/badge/Linter-Oxlint-60a5fa?logo=oxc)](https://oxc.rs/)
 
 A production-ready TypeScript starter template featuring Clean Architecture, Domain-Driven Design principles, Bun runtime, Kysely ORM, and PostgreSQL.
 
@@ -20,7 +20,7 @@ This template provides a solid foundation for building scalable, maintainable ba
 - **💉 Awilix DI** - Powerful dependency injection container
 - **📝 Zod Validation** - Runtime type validation with TypeScript inference
 - **📊 Structured Logging** - LogLayer with Pino transport for production-ready logging
-- **🎨 Biome** - Fast linter and formatter (no ESLint/Prettier needed)
+- **🎨 Oxlint/Oxfmt** - Fast linter and formatter from Ox toolchain
 
 ## 🚀 Getting Started
 
@@ -105,9 +105,9 @@ src/
 | `bun run dev`        | Start development server with hot reload |
 | `bun run start`      | Start production server                  |
 | `bun run build`      | Build for production                     |
-| `bun run lint`       | Run Biome linter                         |
+| `bun run lint`       | Run oxlint linter                        |
 | `bun run lint:fix`   | Fix linting issues                       |
-| `bun run format`     | Format code with Biome                   |
+| `bun run format`     | Format code with oxfmt                   |
 | `bun run typecheck`  | Run TypeScript type checking             |
 | `bun run test`       | Run tests                                |
 | `bun run test:watch` | Run tests in watch mode                  |
@@ -183,7 +183,7 @@ Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
 
 - ✅ Clean Architecture folder structure
 - ✅ TypeScript strict mode configuration
-- ✅ Biome for linting and formatting
+- ✅ Oxlint/Oxfmt for linting and formatting
 - ✅ Zod for environment and input validation
 - ✅ Kysely ORM with PostgreSQL
 - ✅ Awilix dependency injection

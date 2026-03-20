@@ -7,7 +7,7 @@ Core business logic. Framework-agnostic. Zero external dependencies on infrastru
 ```
 domain/
 ├── entity/      # Domain entities (Invoice, Customer)
-├── interface/   # Repository contracts, Logger, Server, Config, Handler
+├── interface/   # Repository contracts, Logger, Server, Config, Handler, UseCase
 ├── type/        # DTOs, type aliases (InvoiceSelectDto, InvoiceCreateDto)
 ├── schema/      # Zod validation schemas (env, invoice, customer)
 ├── error/       # Domain-specific errors (InvoiceNotFoundError, InvoiceFieldNotFoundError)
