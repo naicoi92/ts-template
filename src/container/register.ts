@@ -10,6 +10,7 @@ import {
 } from "../infrastructure/service";
 import { CreateInvoiceHandler, GetInvoiceHandler, HealthHandler } from "../presentation/handler";
 import { BunRoutes } from "../presentation/routes";
+import { JsonBodyParser, FormUrlEncodedBodyParser } from "../presentation/adapter/body-parser";
 
 export const container = createContainer();
 
@@ -32,6 +33,12 @@ container.register({
 	// Services
 	invoiceCodeGenerator: asClass(TimestampInvoiceCodeGenerator).singleton(),
 	healthCheckService: asClass(DatabaseHealthCheckService).singleton(),
+
+	// Body Parsers
+	bodyParsers: asFunction(() => [
+		container.build(JsonBodyParser),
+		container.build(FormUrlEncodedBodyParser),
+	]).singleton(),
 
 	// Handlers (must be Handler[])
 	handlers: asFunction(() => [

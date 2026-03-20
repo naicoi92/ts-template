@@ -1,6 +1,7 @@
 import { fromPairs, keys, map } from "lodash-es";
 import type { Handler, Logger, RequestHandler, ResponseRender } from "../../domain/interface";
 import { RequestAdapter } from "../adapter";
+import type { RequestBodyParser } from "../adapter/body-parser";
 import { JsonRender } from "../render";
 
 /**
@@ -14,6 +15,7 @@ export class BunRoutes {
 		private readonly _deps: {
 			handlers: Handler[];
 			logger: Logger;
+			bodyParsers: RequestBodyParser[];
 		},
 	) {}
 
@@ -42,13 +44,12 @@ export class BunRoutes {
 			handler,
 			logger: this.logger,
 			render: this.jsonRender,
+			bodyParsers: this._deps.bodyParsers,
 		});
 	}
 
 	private get jsonRender(): ResponseRender<unknown, Response> {
-		return new JsonRender({
-			logger: this.logger,
-		});
+		return new JsonRender();
 	}
 
 	private get logger(): Logger {

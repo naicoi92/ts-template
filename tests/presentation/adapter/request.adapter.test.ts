@@ -8,6 +8,10 @@ import {
 	InvalidJsonBodyError,
 	InvalidRequestMethodError,
 } from "../../../src/presentation/error/request-adapter.error";
+import {
+	JsonBodyParser,
+	FormUrlEncodedBodyParser,
+} from "../../../src/presentation/adapter/body-parser";
 
 interface MockResponseRender<TResponse> extends ResponseRender<TResponse, Response> {
 	data: ReturnType<typeof mock>;
@@ -82,6 +86,8 @@ function createMockHandler<TResponse, TParams, TQuery, TBody>(options: {
 	};
 }
 
+const bodyParsers = [new JsonBodyParser(), new FormUrlEncodedBodyParser()];
+
 describe("RequestAdapter", () => {
 	const logger = createMockLogger();
 	let mockRender: MockResponseRender<{ id: string; status: string }>;
@@ -99,6 +105,7 @@ describe("RequestAdapter", () => {
 			logger,
 			handler: mockHandler,
 			render: mockRender,
+			bodyParsers,
 		});
 	});
 
@@ -126,6 +133,29 @@ describe("RequestAdapter", () => {
 			expect(callArgs).toHaveProperty("params");
 			expect(callArgs).toHaveProperty("query");
 			expect(callArgs).toHaveProperty("body");
+		});
+
+		test("should pass undefined for params/query/body when handler has no schemas (void handler)", async () => {
+			const voidHandler = createMockHandler<{ status: string }, void, void, void>({
+				pathname: "/health",
+				method: "GET",
+			});
+			voidHandler.handle.mockImplementation(() => Promise.resolve({ status: "ok" }));
+			const voidAdapter = new RequestAdapter({
+				logger,
+				handler: voidHandler,
+				render: createMockResponseRender(),
+				bodyParsers,
+			});
+
+			const request = new Request("http://localhost/health", { method: "GET" });
+			await voidAdapter.handle(request);
+
+			expect(voidHandler.handle).toHaveBeenCalledTimes(1);
+			const callArgs = voidHandler.handle.mock.calls[0]![0];
+			expect(callArgs.params).toBeUndefined();
+			expect(callArgs.query).toBeUndefined();
+			expect(callArgs.body).toBeUndefined();
 		});
 	});
 
@@ -169,6 +199,7 @@ describe("RequestAdapter", () => {
 				logger,
 				handler: mockBodyHandler,
 				render: createMockResponseRender(),
+				bodyParsers,
 			});
 
 			const bodyData = { name: "Invoice 1", amount: 100 };
@@ -199,6 +230,7 @@ describe("RequestAdapter", () => {
 				logger,
 				handler: mockBodyHandler,
 				render: bodyRender,
+				bodyParsers,
 			});
 
 			const request = new Request("http://localhost/invoices", {
@@ -228,6 +260,7 @@ describe("RequestAdapter", () => {
 				logger,
 				handler: mockBodyHandler,
 				render: bodyRender,
+				bodyParsers,
 			});
 
 			const request = new Request("http://localhost/invoices", {
@@ -260,6 +293,7 @@ describe("RequestAdapter", () => {
 				logger,
 				handler: mockBodyHandler,
 				render: bodyRender,
+				bodyParsers,
 			});
 
 			const formData = new URLSearchParams();
@@ -300,6 +334,7 @@ describe("RequestAdapter", () => {
 				logger,
 				handler: mockQueryHandler,
 				render: createMockResponseRender(),
+				bodyParsers,
 			});
 
 			const request = new Request("http://localhost/invoices?page=2&limit=10", {
@@ -331,6 +366,7 @@ describe("RequestAdapter", () => {
 				logger,
 				handler: mockQueryHandler,
 				render: queryRender,
+				bodyParsers,
 			});
 
 			const request = new Request("http://localhost/invoices?page=0", { method: "GET" });
@@ -356,6 +392,7 @@ describe("RequestAdapter", () => {
 				logger,
 				handler: mockParamsHandler,
 				render: createMockResponseRender(),
+				bodyParsers,
 			});
 
 			const request = new Request(
@@ -383,6 +420,7 @@ describe("RequestAdapter", () => {
 				logger,
 				handler: mockParamsHandler,
 				render: paramsRender,
+				bodyParsers,
 			});
 
 			const request = new Request("http://localhost/invoices/invalid-uuid", {
@@ -419,6 +457,7 @@ describe("RequestAdapter", () => {
 				logger,
 				handler: mockValidHandler,
 				render: createMockResponseRender(),
+				bodyParsers,
 			});
 
 			const request = new Request("http://localhost/invoices", { method: "GET" });
@@ -453,6 +492,7 @@ describe("RequestAdapter", () => {
 				logger,
 				handler: mockInvalidHandler,
 				render: invalidRender,
+				bodyParsers,
 			});
 
 			const request = new Request("http://localhost/invoices", { method: "GET" });
