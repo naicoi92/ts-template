@@ -1,90 +1,80 @@
 import { describe, expect, test } from "bun:test";
 import { InvoiceNotFoundError, RequestValidationError } from "../../../src/domain/error";
-import { JsonRender } from "../../../src/presentation/render";
+import { ErrorMapper, JsonRender } from "../../../src/presentation/render";
 import { InvalidRequestMethodError } from "../../../src/presentation/error";
 import { createMockLogger } from "../../mocks";
 
 describe("JsonRender", () => {
+	const createRender = () => {
+		const logger = createMockLogger();
+		const render = new JsonRender<{ id: string }>({
+			errorMapper: new ErrorMapper(),
+			logger,
+		});
+		return { render, logger };
+	};
+
 	test("returns 200 json response by default", async () => {
-		const render = new JsonRender<{ id: string }>({ logger: createMockLogger() });
-
+		const { render } = createRender();
 		const response = await render.data({ id: "INV-001" });
-
 		expect(response.status).toBe(200);
 		expect(await response.json()).toEqual({ id: "INV-001" });
 	});
 
 	test("supports status code and optional headers on data", async () => {
-		const render = new JsonRender<{ id: string }>({ logger: createMockLogger() });
-
+		const { render } = createRender();
 		const response = await render.data({ id: "INV-001" }, 202, { "X-Request-Id": "req-1" });
-
 		expect(response.status).toBe(202);
 		expect(response.headers.get("X-Request-Id")).toBe("req-1");
 		expect(await response.json()).toEqual({ id: "INV-001" });
 	});
 
 	test("supports created helper", async () => {
-		const render = new JsonRender<{ id: string }>({ logger: createMockLogger() });
-
+		const { render } = createRender();
 		const response = await render.created({ id: "INV-001" }, { "X-Created": "true" });
-
 		expect(response.status).toBe(201);
 		expect(response.headers.get("X-Created")).toBe("true");
 		expect(await response.json()).toEqual({ id: "INV-001" });
 	});
 
 	test("supports noContent helper", async () => {
-		const render = new JsonRender({ logger: createMockLogger() });
-
+		const { render } = createRender();
 		const response = await render.noContent({ "X-Empty": "1" });
-
 		expect(response.status).toBe(204);
 		expect(response.headers.get("X-Empty")).toBe("1");
 		expect(await response.text()).toBe("");
 	});
 
-	test("hides internal error message by default", async () => {
-		const render = new JsonRender({ logger: createMockLogger() });
-
+	test("hides internal error message and logs it", async () => {
+		const { render, logger } = createRender();
 		const response = await render.error(new Error("database connection failed"));
-
 		expect(response.status).toBe(500);
 		expect(await response.json()).toEqual({
-			error: {
-				message: "database connection failed",
-			},
+			error: { message: "Internal server error" },
 		});
+		expect(logger.hasLog("error", "Unexpected error")).toBe(true);
 	});
 
 	test("maps not found errors to 404", async () => {
-		const render = new JsonRender({ logger: createMockLogger() });
-
+		const { render } = createRender();
 		const response = await render.error(new InvoiceNotFoundError("ORDER-1"));
-
 		expect(response.status).toBe(404);
 		expect(await response.json()).toEqual({
-			error: {
-				message: "invoice with orderId ORDER-1 not found",
-			},
+			error: { message: "invoice with orderId ORDER-1 not found" },
 		});
 	});
 
 	test("maps invalid method errors to 405", async () => {
-		const render = new JsonRender({ logger: createMockLogger() });
-
+		const { render } = createRender();
 		const response = await render.error(new InvalidRequestMethodError("DELETE"));
-
 		expect(response.status).toBe(405);
 		expect(await response.json()).toEqual({
-			error: {
-				message: "Invalid method: DELETE",
-			},
+			error: { message: "Invalid method: DELETE" },
 		});
 	});
 
 	test("returns structured validation error details", async () => {
-		const render = new JsonRender({ logger: createMockLogger() });
+		const { render } = createRender();
 		const validationError = new RequestValidationError([
 			{
 				source: "body",
@@ -93,9 +83,7 @@ describe("JsonRender", () => {
 				code: "invalid_type",
 			},
 		]);
-
 		const response = await render.error(validationError);
-
 		expect(response.status).toBe(400);
 		expect(await response.json()).toEqual({
 			error: {
@@ -114,16 +102,13 @@ describe("JsonRender", () => {
 		});
 	});
 
-	test("stringifies non-Error values", async () => {
-		const render = new JsonRender({ logger: createMockLogger() });
-
+	test("maps non-Error values to 500 with generic message", async () => {
+		const { render, logger } = createRender();
 		const response = await render.error("something-wrong");
-
 		expect(response.status).toBe(500);
 		expect(await response.json()).toEqual({
-			error: {
-				message: "something-wrong",
-			},
+			error: { message: "Internal server error" },
 		});
+		expect(logger.hasLog("error", "Unexpected error")).toBe(true);
 	});
 });

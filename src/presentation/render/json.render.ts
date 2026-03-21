@@ -1,68 +1,21 @@
-import {
-	CustomerNotFoundError,
-	InvoiceAmountMisMatch,
-	InvoiceNotFoundError,
-	RequestValidationError,
-	ServiceUnhealthyError,
-} from "../../domain/error";
-import type { ResponseRender } from "../../domain/interface";
-import { InvalidJsonBodyError, InvalidRequestMethodError, InvalidTextBodyError } from "../error";
-
-interface ErrorResponse {
-	error: {
-		message: string;
-		details?: unknown;
-	};
-}
-
-type ErrorClass = new (...args: never[]) => Error;
-
-interface ErrorMapping {
-	status: number;
-	errorClasses: readonly ErrorClass[];
-}
+import type { Logger, ResponseRender } from "../../domain/interface";
+import { ErrorMapper } from "./error.mapper";
 
 export class JsonRender<I = void> implements ResponseRender<I, Response> {
-	private readonly errorMappings: readonly ErrorMapping[] = [
-		{
-			status: 404,
-			errorClasses: [InvoiceNotFoundError, CustomerNotFoundError],
-		},
-		{
-			status: 405,
-			errorClasses: [InvalidRequestMethodError],
-		},
-		{
-			status: 503,
-			errorClasses: [ServiceUnhealthyError],
-		},
-		{
-			status: 400,
-			errorClasses: [
-				RequestValidationError,
-				InvalidJsonBodyError,
-				InvalidTextBodyError,
-				InvoiceAmountMisMatch,
-			],
-		},
-	];
-
-	constructor() {}
+	constructor(private readonly _deps: { errorMapper: ErrorMapper; logger: Logger }) {}
 
 	data(data: I, statusCode: number = 200, headers?: Record<string, string>): Promise<Response> {
-		const response = Response.json(data, {
-			status: statusCode,
-			headers,
-		});
+		const response = Response.json(data, { status: statusCode, headers });
 		return Promise.resolve(response);
 	}
 
 	error(error: unknown): Promise<Response> {
-		const errorStatus = this.getErrorStatus(error);
-		const errorBody = this.formatErrorBody(error);
-		const response = Response.json(errorBody, {
-			status: errorStatus,
-		});
+		const { status, body } = this.errorMapper.map(error);
+		if (status === 500) {
+			const errorObj = error instanceof Error ? error : new Error(String(error));
+			this.logger.withError(errorObj).error("Unexpected error");
+		}
+		const response = Response.json(body, { status });
 		return Promise.resolve(response);
 	}
 
@@ -71,56 +24,15 @@ export class JsonRender<I = void> implements ResponseRender<I, Response> {
 	}
 
 	noContent(headers?: Record<string, string>): Promise<Response> {
-		const response = new Response(null, {
-			status: 204,
-			headers,
-		});
+		const response = new Response(null, { status: 204, headers });
 		return Promise.resolve(response);
 	}
 
-	private getErrorStatus(error: unknown): number {
-		const matched = this.errorMappings.find((mapping) =>
-			mapping.errorClasses.some((errorClass) => error instanceof errorClass),
-		);
-
-		if (matched) {
-			return matched.status;
-		}
-
-		return 500;
+	private get errorMapper(): ErrorMapper {
+		return this._deps.errorMapper;
 	}
 
-	private formatErrorBody(error: unknown): ErrorResponse {
-		if (error instanceof ServiceUnhealthyError) {
-			return {
-				error: {
-					message: error.message,
-					details: error.toJSON(),
-				},
-			};
-		}
-
-		if (error instanceof RequestValidationError) {
-			return {
-				error: {
-					message: error.message,
-					details: error.toJSON(),
-				},
-			};
-		}
-
-		if (error instanceof Error) {
-			return {
-				error: {
-					message: error.message,
-				},
-			};
-		}
-
-		return {
-			error: {
-				message: String(error),
-			},
-		};
+	private get logger(): Logger {
+		return this._deps.logger;
 	}
 }

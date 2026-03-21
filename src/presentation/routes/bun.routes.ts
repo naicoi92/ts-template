@@ -2,7 +2,7 @@ import { fromPairs, keys, map } from "lodash-es";
 import type { Handler, Logger, RequestHandler, ResponseRender } from "../../domain/interface";
 import { RequestAdapter } from "../adapter";
 import type { RequestBodyParser } from "../adapter/body-parser";
-import { JsonRender } from "../render";
+import { ErrorMapper, JsonRender } from "../render";
 
 /**
  * Bun Routes
@@ -49,7 +49,7 @@ export class BunRoutes {
 	}
 
 	private get jsonRender(): ResponseRender<unknown, Response> {
-		return new JsonRender();
+		return new JsonRender({ errorMapper: new ErrorMapper(), logger: this.logger });
 	}
 
 	private get logger(): Logger {
