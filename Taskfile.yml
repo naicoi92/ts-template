@@ -5,7 +5,6 @@ vars:
   APP_NAME: qr-payment
   ENTRYPOINT: ./src/index.ts
   OUTDIR: ./dist
-  BIOME_VERSION: "2.4.4"
 
 env:
   NODE_ENV: development
@@ -89,26 +88,26 @@ tasks:
   # ===========================================
 
   lint:
-    desc: "Run Biome linter"
+    desc: "Run oxlint linter"
     sources:
       - "src/**/*.ts"
     deps: [install]
     cmds:
-      - bunx biome check . {{.CLI_ARGS}}
+      - bun run lint {{.CLI_ARGS}}
 
   lint:fix:
     desc: "Fix linting issues"
     deps: [install]
     cmds:
-      - bunx biome check . --write
+      - bun run lint:fix
 
   format:
-    desc: "Format code with Biome"
+    desc: "Format code with oxfmt"
     sources:
       - "src/**/*.ts"
     deps: [install]
     cmds:
-      - bunx biome format . --write
+      - bun run format
 
   # ===========================================
   # Type Checking
@@ -128,22 +127,22 @@ tasks:
   # ===========================================
 
   ci:lint:
-    desc: "Run linter in CI mode (uses biome ci command)"
+    desc: "Run linter in CI mode"
     deps: [install]
     cmds:
-      - biome ci .
+      - bun run lint
 
   ci:test:
     desc: "Run tests in CI"
     deps: [install]
     cmds:
-      - bun test --timeout=10000
+      - bun run test --timeout=10000
 
   ci:build:
     desc: "Build in CI"
     deps: [install]
     cmds:
-      - bun build {{.ENTRYPOINT}} --outdir {{.OUTDIR}} --target bun
+      - bun run build
 
   ci:
     desc: "Run all CI tasks"
