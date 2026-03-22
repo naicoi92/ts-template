@@ -14,10 +14,10 @@ body-parser/
 
 ## WHERE TO LOOK
 
-| Task                      | Location                            |
-| ------------------------- | ----------------------------------- |
-| Add new content-type      | Create `*.body-parser.ts`           |
-| Change parser contract    | `body-parser.interface.ts`          |
+| Task                   | Location                   |
+| ---------------------- | -------------------------- |
+| Add new content-type   | Create `*.body-parser.ts`  |
+| Change parser contract | `body-parser.interface.ts` |
 
 ## PATTERNS
 

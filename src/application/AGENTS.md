@@ -12,10 +12,10 @@ application/
 
 ## WHERE TO LOOK
 
-| Task                  | Location                             |
-| --------------------- | ------------------------------------ |
-| Add business use case | `use-case/*.use-case.ts`             |
-| Add cross-cutting     | `proxy/*.proxy.ts`                   |
+| Task                  | Location                 |
+| --------------------- | ------------------------ |
+| Add business use case | `use-case/*.use-case.ts` |
+| Add cross-cutting     | `proxy/*.proxy.ts`       |
 
 ## PATTERNS
 
@@ -37,7 +37,9 @@ export class CreateInvoiceUseCase implements UseCase<Input, Output> {
 		// Orchestrate domain objects
 	}
 
-	private get logger(): Logger { return this._deps.logger; }
+	private get logger(): Logger {
+		return this._deps.logger;
+	}
 }
 ```
 

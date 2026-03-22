@@ -51,13 +51,13 @@ qr-payment/
 
 ### Core Patterns (see child AGENTS.md for details)
 
-| Pattern | Location | Key Points |
-|---------|----------|------------|
-| Entity | `src/domain/AGENTS.md` | Partial DTOs, getters throw `*FieldNotFoundError` |
-| Repository | `src/domain/AGENTS.md` | Interface in domain, impl in infrastructure |
-| Use Case | `src/application/AGENTS.md` | Implements `UseCase<I, O>`, orchestrates domain |
-| Handler | `src/presentation/AGENTS.md` | Returns typed data, NOT Response object |
-| DI | All layers | `constructor(private _deps: {...}) {}` + private getters |
+| Pattern    | Location                     | Key Points                                               |
+| ---------- | ---------------------------- | -------------------------------------------------------- |
+| Entity     | `src/domain/AGENTS.md`       | Partial DTOs, getters throw `*FieldNotFoundError`        |
+| Repository | `src/domain/AGENTS.md`       | Interface in domain, impl in infrastructure              |
+| Use Case   | `src/application/AGENTS.md`  | Implements `UseCase<I, O>`, orchestrates domain          |
+| Handler    | `src/presentation/AGENTS.md` | Returns typed data, NOT Response object                  |
+| DI         | All layers                   | `constructor(private _deps: {...}) {}` + private getters |
 
 ### TypeScript & Formatting
 

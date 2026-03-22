@@ -1,7 +1,4 @@
-import type {
-	ValidationErrorDetail,
-	ValidationErrorSource,
-} from "../type/validation.type";
+import type { ValidationErrorDetail, ValidationErrorSource } from "../type/validation.type";
 
 /**
  * Domain error for validation failures

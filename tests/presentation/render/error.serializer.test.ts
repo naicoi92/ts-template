@@ -8,14 +8,24 @@ describe("ErrorSerializer", () => {
 	describe("serializeValidation", () => {
 		test("exposes validation errors array", () => {
 			const error = new RequestValidationError([
-				{ source: "body", field: "amount", message: "Amount is required", code: "invalid_type" },
+				{
+					source: "body",
+					field: "amount",
+					message: "Amount is required",
+					code: "invalid_type",
+				},
 			]);
 
 			const result = serializer.serializeValidation(error);
 
 			expect(result).toEqual({
 				errors: [
-					{ source: "body", field: "amount", message: "Amount is required", code: "invalid_type" },
+					{
+						source: "body",
+						field: "amount",
+						message: "Amount is required",
+						code: "invalid_type",
+					},
 				],
 			});
 		});
