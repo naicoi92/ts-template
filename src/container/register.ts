@@ -1,28 +1,16 @@
 import { asClass, asFunction, createContainer } from "awilix";
-import { CreateInvoiceUseCase } from "../application/use-case/create-invoice.use-case";
-import { GetInvoiceUseCase } from "../application/use-case/get-invoice.use-case";
 import { AppConfig } from "../infrastructure/config/app.config";
 import { KyselyDatabase } from "../infrastructure/database/kysely";
-import {
-	LogConsoleTransport,
-	LogLayerLogger,
-	LogPinoTransport,
-} from "../infrastructure/logger";
-import {
-	KyselyCustomerRepository,
-	KyselyInvoiceRepository,
-} from "../infrastructure/repositories";
+import { LogConsoleTransport, LogLayerLogger, LogPinoTransport } from "../infrastructure/logger";
+import { KyselyCustomerRepository, KyselyInvoiceRepository } from "../infrastructure/repositories";
 import { BunServer } from "../infrastructure/server/bun.server";
 import {
 	DatabaseHealthCheckService,
 	TimestampInvoiceCodeGenerator,
 } from "../infrastructure/service";
-import {
-	CreateInvoiceHandler,
-	GetInvoiceHandler,
-	HealthHandler,
-} from "../presentation/handler";
+import { CreateInvoiceHandler, GetInvoiceHandler, HealthHandler } from "../presentation/handler";
 import { BunRoutes } from "../presentation/routes";
+import { JsonBodyParser, FormUrlEncodedBodyParser } from "../presentation/adapter/body-parser";
 
 export const container = createContainer();
 
@@ -46,9 +34,11 @@ container.register({
 	invoiceCodeGenerator: asClass(TimestampInvoiceCodeGenerator).singleton(),
 	healthCheckService: asClass(DatabaseHealthCheckService).singleton(),
 
-	// Use Cases
-	createInvoiceUseCase: asClass(CreateInvoiceUseCase).singleton(),
-	getInvoiceUseCase: asClass(GetInvoiceUseCase).singleton(),
+	// Body Parsers
+	bodyParsers: asFunction(() => [
+		container.build(JsonBodyParser),
+		container.build(FormUrlEncodedBodyParser),
+	]).singleton(),
 
 	// Handlers (must be Handler[])
 	handlers: asFunction(() => [

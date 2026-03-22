@@ -21,10 +21,18 @@ export class MockConfig implements Config {
 		};
 	}
 
-	get name() { return this._config.name; }
-	get database() { return this._config.database; }
-	get log() { return this._config.log; }
-	get server() { return this._config.server; }
+	get name() {
+		return this._config.name;
+	}
+	get database() {
+		return this._config.database;
+	}
+	get log() {
+		return this._config.log;
+	}
+	get server() {
+		return this._config.server;
+	}
 }
 
 export function createMockConfig(overrides: Partial<Config> = {}): MockConfig {

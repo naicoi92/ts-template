@@ -1,11 +1,12 @@
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-03-01
-**Commit:** 9bd46a7
+**Generated:** 2026-03-20
+**Commit:** 8fc32a6
+**Branch:** main
 
 ## OVERVIEW
 
-QR Payment backend service. Clean Architecture + DDD. Bun runtime, TypeScript, Kysely ORM, PostgreSQL. AWILIX DI container.
+QR Payment backend service. Clean Architecture + DDD. Bun runtime, TypeScript, Kysely ORM, PostgreSQL. AWILIX DI container. Task runner for CI/CD.
 
 ## STRUCTURE
 
@@ -14,77 +15,66 @@ qr-payment/
 ├── src/
 │   ├── domain/          # Core business logic (entities, interfaces, types, schemas, errors, enums)
 │   ├── application/     # Use cases orchestrate business rules
-│   ├── infrastructure/  # External concerns (DB, server, config, logger, routers)
-│   ├── presentation/    # HTTP handlers, adapters, routes
+│   ├── infrastructure/  # External concerns (DB, server, config, logger, services)
+│   ├── presentation/    # HTTP layer (handlers, adapters, routes, render)
 │   └── container/       # DI container registration
-├── biome.json           # Linting + formatting (Biome, not ESLint/Prettier)
+├── tests/               # Test suites (mirrors src structure)
+├── oxlint.json          # Linting config (Oxlint)
 ├── tsconfig.json        # TypeScript strict mode, bundler resolution
-└── package.json         # No scripts - use `bun` directly
+├── Taskfile.yml         # Task runner (build, test, lint commands)
+└── package.json         # Dependencies
 ```
 
 ## WHERE TO LOOK
 
-| Task | Location | Notes |
-|------|----------|-------|
-| Add business entity | `src/domain/entity/` | Extend Entity pattern, validate in constructor |
-| Add repository interface | `src/domain/interface/` | Define contract, impl in `infrastructure/repositories/` |
-| Add use case | `src/application/use-case/` | Orchestrate domain objects |
-| Add HTTP endpoint | `src/infrastructure/router/` + `src/presentation/handler/` | Router defines routes, Handler processes requests |
-| Change DB query | `src/infrastructure/repositories/` | Kysely implementation |
-| Add config | `src/domain/type/config.type.ts` + `src/infrastructure/config/` | Type + loader pattern |
-| Register new dependency | `src/container/register.ts` | Use `asClass()` or `asValue()` |
+| Task                     | Location                                                         | Notes                                                      |
+| ------------------------ | ---------------------------------------------------------------- | ---------------------------------------------------------- |
+| Add business entity      | `src/domain/entity/`                                             | Extend Entity pattern, getters throw `*FieldNotFoundError` |
+| Add repository interface | `src/domain/interface/`                                          | Define contract, impl in `infrastructure/repositories/`    |
+| Add use case             | `src/application/use-case/`                                      | Orchestrate domain objects                                 |
+| Add HTTP endpoint        | `src/presentation/handler/` + `src/presentation/routes/`         | Handler declares pathname/method, routes wires them        |
+| Change DB query          | `src/infrastructure/repositories/`                               | Kysely implementation                                      |
+| Add config               | `src/domain/schema/env.schema.ts` + `src/infrastructure/config/` | Zod env schema + AppConfig                                 |
+| Register new dependency  | `src/container/register.ts`                                      | Use `asClass()` or `asFunction()`                          |
+| Add tests                | `tests/`                                                         | Mirror src structure, use mocks/fixtures                   |
+| Add mock                 | `tests/mocks/`                                                   | Create mock implementing domain interface                  |
+| Add fixture              | `tests/fixtures/`                                                | Test data builders                                         |
 
 ## CONVENTIONS
 
 ### File Naming
-- `*.interface.ts` - Domain interfaces (e.g., `logger.interface.ts`)
-- `*.type.ts` - Type aliases and DTOs (e.g., `invoice.type.ts`)
-- `*.schema.ts` - Zod schemas (e.g., `invoice.schema.ts`)
-- `*.entity.ts` - Domain entities (e.g., `invoice.entity.ts`)
-- `*.handler.ts` - Request handlers (e.g., `create-invoice.handler.ts`)
-- `*.adapter.ts` - Adapters (e.g., `fetch.adapter.ts`)
-- `*.use-case.ts` - Application use cases
-- `*.repository.ts` - Repository implementations
-- File names: kebab-case | Classes: PascalCase | Properties: camelCase
 
-### Dependency Injection Pattern
-```typescript
-// Constructor receives _deps object, private getters expose dependencies
-constructor(private _deps: { logger: Logger; repo: Repository }) {}
-private get logger() { return this._deps.logger; }
-```
+- `*.interface.ts` - Domain interfaces | `*.type.ts` - DTOs | `*.schema.ts` - Zod schemas
+- `*.entity.ts` - Domain entities | `*.handler.ts` - HTTP handlers | `*.use-case.ts` - Use cases
+- `*.repository.ts` - Repository impls | `*.adapter.ts` - Request adapters | `*.render.ts` - Response renderers
+- kebab-case files | PascalCase classes | camelCase properties
 
-### Entity Pattern
-```typescript
-export class Entity {
-  constructor(private _data: Dto) { this.validate(); }
-  private validate() { /* throw if invalid */ }
-  get property() { return this._data.property; }
-}
-```
+### Core Patterns (see child AGENTS.md for details)
 
-### TypeScript Config
-- `module: Preserve`, `moduleResolution: bundler` - Bundler-optimized
-- `verbatimModuleSyntax: true` - Preserve import syntax
-- `noEmit: true` - Type-check only
-- `strict: true` + `noUncheckedIndexedAccess: true`
-- `noUnusedLocals: false` / `noUnusedParameters: false` - Intentionally relaxed
+| Pattern    | Location                     | Key Points                                               |
+| ---------- | ---------------------------- | -------------------------------------------------------- |
+| Entity     | `src/domain/AGENTS.md`       | Partial DTOs, getters throw `*FieldNotFoundError`        |
+| Repository | `src/domain/AGENTS.md`       | Interface in domain, impl in infrastructure              |
+| Use Case   | `src/application/AGENTS.md`  | Implements `UseCase<I, O>`, orchestrates domain          |
+| Handler    | `src/presentation/AGENTS.md` | Returns typed data, NOT Response object                  |
+| DI         | All layers                   | `constructor(private _deps: {...}) {}` + private getters |
 
-### Formatting (Biome)
-- Indent: tabs
-- Quotes: double
-- Organize imports: auto
+### TypeScript & Formatting
+
+- `strict: true` + `noUncheckedIndexedAccess: true` | `noEmit: true`
+- `module: Preserve` | `moduleResolution: bundler` | `verbatimModuleSyntax: true`
+- Oxlint/oxfmt: tabs indent, double quotes
 
 ## ANTI-PATTERNS (THIS PROJECT)
 
-| Pattern | Reason |
-|---------|--------|
-| `as any` / `@ts-ignore` | Never suppress types |
-| Express/Fastify | Use `Bun.serve()` only |
-| `dotenv` package | Bun auto-loads `.env` |
-| `node:*` imports | Use Bun APIs (`bun:sqlite`, `Bun.file`, `Bun.$`) |
-| `ioredis` | Use `Bun.redis` |
-| `pg` client directly | Use Kysely abstraction |
+| Pattern                 | Reason                                           |
+| ----------------------- | ------------------------------------------------ |
+| `as any` / `@ts-ignore` | Never suppress types                             |
+| Express/Fastify         | Use `Bun.serve()` only                           |
+| `dotenv` package        | Bun auto-loads `.env`                            |
+| `node:*` imports        | Use Bun APIs (`bun:sqlite`, `Bun.file`, `Bun.$`) |
+| `ioredis`               | Use `Bun.redis`                                  |
+| `pg` client directly    | Use Kysely abstraction                           |
 
 ## COMMANDS
 
@@ -101,8 +91,14 @@ bun test <file>                 # Run specific test
 bun build ./src/index.ts        # Production build
 
 # Code quality
-bunx biome check .              # Lint
-bunx biome format . --write     # Format
+oxlint .                        # Lint
+oxfmt . --write                 # Format
+
+# Task runner (alternative)
+task dev                        # Dev server with HMR
+task test                       # Run tests
+task build                      # Production build
+task ci                         # Run all CI tasks
 
 # Install
 bun install                     # Install deps (auto-loads .env)
@@ -111,8 +107,8 @@ bun install                     # Install deps (auto-loads .env)
 ## NOTES
 
 - **Entry point**: `src/index.ts` bootstraps container, starts server, handles graceful shutdown (SIGINT/SIGTERM)
-- **Handler incomplete**: `CreateInvoiceHandler.handle()` throws "not implemented"
-- **Config loader**: `EnvConfigLoader.load()` not implemented
-- **No CI/CD**: No GitHub Actions, Makefile, or Docker setup
-- **No tests yet**: Project structure ready but test files not created
+- **CI/CD**: GitHub Actions workflow with lint → typecheck → test → build pipeline
+- **Task runner**: Taskfile.yml for build/test/lint automation
 - **Inngest dependency**: Present but no worker/processor files yet
+- **Known gap**: `JsonRender.error()` in `src/presentation/render/json.render.ts` throws "Method not implemented"
+- **Ox toolchain**: Uses oxlint/oxfmt (Ox toolchain) for linting and formatting

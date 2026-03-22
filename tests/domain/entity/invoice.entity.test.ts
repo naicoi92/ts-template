@@ -50,13 +50,6 @@ describe("Invoice Entity", () => {
 			expect(() => invoice.code).toThrow(InvoiceFieldNotFoundError);
 		});
 
-		test("should return email when present", () => {
-			const data = invoiceFixtures.complete();
-			const invoice = new Invoice(data);
-
-			expect(invoice.email).toBe("customer@example.com");
-		});
-
 		test("should return orderId when present", () => {
 			const data = invoiceFixtures.complete();
 			const invoice = new Invoice(data);

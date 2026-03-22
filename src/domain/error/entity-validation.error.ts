@@ -3,9 +3,7 @@
  * Thrown when a required field is missing in Customer entity
  */
 export class CustomerFieldNotFoundError extends Error {
-	constructor(
-		public readonly field: "customerId" | "email" | "createdAt" | "updatedAt",
-	) {
+	constructor(public readonly field: "customerId" | "email" | "createdAt" | "updatedAt") {
 		super(`${field} not found`);
 		this.name = "CustomerFieldNotFoundError";
 	}

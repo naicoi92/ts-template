@@ -4,7 +4,7 @@
  * - query: Query parameters from URL (e.g., ?page=1&limit=20)
  * - body: Request body (POST/PUT/PATCH)
  */
-export type ValidationErrorSource = "params" | "query" | "body";
+export type ValidationErrorSource = "params" | "query" | "body" | "response";
 
 /**
  * Single validation error detail

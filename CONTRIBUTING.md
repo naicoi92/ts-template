@@ -51,40 +51,40 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 
 1. Fork and clone the repository
 
-   ```bash
-   git clone https://github.com/your-username/bun-clean-architecture-starter.git
-   cd bun-clean-architecture-starter
-   ```
+    ```bash
+    git clone https://github.com/your-username/bun-clean-architecture-starter.git
+    cd bun-clean-architecture-starter
+    ```
 
 2. Install dependencies
 
-   ```bash
-   bun install
-   ```
+    ```bash
+    bun install
+    ```
 
 3. Set up environment
 
-   ```bash
-   cp .env.example .env
-   # Edit .env with your local database credentials
-   ```
+    ```bash
+    cp .env.example .env
+    # Edit .env with your local database credentials
+    ```
 
 4. Run development server
 
-   ```bash
-   bun run dev
-   ```
+    ```bash
+    bun run dev
+    ```
 
 ### Scripts
 
-| Command | Description |
-|---------|-------------|
-| `bun run dev` | Start dev server with hot reload |
-| `bun run lint` | Run Biome linter |
-| `bun run lint:fix` | Fix linting issues |
-| `bun run format` | Format code |
-| `bun run typecheck` | Run TypeScript checks |
-| `bun run test` | Run tests |
+| Command             | Description                      |
+| ------------------- | -------------------------------- |
+| `bun run dev`       | Start dev server with hot reload |
+| `bun run lint`      | Run oxlint linter                |
+| `bun run lint:fix`  | Fix linting issues               |
+| `bun run format`    | Format code                      |
+| `bun run typecheck` | Run TypeScript checks            |
+| `bun run test`      | Run tests                        |
 
 ## 📝 Coding Standards
 

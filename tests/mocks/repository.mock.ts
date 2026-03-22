@@ -23,7 +23,6 @@ export class MockInvoiceRepository implements InvoiceRepository {
 			invoiceId,
 			code: data.code,
 			customerId: data.customerId,
-			email: data.email,
 			orderId: data.orderId,
 			amount: data.amount,
 			status: InvoiceStatus.PENDING,
@@ -75,12 +74,6 @@ export class MockCustomerRepository implements CustomerRepository {
 		const customer = new Customer(customerData);
 		this.customers.set(data.email, customer);
 		return customer;
-	}
-
-	async findOrCreateByEmail(email: string): Promise<Customer> {
-		const existing = this.customers.get(email);
-		if (existing) return existing;
-		return this.create({ email });
 	}
 
 	reset(): void {

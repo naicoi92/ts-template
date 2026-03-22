@@ -1,34 +1,32 @@
 import type z from "zod";
-import { RequestValidationError } from "../../domain/error/validation.error";
-import type { Handler, Logger, RequestHandler } from "../../domain/interface";
-import {
-	InvalidJsonBodyError,
-	InvalidRequestMethodError,
-	InvalidTextBodyError,
-} from "../error";
-import { ResponseFactory } from "../factory/response.factory";
+import { formatZodError, RequestValidationError } from "../../domain/error/validation.error";
+import type { Handler, Logger, RequestHandler, ResponseRender } from "../../domain/interface";
+import type { ValidationErrorSource } from "../../domain/type/validation.type";
+import { InvalidRequestMethodError } from "../error";
+import type { RequestBodyParser } from "./body-parser";
 
-export class RequestAdapter<TParams, TQuery, TBody> implements RequestHandler {
+export class RequestAdapter<TResponse, TParams, TQuery, TBody> implements RequestHandler<
+	Request,
+	Response
+> {
 	constructor(
 		private readonly _deps: {
-			handler: Handler<TParams, TQuery, TBody>;
 			logger: Logger;
+			handler: Handler<TResponse, TParams, TQuery, TBody>;
+			render: ResponseRender<TResponse, Response>;
+			bodyParsers: RequestBodyParser[];
 		},
 	) {}
 
 	async handle(request: Request): Promise<Response> {
 		try {
 			const url = new URL(request.url);
-
 			if (!this.hasMethod(request.method)) {
 				throw new InvalidRequestMethodError(request.method);
 			}
-
 			const params = this.parseParams(url.pathname);
 			const query = this.parseQueries(url.searchParams);
 			const body = await this.parseBody(request);
-
-			// Single log for successful parsing
 			this.logger
 				.withData({
 					pathname: url.pathname,
@@ -38,71 +36,57 @@ export class RequestAdapter<TParams, TQuery, TBody> implements RequestHandler {
 					hasBody: !!body,
 				})
 				.debug("Request parsed");
-
-			return await this.handler.handle({ params, query, body });
+			// SAFETY INVARIANT: When a handler omits a schema (paramsSchema, querySchema,
+			// bodySchema), the corresponding type parameter defaults to void.
+			// undefined satisfies void in TypeScript, making these casts safe.
+			// This correlation is guaranteed by the Handler interface contract.
+			const data = await this.handler.handle({
+				params: params as TParams,
+				query: query as TQuery,
+				body: body as TBody,
+			});
+			const response = this.schemaParse(data, this.handler.responseSchema, "response");
+			return this.render.data(response);
 		} catch (error) {
-			if (error instanceof RequestValidationError) {
-				this.logger
-					.withData({ errors: error.errors })
-					.warn("Request validation failed");
-				return ResponseFactory.validationError(error.errors);
-			}
-			if (error instanceof SyntaxError) {
-				this.logger.warn("Invalid request body");
-				return ResponseFactory.badRequest("Invalid request body");
-			}
-
-			this.logger
-				.withError(error instanceof Error ? error : new Error(String(error)))
-				.error("Unexpected error in validation adapter");
-			throw error;
+			return this.render.error(error);
 		}
 	}
-	private parseQueries(searchParams: URLSearchParams): TQuery {
+	private parseQueries(searchParams: URLSearchParams): TQuery | undefined {
 		if (!this.handler.querySchema) {
-			return undefined as TQuery;
+			return undefined;
 		}
 		const rawQuery = Object.fromEntries(searchParams.entries());
-		return this.schemaParse(rawQuery, this.handler.querySchema);
+		return this.schemaParse(rawQuery, this.handler.querySchema, "query");
 	}
-	private async parseBody(request: Request): Promise<TBody> {
+	private async parseBody(request: Request): Promise<TBody | undefined> {
 		if (!this.handler.bodySchema) {
-			return undefined as TBody;
+			return undefined;
 		}
 		if (!this.methodHasBody(request.method)) {
-			return undefined as TBody;
+			return undefined;
 		}
 		const body = await this.extractRequestBody(request);
-		return this.schemaParse(body, this.handler.bodySchema);
+		return this.schemaParse(body, this.handler.bodySchema, "body");
 	}
-	private parseParams(pathname: string): TParams {
+	private parseParams(pathname: string): TParams | undefined {
 		if (!this.handler.paramsSchema) {
-			return undefined as TParams;
+			return undefined;
 		}
 		const params = new URLPattern({ pathname: this.handler.pathname }).exec({
 			pathname,
 		});
-		return this.schemaParse(params?.pathname.groups, this.handler.paramsSchema);
+		return this.schemaParse(params?.pathname.groups, this.handler.paramsSchema, "params");
 	}
 
 	private async extractRequestBody(request: Request): Promise<unknown> {
 		const contentType = request.headers.get("content-type");
-		if (contentType?.includes("application/json")) {
-			try {
-				return await request.json();
-			} catch (error) {
-				throw new InvalidJsonBodyError((error as Error).message);
+
+		for (const parser of this._deps.bodyParsers) {
+			if (parser.supports(contentType)) {
+				return await parser.parse(request);
 			}
 		}
-		if (contentType?.includes("application/x-www-form-urlencoded")) {
-			try {
-				const bodyString = await request.text();
-				const bodyParams = new URLSearchParams(bodyString);
-				return Object.fromEntries(bodyParams.entries());
-			} catch (error) {
-				throw new InvalidTextBodyError((error as Error).message);
-			}
-		}
+
 		return null;
 	}
 
@@ -114,16 +98,23 @@ export class RequestAdapter<TParams, TQuery, TBody> implements RequestHandler {
 		return ["POST", "PUT", "PATCH"].includes(method);
 	}
 
-	private schemaParse<T>(data: unknown, schema: z.ZodSchema<T>): T {
+	private schemaParse<T>(
+		data: unknown,
+		schema: z.ZodSchema<T>,
+		source: ValidationErrorSource,
+	): T {
 		const result = schema.safeParse(data);
 		if (result.success) return result.data;
-		throw result.error;
+		throw new RequestValidationError(formatZodError(result.error, source));
 	}
 
-	private get handler(): Handler<TParams, TQuery, TBody> {
+	private get handler(): Handler<TResponse, TParams, TQuery, TBody> {
 		return this._deps.handler;
 	}
 	private get logger(): Logger {
 		return this._deps.logger;
+	}
+	private get render(): ResponseRender<TResponse, Response> {
+		return this._deps.render;
 	}
 }

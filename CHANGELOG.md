@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Clean Architecture folder structure
 - Bun runtime configuration
 - TypeScript strict mode
-- Biome linter and formatter
+- Oxlint linter and Oxfmt formatter
 - Kysely ORM setup with PostgreSQL
 - Awilix dependency injection
 - Zod validation schemas

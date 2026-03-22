@@ -6,10 +6,12 @@ export class MockLogger implements Logger {
 		message: string;
 		metadata?: Record<string, unknown>;
 		error?: Error;
+		traceId?: string;
 	}[] = [];
 
 	private currentMetadata: Record<string, unknown> = {};
 	private currentError?: Error;
+	private currentTraceId?: string;
 
 	debug(message: string): void {
 		this.logs.push({
@@ -17,6 +19,7 @@ export class MockLogger implements Logger {
 			message,
 			metadata: { ...this.currentMetadata },
 			error: this.currentError,
+			traceId: this.currentTraceId,
 		});
 		this.resetContext();
 	}
@@ -27,6 +30,7 @@ export class MockLogger implements Logger {
 			message,
 			metadata: { ...this.currentMetadata },
 			error: this.currentError,
+			traceId: this.currentTraceId,
 		});
 		this.resetContext();
 	}
@@ -37,6 +41,7 @@ export class MockLogger implements Logger {
 			message,
 			metadata: { ...this.currentMetadata },
 			error: this.currentError,
+			traceId: this.currentTraceId,
 		});
 		this.resetContext();
 	}
@@ -47,6 +52,7 @@ export class MockLogger implements Logger {
 			message,
 			metadata: { ...this.currentMetadata },
 			error: this.currentError,
+			traceId: this.currentTraceId,
 		});
 		this.resetContext();
 	}
@@ -61,21 +67,26 @@ export class MockLogger implements Logger {
 		return this;
 	}
 
+	withTraceId(traceId: string): Logger {
+		this.currentTraceId = traceId;
+		return this;
+	}
+
 	private resetContext(): void {
 		this.currentMetadata = {};
 		this.currentError = undefined;
+		this.currentTraceId = undefined;
 	}
 
 	reset(): void {
 		this.logs = [];
 		this.currentMetadata = {};
 		this.currentError = undefined;
+		this.currentTraceId = undefined;
 	}
 
 	hasLog(level: string, message: string): boolean {
-		return this.logs.some(
-			(log) => log.level === level && log.message.includes(message),
-		);
+		return this.logs.some((log) => log.level === level && log.message.includes(message));
 	}
 }
 

@@ -1,50 +1,41 @@
-import type { GetInvoiceUseCase } from "../../application/use-case/get-invoice.use-case";
-import type { Handler, Logger } from "../../domain/interface";
-import { InvoiceParamsDtoSchema } from "../../domain/schema";
-import type { InvoiceParamsDto } from "../../domain/type";
-import { ResponseFactory } from "../factory/response.factory";
+import { UseCaseLogProxy } from "../../application/proxy";
+import { GetInvoiceUseCase } from "../../application/use-case";
+import type { Handler, InvoiceRepository, Logger } from "../../domain/interface";
+import { GetInvoiceOutputDtoSchema, InvoiceParamsDtoSchema } from "../../domain/schema";
+import type { GetInvoiceOutputDto, InvoiceParamsDto } from "../../domain/type";
 
-export class GetInvoiceHandler
-	implements Handler<InvoiceParamsDto, undefined, undefined>
-{
+export class GetInvoiceHandler implements Handler<GetInvoiceOutputDto, InvoiceParamsDto> {
 	readonly pathname = "/invoices/:orderId";
 	readonly method = "GET";
 	readonly paramsSchema = InvoiceParamsDtoSchema;
+	readonly responseSchema = GetInvoiceOutputDtoSchema;
 
 	constructor(
 		private readonly _deps: {
-			getInvoiceUseCase: GetInvoiceUseCase;
 			logger: Logger;
+			invoiceRepository: InvoiceRepository;
 		},
 	) {}
 
-	async handle(data: { params: InvoiceParamsDto }): Promise<Response> {
-		this.logger
-			.withData({
-				orderId: data.params.orderId,
-			})
-			.info("Processing get invoice request");
+	async handle(data: { params: InvoiceParamsDto }): Promise<GetInvoiceOutputDto> {
+		return await this.getInvoiceUseCase.execute(data.params.orderId);
+	}
 
-		const invoice = await this.getInvoiceUseCase.execute(data.params.orderId);
-
-		this.logger
-			.withData({
-				invoiceId: invoice.invoiceId,
-				orderId: invoice.orderId,
-			})
-			.info("Invoice retrieved successfully");
-
-		return ResponseFactory.success({
-			invoiceId: invoice.invoiceId,
-			orderId: invoice.orderId,
-			amount: invoice.amount,
-			status: invoice.status,
-			isPaid: invoice.isPaid,
+	private get getInvoiceUseCase() {
+		const logger = this.logger.withTraceId("ginv");
+		logger.info("Initializing GetInvoiceUseCase");
+		return new UseCaseLogProxy<string, GetInvoiceOutputDto>({
+			useCase: new GetInvoiceUseCase({
+				logger: logger,
+				invoiceRepository: this.invoiceRepository,
+			}),
+			logger: logger,
 		});
 	}
-	private get getInvoiceUseCase(): GetInvoiceUseCase {
-		return this._deps.getInvoiceUseCase;
+	private get invoiceRepository(): InvoiceRepository {
+		return this._deps.invoiceRepository;
 	}
+
 	private get logger(): Logger {
 		return this._deps.logger;
 	}

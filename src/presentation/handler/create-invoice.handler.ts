@@ -1,49 +1,61 @@
-import type { CreateInvoiceUseCase } from "../../application/use-case/create-invoice.use-case";
-import type { Handler, Logger } from "../../domain/interface";
-import { InvoiceCreateDtoSchema } from "../../domain/schema";
-import type { InvoiceCreateDto } from "../../domain/type";
-import { ResponseFactory } from "../factory/response.factory";
+import { UseCaseLogProxy } from "../../application/proxy";
+import { CreateInvoiceUseCase } from "../../application/use-case";
+import type {
+	CustomerRepository,
+	Handler,
+	InvoiceCodeGenerator,
+	InvoiceRepository,
+	Logger,
+} from "../../domain/interface";
+import { CreateInvoiceInputDtoSchema, CreateInvoiceOutputDtoSchema } from "../../domain/schema";
+import type { CreateInvoiceInputDto, CreateInvoiceOutputDto } from "../../domain/type";
+import { CacheCustomerProxy } from "../../infrastructure/repositories/cache-customer.proxy";
 
-export class CreateInvoiceHandler
-	implements Handler<undefined, undefined, InvoiceCreateDto>
-{
+export class CreateInvoiceHandler implements Handler<
+	CreateInvoiceOutputDto,
+	void,
+	void,
+	CreateInvoiceInputDto
+> {
 	readonly pathname = "/invoices";
 	readonly method = "POST";
-	readonly bodySchema = InvoiceCreateDtoSchema;
-
+	readonly bodySchema = CreateInvoiceInputDtoSchema;
+	readonly responseSchema = CreateInvoiceOutputDtoSchema;
 	constructor(
 		private readonly _deps: {
-			createInvoiceUseCase: CreateInvoiceUseCase;
 			logger: Logger;
+			invoiceRepository: InvoiceRepository;
+			customerRepository: CustomerRepository;
+			invoiceCodeGenerator: InvoiceCodeGenerator;
 		},
 	) {}
 
-	async handle(data: { body: InvoiceCreateDto }): Promise<Response> {
-		this.logger
-			.withData({
-				orderId: data.body.orderId,
-			})
-			.info("Processing create invoice request");
+	async handle(data: { body: CreateInvoiceInputDto }): Promise<CreateInvoiceOutputDto> {
+		return await this.createInvoiceUseCase.execute(data.body);
+	}
 
-		const invoice = await this.createInvoiceUseCase.execute(data.body);
-
-		this.logger
-			.withData({
-				invoiceId: invoice.invoiceId,
-				orderId: invoice.orderId,
-			})
-			.info("Invoice created successfully");
-
-		return ResponseFactory.created({
-			id: invoice.invoiceId,
-			orderId: invoice.orderId,
-			amount: invoice.amount,
-			customerId: invoice.customerId,
-			email: invoice.email,
+	private get createInvoiceUseCase() {
+		const logger = this.logger.withTraceId("cinv");
+		return new UseCaseLogProxy<CreateInvoiceInputDto, CreateInvoiceOutputDto>({
+			useCase: new CreateInvoiceUseCase({
+				logger: logger,
+				invoiceCodeGenerator: this.invoiceCodeGenerator,
+				customerRepository: new CacheCustomerProxy({
+					customerRepository: this.customerRepository,
+				}),
+				invoiceRepository: this.invoiceRepository,
+			}),
+			logger: logger,
 		});
 	}
-	private get createInvoiceUseCase(): CreateInvoiceUseCase {
-		return this._deps.createInvoiceUseCase;
+	private get invoiceRepository(): InvoiceRepository {
+		return this._deps.invoiceRepository;
+	}
+	private get customerRepository(): CustomerRepository {
+		return this._deps.customerRepository;
+	}
+	private get invoiceCodeGenerator(): InvoiceCodeGenerator {
+		return this._deps.invoiceCodeGenerator;
 	}
 	private get logger(): Logger {
 		return this._deps.logger;

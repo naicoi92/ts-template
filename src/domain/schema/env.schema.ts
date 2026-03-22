@@ -3,9 +3,7 @@ import { LogLevel } from "../enum";
 
 export const EnvSchema = z.object({
 	// Node Environment
-	NODE_ENV: z
-		.enum(["development", "production", "test"])
-		.default("development"),
+	NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 
 	APP_NAME: z.string().default("qr-payment"),
 	LOG_LEVEL: z.enum(LogLevel).default(LogLevel.INFO),

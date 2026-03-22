@@ -5,12 +5,14 @@ import type {
 	InvoiceCodeGenerator,
 	InvoiceRepository,
 	Logger,
+	UseCase,
 } from "../../domain/interface";
-import type { InvoiceCreateDto } from "../../domain/type";
+import type { CreateInvoiceInputDto, CreateInvoiceOutputDto } from "../../domain/type";
 
-export class CreateInvoiceUseCase {
-	private readonly _invoiceCodeGenerator: InvoiceCodeGenerator;
-
+export class CreateInvoiceUseCase implements UseCase<
+	CreateInvoiceInputDto,
+	CreateInvoiceOutputDto
+> {
 	constructor(
 		private _deps: {
 			logger: Logger;
@@ -18,18 +20,14 @@ export class CreateInvoiceUseCase {
 			customerRepository: CustomerRepository;
 			invoiceCodeGenerator: InvoiceCodeGenerator;
 		},
-	) {
-		this._invoiceCodeGenerator = _deps.invoiceCodeGenerator;
-	}
+	) {}
 
-	async execute(input: InvoiceCreateDto): Promise<Invoice> {
+	async execute(input: CreateInvoiceInputDto): Promise<CreateInvoiceOutputDto> {
 		this.logger
 			.withData({ orderId: input.orderId, email: input.email })
 			.info("Creating invoice");
 
-		const existingInvoice = await this.invoiceRepository.findByOrderId(
-			input.orderId,
-		);
+		const existingInvoice = await this.invoiceRepository.findByOrderId(input.orderId);
 		if (existingInvoice) {
 			if (!existingInvoice.isAmountMatch(input.amount)) {
 				this.logger
@@ -51,20 +49,15 @@ export class CreateInvoiceUseCase {
 					invoiceId: existingInvoice.invoiceId,
 				})
 				.info("Returning existing invoice");
-			return existingInvoice;
+			return this.toInvoiceOutputDto(existingInvoice);
 		}
 
-		this.logger
-			.withData({ email: input.email })
-			.info("Finding or creating customer");
-		const customer = await this.customerRepository.findOrCreateByEmail(
-			input.email,
-		);
+		this.logger.withData({ email: input.email }).info("Finding or creating customer");
+		const customer = await this.customerRepository.findByEmail(input.email);
 
-		const code = this._invoiceCodeGenerator.generate();
+		const code = this.invoiceCodeGenerator.generate();
 		const invoice = await this.invoiceRepository.create({
 			code,
-			email: input.email,
 			orderId: input.orderId,
 			amount: input.amount,
 			customerId: customer.customerId,
@@ -74,7 +67,15 @@ export class CreateInvoiceUseCase {
 			.withData({ invoiceId: invoice.invoiceId, orderId: invoice.orderId })
 			.info("Invoice created successfully");
 
-		return invoice;
+		return this.toInvoiceOutputDto(invoice);
+	}
+
+	private toInvoiceOutputDto(invoice: Invoice): CreateInvoiceOutputDto {
+		return {
+			orderId: invoice.orderId,
+			amount: invoice.amount,
+			code: invoice.code,
+		};
 	}
 
 	private get logger(): Logger {
