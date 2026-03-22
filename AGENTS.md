@@ -100,6 +100,12 @@ task test                       # Run tests
 task build                      # Production build
 task ci                         # Run all CI tasks
 
+# Task runner (alternative)
+task dev                        # Dev server with HMR
+task test                       # Run tests
+task build                      # Production build
+task ci                         # Run all CI tasks
+
 # Install
 bun install                     # Install deps (auto-loads .env)
 ```
