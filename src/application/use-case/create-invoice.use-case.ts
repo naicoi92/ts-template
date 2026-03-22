@@ -53,7 +53,7 @@ export class CreateInvoiceUseCase implements UseCase<
 		}
 
 		this.logger.withData({ email: input.email }).info("Finding or creating customer");
-		const customer = await this.customerRepository.findOrCreateByEmail(input.email);
+		const customer = await this.customerRepository.findByEmail(input.email);
 
 		const code = this.invoiceCodeGenerator.generate();
 		const invoice = await this.invoiceRepository.create({

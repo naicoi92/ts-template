@@ -5,4 +5,5 @@ export interface Logger {
 	error(message: string): void;
 	withData(metadata: Record<string, unknown>): Logger;
 	withError(error: Error): Logger;
+	withTraceId(traceId: string): Logger;
 }

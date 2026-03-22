@@ -76,12 +76,6 @@ export class MockCustomerRepository implements CustomerRepository {
 		return customer;
 	}
 
-	async findOrCreateByEmail(email: string): Promise<Customer> {
-		const existing = this.customers.get(email);
-		if (existing) return existing;
-		return this.create({ email });
-	}
-
 	reset(): void {
 		this.customers.clear();
 		this.nextId = 1;

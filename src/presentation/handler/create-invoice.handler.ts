@@ -9,6 +9,7 @@ import type {
 } from "../../domain/interface";
 import { CreateInvoiceInputDtoSchema, CreateInvoiceOutputDtoSchema } from "../../domain/schema";
 import type { CreateInvoiceInputDto, CreateInvoiceOutputDto } from "../../domain/type";
+import { CacheCustomerProxy } from "../../infrastructure/repositories/cache-customer.proxy";
 
 export class CreateInvoiceHandler implements Handler<
 	CreateInvoiceOutputDto,
@@ -39,7 +40,9 @@ export class CreateInvoiceHandler implements Handler<
 			useCase: new CreateInvoiceUseCase({
 				logger: logger,
 				invoiceCodeGenerator: this.invoiceCodeGenerator,
-				customerRepository: this.customerRepository,
+				customerRepository: new CacheCustomerProxy({
+					customerRepository: this.customerRepository,
+				}),
 				invoiceRepository: this.invoiceRepository,
 			}),
 			logger: logger,
