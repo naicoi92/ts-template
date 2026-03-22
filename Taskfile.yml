@@ -109,6 +109,14 @@ tasks:
     cmds:
       - bun run format
 
+  format:check:
+    desc: "Check code formatting with oxfmt"
+    sources:
+      - "src/**/*.ts"
+    deps: [install]
+    cmds:
+      - bun run format:check
+
   # ===========================================
   # Type Checking
   # ===========================================
