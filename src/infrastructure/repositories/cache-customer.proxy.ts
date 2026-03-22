@@ -1,4 +1,5 @@
 import type { Customer } from "../../domain/entity";
+import { CustomerNotFoundError } from "../../domain/error";
 import type { CustomerRepository } from "../../domain/interface";
 import type { CustomerCreateDto } from "../../domain/type";
 
@@ -7,7 +8,13 @@ export class CacheCustomerProxy implements CustomerRepository {
 	constructor(private deps: { customerRepository: CustomerRepository }) {}
 	async findByEmail(email: string): Promise<Customer> {
 		if (this.customers.has(email)) return this.customers.get(email) as Customer;
-		const customer = await this.customerRepository.findByEmail(email);
+		const customer = await this.customerRepository.findByEmail(email).catch((error) => {
+			const isCustomerNotFoundError = error instanceof CustomerNotFoundError;
+			if (!isCustomerNotFoundError) {
+				throw error;
+			}
+			return this.create({ email });
+		});
 		this.customers.set(email, customer);
 		return customer;
 	}
