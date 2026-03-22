@@ -1,7 +1,7 @@
 import type { Logger } from "../../src/domain/interface";
 
 export class MockLogger implements Logger {
-	public 	logs: {
+	public logs: {
 		level: "debug" | "info" | "warn" | "error";
 		message: string;
 		metadata?: Record<string, unknown>;

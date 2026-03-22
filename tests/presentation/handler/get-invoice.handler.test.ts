@@ -1,11 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { Invoice } from "../../../src/domain/entity";
 import { GetInvoiceHandler } from "../../../src/presentation/handler/get-invoice.handler";
-import {
-	createMockInvoiceRepository,
-	createMockLogger,
-	resetAllMocks,
-} from "../../mocks/index.ts";
+import { createMockInvoiceRepository, createMockLogger, resetAllMocks } from "../../mocks/index.ts";
 import { invoiceFixtures } from "../../fixtures/index.ts";
 
 describe("GetInvoiceHandler", () => {
