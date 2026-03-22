@@ -17,12 +17,12 @@ import type { MockInvoiceCodeGenerator } from "./invoice-code-generator.mock";
 
 export function resetAllMocks(
 	logger: MockLogger,
-	invoiceRepo: MockInvoiceRepository,
-	customerRepo: MockCustomerRepository,
-	codeGenerator: MockInvoiceCodeGenerator,
+	invoiceRepo?: MockInvoiceRepository,
+	customerRepo?: MockCustomerRepository,
+	codeGenerator?: MockInvoiceCodeGenerator,
 ): void {
 	logger.reset();
-	invoiceRepo.reset();
-	customerRepo.reset();
-	codeGenerator.reset();
+	invoiceRepo?.reset();
+	customerRepo?.reset();
+	codeGenerator?.reset();
 }

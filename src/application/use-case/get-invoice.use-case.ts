@@ -18,8 +18,14 @@ export class GetInvoiceUseCase implements UseCase<string, GetInvoiceOutputDto> {
 		return this.toInvoiceOutputDto(invoice);
 	}
 
-	private toInvoiceOutputDto(_invoice: Invoice): GetInvoiceOutputDto {
-		return {};
+	private toInvoiceOutputDto(invoice: Invoice): GetInvoiceOutputDto {
+		return {
+			orderId: invoice.orderId,
+			invoiceId: invoice.invoiceId,
+			code: invoice.code,
+			amount: invoice.amount,
+			status: invoice.status,
+		};
 	}
 
 	private get logger(): Logger {

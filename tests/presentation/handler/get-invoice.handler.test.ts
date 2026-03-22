@@ -1,10 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { Invoice } from "../../../src/domain/entity";
-import { GetInvoiceUseCase } from "../../../src/application/use-case/get-invoice.use-case";
 import { GetInvoiceHandler } from "../../../src/presentation/handler/get-invoice.handler";
 import {
-	createMockCustomerRepository,
-	createMockInvoiceCodeGenerator,
 	createMockInvoiceRepository,
 	createMockLogger,
 	resetAllMocks,
@@ -14,28 +11,20 @@ import { invoiceFixtures } from "../../fixtures/index.ts";
 describe("GetInvoiceHandler", () => {
 	const logger = createMockLogger();
 	const invoiceRepo = createMockInvoiceRepository();
-	const customerRepo = createMockCustomerRepository();
-	const codeGenerator = createMockInvoiceCodeGenerator();
 
-	let useCase: GetInvoiceUseCase;
 	let handler: GetInvoiceHandler;
 
 	beforeEach(() => {
-		resetAllMocks(logger, invoiceRepo, customerRepo, codeGenerator);
-
-		useCase = new GetInvoiceUseCase({
-			logger,
-			invoiceRepository: invoiceRepo,
-		});
+		resetAllMocks(logger, invoiceRepo);
 
 		handler = new GetInvoiceHandler({
-			getInvoiceUseCase: useCase,
 			logger,
+			invoiceRepository: invoiceRepo,
 		});
 	});
 
 	afterEach(() => {
-		resetAllMocks(logger, invoiceRepo, customerRepo, codeGenerator);
+		resetAllMocks(logger, invoiceRepo);
 	});
 
 	describe("handler metadata", () => {
@@ -63,10 +52,16 @@ describe("GetInvoiceHandler", () => {
 			});
 
 			expect(data).toBeInstanceOf(Object);
-			expect(data).toEqual({});
+			expect(data).toEqual({
+				orderId: invoiceData.orderId!,
+				invoiceId: invoiceData.invoiceId!,
+				code: invoiceData.code!,
+				amount: invoiceData.amount!,
+				status: invoiceData.status!,
+			});
 		});
 
-		test("should log processing request", async () => {
+		test("should log use case initialization", async () => {
 			const invoiceData = invoiceFixtures.complete();
 			const invoice = new Invoice(invoiceData);
 			invoiceRepo.seedInvoice(invoice);
@@ -75,10 +70,10 @@ describe("GetInvoiceHandler", () => {
 				params: { orderId: invoiceData.orderId! },
 			});
 
-			expect(logger.hasLog("info", "Processing get invoice request")).toBe(true);
+			expect(logger.hasLog("info", "Initializing GetInvoiceUseCase")).toBe(true);
 		});
 
-		test("should log successful retrieval", async () => {
+		test("should log fetching invoice", async () => {
 			const invoiceData = invoiceFixtures.complete();
 			const invoice = new Invoice(invoiceData);
 			invoiceRepo.seedInvoice(invoice);
@@ -87,10 +82,10 @@ describe("GetInvoiceHandler", () => {
 				params: { orderId: invoiceData.orderId! },
 			});
 
-			expect(logger.hasLog("info", "Invoice retrieved successfully")).toBe(true);
+			expect(logger.hasLog("info", "Fetching invoice by orderId")).toBe(true);
 		});
 
-		test("should return empty data for complete invoice (paid or unpaid)", async () => {
+		test("should return invoice data for complete invoice (paid or unpaid)", async () => {
 			// complete invoice
 			const invoiceData = invoiceFixtures.complete();
 			const invoice = new Invoice(invoiceData);
@@ -99,7 +94,13 @@ describe("GetInvoiceHandler", () => {
 			const data1 = await handler.handle({
 				params: { orderId: invoiceData.orderId! },
 			});
-			expect(data1).toEqual({});
+			expect(data1).toEqual({
+				orderId: invoiceData.orderId!,
+				invoiceId: invoiceData.invoiceId!,
+				code: invoiceData.code!,
+				amount: invoiceData.amount!,
+				status: invoiceData.status!,
+			});
 
 			const paidInvoiceData = invoiceFixtures.paid();
 			const paidInvoice = new Invoice(paidInvoiceData);
@@ -107,7 +108,13 @@ describe("GetInvoiceHandler", () => {
 			const data2 = await handler.handle({
 				params: { orderId: paidInvoiceData.orderId! },
 			});
-			expect(data2).toEqual({});
+			expect(data2).toEqual({
+				orderId: paidInvoiceData.orderId!,
+				invoiceId: paidInvoiceData.invoiceId!,
+				code: paidInvoiceData.code!,
+				amount: paidInvoiceData.amount!,
+				status: paidInvoiceData.status!,
+			});
 		});
 	});
 });
