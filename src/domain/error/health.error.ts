@@ -23,13 +23,4 @@ export class ServiceUnhealthyError extends Error {
 		super("service unhealthy");
 		this.name = "ServiceUnhealthyError";
 	}
-
-	toJSON(): Record<string, unknown> {
-		return {
-			status: this.health.status,
-			timestamp: this.health.timestamp,
-			error: this.health.error,
-			details: this.health.details,
-		};
-	}
 }

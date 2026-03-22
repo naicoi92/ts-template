@@ -40,12 +40,12 @@ describe("ErrorMapper", () => {
 		});
 	});
 
-	test("maps ServiceUnhealthyError to 503 with details", () => {
+	test("maps ServiceUnhealthyError to 503 with whitelisted details", () => {
 		const healthStatus = {
 			status: "unhealthy" as const,
 			timestamp: "2024-01-01T00:00:00Z",
 			error: "DB connection failed",
-			details: {},
+			details: { dependency: "database" },
 		};
 		const result = mapper.map(new ServiceUnhealthyError(healthStatus));
 		expect(result.status).toBe(503);
@@ -53,9 +53,9 @@ describe("ErrorMapper", () => {
 		expect(result.body.error.details).toEqual({
 			status: "unhealthy",
 			timestamp: "2024-01-01T00:00:00Z",
-			error: "DB connection failed",
-			details: {},
 		});
+		expect(result.body.error.details).not.toHaveProperty("error");
+		expect(result.body.error.details).not.toHaveProperty("details");
 	});
 
 	test("maps RequestValidationError to 400 with details", () => {

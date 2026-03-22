@@ -1,6 +1,5 @@
 import type {
 	ValidationErrorDetail,
-	ValidationErrorList,
 	ValidationErrorSource,
 } from "../type/validation.type";
 
@@ -35,15 +34,6 @@ export class RequestValidationError extends Error {
 	 */
 	getErrorsFor(source: ValidationErrorSource): ValidationErrorDetail[] {
 		return this.errors.filter((e) => e.source === source);
-	}
-
-	/**
-	 * Convert to JSON-serializable format for API response
-	 */
-	toJSON(): ValidationErrorList {
-		return {
-			errors: this.errors,
-		};
 	}
 }
 

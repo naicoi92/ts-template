@@ -6,6 +6,7 @@ import {
 	ServiceUnhealthyError,
 } from "../../domain/error";
 import { InvalidJsonBodyError, InvalidRequestMethodError, InvalidTextBodyError } from "../error";
+import { ErrorSerializer } from "./error.serializer";
 
 export interface ErrorResponse {
 	error: {
@@ -22,6 +23,8 @@ interface ErrorMapping {
 }
 
 export class ErrorMapper {
+	private readonly serializer = new ErrorSerializer();
+
 	private readonly errorMappings: readonly ErrorMapping[] = [
 		{
 			status: 404,
@@ -71,17 +74,16 @@ export class ErrorMapper {
 		// Known domain/presentation errors: safe to expose message
 		if (error instanceof Error) {
 			const body: ErrorResponse = { error: { message: error.message } };
-			// Include details if error supports toJSON()
-			if (this.hasToJson(error)) {
-				body.error.details = error.toJSON();
+
+			if (error instanceof RequestValidationError) {
+				body.error.details = this.serializer.serializeValidation(error);
+			} else if (error instanceof ServiceUnhealthyError) {
+				body.error.details = this.serializer.serializeHealth(error);
 			}
+
 			return body;
 		}
 
 		return { error: { message: String(error) } };
-	}
-
-	private hasToJson(error: Error): error is Error & { toJSON(): unknown } {
-		return "toJSON" in error && typeof (error as Record<string, unknown>).toJSON === "function";
 	}
 }
