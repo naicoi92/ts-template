@@ -1,10 +1,3 @@
-import {
-	CustomerNotFoundError,
-	InvoiceAmountMisMatch,
-	InvoiceNotFoundError,
-	RequestValidationError,
-	ServiceUnhealthyError,
-} from "../../domain/error";
 import type { Logger, ResponseRender } from "../../domain/interface";
 import { ErrorMapper } from "./error.mapper";
 
@@ -37,5 +30,8 @@ export class JsonRender<I = void> implements ResponseRender<I, Response> {
 
 	private get errorMapper(): ErrorMapper {
 		return this._deps.errorMapper;
+	}
+	private get logger(): Logger {
+		return this._deps.logger;
 	}
 }
