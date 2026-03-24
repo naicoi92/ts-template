@@ -17,8 +17,10 @@ import { PartnerAuthenticationError } from "../../../src/domain/error";
 class MockHeaderProvider implements HeaderProvider {
 	private headers: Map<string, string> = new Map();
 
-	setHeader(name: string, value: string): void {
-		this.headers.set(name.toLowerCase(), value);
+	setHeader(name: string, value: string | undefined): void {
+		if (value !== undefined) {
+			this.headers.set(name.toLowerCase(), value);
+		}
 	}
 
 	get(name: string): string | null {

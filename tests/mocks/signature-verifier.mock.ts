@@ -26,8 +26,10 @@ export class MockSignatureVerifier implements SignatureVerifier {
 		this.defaultValid = true;
 	}
 
-	seedSignature(token: string, canonical: string, signature: string): void {
-		this.seededSignatures.push({ token, canonical, signature });
+	seedSignature(token: string | undefined, canonical: string, signature: string): void {
+		if (token) {
+			this.seededSignatures.push({ token, canonical, signature });
+		}
 	}
 
 	setDefaultValid(valid: boolean): void {
