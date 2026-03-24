@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import type { HeaderProvider } from "./header-provider.interface";
 
 /**
  * Validated request data passed to handler
@@ -11,6 +12,8 @@ export interface RequestData<TParams, TQuery, TBody> {
 	readonly query: TQuery;
 	/** Validated request body */
 	readonly body: TBody;
+	/** Header provider for accessing request headers */
+	readonly headers: HeaderProvider;
 }
 /**
  * HTTP Request Handler Interface

@@ -19,7 +19,14 @@ export type Invoice = {
 	updatedAt: ColumnType<Date, string | undefined, never>;
 };
 
+export type Partner = {
+	partnerId: GeneratedAlways<number>;
+	name: string;
+	token: string;
+};
+
 export type Database = {
 	customers: Customer;
 	invoices: Invoice;
+	partners: Partner;
 };

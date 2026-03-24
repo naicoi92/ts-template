@@ -532,4 +532,52 @@ describe("RequestAdapter", () => {
 			expect(logger.hasLog("debug", "Request parsed")).toBe(true);
 		});
 	});
+
+	describe("Header passing", () => {
+		test("should pass headers to handler via HeaderProvider", async () => {
+			mockHandler.handle.mockImplementation(() => Promise.resolve({ id: "1", status: "ok" }));
+
+			const request = new Request("http://localhost/invoices", {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+					"X-Request-Id": "req-123",
+				},
+			});
+			await adapter.handle(request);
+
+			expect(mockHandler.handle).toHaveBeenCalledTimes(1);
+			const callArgs = mockHandler.handle.mock.calls[0]![0];
+			expect(callArgs.headers).toBeDefined();
+			expect(callArgs.headers.get("Content-Type")).toBe("application/json");
+			expect(callArgs.headers.get("X-Request-Id")).toBe("req-123");
+		});
+
+		test("should return null for non-existent headers via get()", async () => {
+			mockHandler.handle.mockImplementation(() => Promise.resolve({ id: "1", status: "ok" }));
+
+			const request = new Request("http://localhost/invoices", {
+				method: "GET",
+				headers: { "Content-Type": "application/json" },
+			});
+			await adapter.handle(request);
+
+			const callArgs = mockHandler.handle.mock.calls[0]![0];
+			expect(callArgs.headers.get("X-Non-Existent")).toBeNull();
+		});
+
+		test("should correctly report header existence via has()", async () => {
+			mockHandler.handle.mockImplementation(() => Promise.resolve({ id: "1", status: "ok" }));
+
+			const request = new Request("http://localhost/invoices", {
+				method: "GET",
+				headers: { "Content-Type": "application/json" },
+			});
+			await adapter.handle(request);
+
+			const callArgs = mockHandler.handle.mock.calls[0]![0];
+			expect(callArgs.headers.has("Content-Type")).toBe(true);
+			expect(callArgs.headers.has("X-Non-Existent")).toBe(false);
+		});
+	});
 });
