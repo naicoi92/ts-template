@@ -11,7 +11,11 @@ const mockInnerUseCase = {
 const AuthContext = {
 	partnerName: "partner-abc",
 	signature: "valid-signature",
-	canonicalString: "canonical-data",
+	request: {
+		method: "POST",
+		pathname: "/invoices",
+		data: { orderId: "ORDER-001", amount: 100 },
+	},
 } as const;
 
 describe("UseCasePartnerAuthProxy", () => {
@@ -56,7 +60,11 @@ describe("UseCasePartnerAuthProxy", () => {
 		const authContextWithoutPartnerName = {
 			partnerName: "",
 			signature: "valid-signature",
-			canonicalString: "canonical-data",
+			request: {
+				method: "POST",
+				pathname: "/invoices",
+				data: { orderId: "ORDER-001", amount: 100 },
+			},
 		};
 
 		proxy = new UseCasePartnerAuthProxy({
@@ -81,7 +89,11 @@ describe("UseCasePartnerAuthProxy", () => {
 		const authContextWithoutSignature = {
 			partnerName: "partner-abc",
 			signature: "",
-			canonicalString: "canonical-data",
+			request: {
+				method: "POST",
+				pathname: "/invoices",
+				data: { orderId: "ORDER-001", amount: 100 },
+			},
 		};
 
 		proxy = new UseCasePartnerAuthProxy({

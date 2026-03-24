@@ -1,18 +1,29 @@
-import type { SignatureVerifier } from "../../src/domain/interface/signature-verifier.interface";
+import type {
+	SignatureVerificationInput,
+	SignatureVerificationRequest,
+	SignatureVerifier,
+} from "../../src/domain/interface/signature-verifier.interface";
 
 interface SeededSignature {
 	token: string;
-	canonical: string;
 	signature: string;
+	request: SignatureVerificationRequest;
 }
 
 export class MockSignatureVerifier implements SignatureVerifier {
 	private seededSignatures: SeededSignature[] = [];
 	private defaultValid = true;
 
-	verify(token: string, canonical: string, signature: string): boolean {
+	verify(input: SignatureVerificationInput): boolean {
+		const { token, signature, request } = input;
+
 		const seeded = this.seededSignatures.find(
-			(s) => s.token === token && s.canonical === canonical && s.signature === signature,
+			(s) =>
+				s.token === token &&
+				s.signature === signature &&
+				s.request.method === request.method &&
+				s.request.pathname === request.pathname &&
+				this.toComparableData(s.request.data) === this.toComparableData(request.data),
 		);
 		if (seeded) return true;
 
@@ -21,14 +32,26 @@ export class MockSignatureVerifier implements SignatureVerifier {
 		return false;
 	}
 
+	private toComparableData(data: unknown): string {
+		if (data === undefined) {
+			return "__undefined__";
+		}
+
+		return JSON.stringify(data);
+	}
+
 	reset(): void {
 		this.seededSignatures = [];
 		this.defaultValid = true;
 	}
 
-	seedSignature(token: string | undefined, canonical: string, signature: string): void {
-		if (token) {
-			this.seededSignatures.push({ token, canonical, signature });
+	seedSignature(input: SignatureVerificationInput): void {
+		if (input.token) {
+			this.seededSignatures.push({
+				token: input.token,
+				signature: input.signature,
+				request: input.request,
+			});
 		}
 	}
 

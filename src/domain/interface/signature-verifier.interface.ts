@@ -1,3 +1,15 @@
+export type SignatureVerificationRequest = {
+	method: string;
+	pathname: string;
+	data?: unknown;
+};
+
+export type SignatureVerificationInput = {
+	token: string;
+	signature: string;
+	request: SignatureVerificationRequest;
+};
+
 export interface SignatureVerifier {
-	verify(token: string, canonical: string, signature: string): boolean;
+	verify(input: SignatureVerificationInput): boolean;
 }

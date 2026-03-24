@@ -192,6 +192,9 @@ describe("CreateInvoiceHandler", () => {
 
 		test("7. valid auth with seeded signature continues to business logic", async () => {
 			const partner = partnerFixtures.valid();
+			if (!partner.token) {
+				throw new Error("partner token is required for seeded signature test");
+			}
 			partnerRepo.seedPartner(partner);
 
 			const invoiceData = invoiceFixtures.complete();
@@ -206,9 +209,16 @@ describe("CreateInvoiceHandler", () => {
 			});
 			customerRepo.seedCustomer(customer);
 
-			const canonicalString = `POST\n/invoices\n${JSON.stringify(validBody)}`;
 			const signature = "seeded-signature";
-			signatureVerifier.seedSignature(partner.token, canonicalString, signature);
+			signatureVerifier.seedSignature({
+				token: partner.token,
+				signature,
+				request: {
+					method: "POST",
+					pathname: "/invoices",
+					data: validBody,
+				},
+			});
 
 			headerProvider.setHeader("x-partner-name", partner.name);
 			headerProvider.setHeader("x-signature", signature);

@@ -1,14 +1,17 @@
 import type { Partner } from "../../domain/entity/partner.entity";
 import type { UseCase } from "../../domain/interface/usecase.interface";
 import type { PartnerRepository } from "../../domain/interface/partner-repository.interface";
-import type { SignatureVerifier } from "../../domain/interface/signature-verifier.interface";
+import type {
+	SignatureVerificationRequest,
+	SignatureVerifier,
+} from "../../domain/interface/signature-verifier.interface";
 import { PartnerNotFoundError } from "../../domain/error/partner.error";
 import { PartnerAuthenticationError } from "../../domain/error/partner-authentication.error";
 
 export type AuthContext = {
 	partnerName: string;
 	signature: string;
-	canonicalString: string;
+	request: SignatureVerificationRequest;
 };
 
 export class UseCasePartnerAuthProxy<I, O> implements UseCase<I, O> {
@@ -28,6 +31,10 @@ export class UseCasePartnerAuthProxy<I, O> implements UseCase<I, O> {
 			throw new PartnerAuthenticationError();
 		}
 
+		if (!context.request.method || !context.request.pathname) {
+			throw new PartnerAuthenticationError();
+		}
+
 		let partner: Partner;
 		try {
 			partner = await this._deps.partnerRepository.findByName(context.partnerName);
@@ -38,11 +45,11 @@ export class UseCasePartnerAuthProxy<I, O> implements UseCase<I, O> {
 			throw error;
 		}
 
-		const isValid = this._deps.signatureVerifier.verify(
-			partner.token,
-			context.canonicalString,
-			context.signature,
-		);
+		const isValid = this._deps.signatureVerifier.verify({
+			token: partner.token,
+			signature: context.signature,
+			request: context.request,
+		});
 		if (!isValid) {
 			throw new PartnerAuthenticationError();
 		}
