@@ -1,8 +1,8 @@
 import type { Invoice } from "../../domain/entity";
 import type { InvoiceRepository, Logger, UseCase } from "../../domain/interface";
-import type { GetInvoiceOutputDto } from "../../domain/type";
+import type { GetInvoiceInputDto, GetInvoiceOutputDto } from "../../domain/type";
 
-export class GetInvoiceUseCase implements UseCase<{ orderId: string }, GetInvoiceOutputDto> {
+export class GetInvoiceUseCase implements UseCase<GetInvoiceInputDto, GetInvoiceOutputDto> {
 	constructor(
 		private _deps: {
 			logger: Logger;
@@ -12,7 +12,7 @@ export class GetInvoiceUseCase implements UseCase<{ orderId: string }, GetInvoic
 		this.logger.debug("GetInvoiceUseCase initialized");
 	}
 
-	async execute(input: { orderId: string }): Promise<GetInvoiceOutputDto> {
+	async execute(input: GetInvoiceInputDto): Promise<GetInvoiceOutputDto> {
 		const { orderId } = input;
 		this.logger.withData({ orderId }).info("Fetching invoice by orderId");
 		const invoice = await this.invoiceRepository.findByOrderId(orderId);
