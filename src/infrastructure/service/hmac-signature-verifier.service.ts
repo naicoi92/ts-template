@@ -6,6 +6,8 @@ import type {
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
+const MAX_SIGNATURE_AGE_SECONDS = 300;
+
 export class HmacSignatureVerifierService implements SignatureVerifier {
 	verify(input: SignatureVerificationInput): boolean {
 		const { token, signature, request } = input;
@@ -18,14 +20,28 @@ export class HmacSignatureVerifierService implements SignatureVerifier {
 			return false;
 		}
 
-		const canonical = this.buildCanonicalString(request.method, request.pathname, request.data);
+		if (!this.isValidTimestamp(request.timestamp)) {
+			return false;
+		}
+
+		const canonical = this.buildCanonicalString(
+			request.method,
+			request.pathname,
+			request.timestamp,
+			request.data,
+		);
 
 		const expectedSignature = this.computeHmacSha256(token, canonical);
 
 		return this.constantTimeCompare(signature, expectedSignature);
 	}
 
-	private buildCanonicalString(method: string, pathname: string, data?: unknown): string {
+	private buildCanonicalString(
+		method: string,
+		pathname: string,
+		timestamp?: string,
+		data?: unknown,
+	): string {
 		const upperMethod = method.toUpperCase();
 
 		let dataSegment = "";
@@ -34,7 +50,27 @@ export class HmacSignatureVerifierService implements SignatureVerifier {
 			dataSegment = JSON.stringify(sorted);
 		}
 
-		return `${upperMethod}\n${pathname}\n${dataSegment}`;
+		return `${upperMethod}\n${pathname}\n${timestamp ?? ""}\n${dataSegment}`;
+	}
+
+	private isValidTimestamp(timestamp?: string): boolean {
+		if (timestamp === undefined) {
+			return false;
+		}
+
+		if (!/^\d+$/.test(timestamp)) {
+			return false;
+		}
+
+		const timestampSeconds = Number(timestamp);
+		if (!Number.isSafeInteger(timestampSeconds)) {
+			return false;
+		}
+
+		const nowSeconds = Math.floor(Date.now() / 1000);
+		const ageSeconds = nowSeconds - timestampSeconds;
+
+		return Math.abs(ageSeconds) <= MAX_SIGNATURE_AGE_SECONDS;
 	}
 
 	private sortJsonKeys(value: JsonValue): JsonValue {

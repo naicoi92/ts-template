@@ -23,6 +23,7 @@ export class MockSignatureVerifier implements SignatureVerifier {
 				s.signature === signature &&
 				s.request.method === request.method &&
 				s.request.pathname === request.pathname &&
+				s.request.timestamp === request.timestamp &&
 				this.toComparableData(s.request.data) === this.toComparableData(request.data),
 		);
 		if (seeded) return true;

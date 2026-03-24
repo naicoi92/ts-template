@@ -5,7 +5,6 @@ import type { HeaderProvider } from "../../domain/interface/header-provider.inte
 import type { ValidationErrorSource } from "../../domain/type/validation.type";
 import { InvalidRequestMethodError } from "../error";
 import type { RequestBodyParser } from "./body-parser";
-import { BunHeaderProvider } from "../../infrastructure/server/bun-header-provider";
 
 export class RequestAdapter<TResponse, TParams, TQuery, TBody> implements RequestHandler<
 	Request,
@@ -17,6 +16,7 @@ export class RequestAdapter<TResponse, TParams, TQuery, TBody> implements Reques
 			handler: Handler<TResponse, TParams, TQuery, TBody>;
 			render: ResponseRender<TResponse, Response>;
 			bodyParsers: RequestBodyParser[];
+			headerProviderFactory: (headers: Headers) => HeaderProvider;
 		},
 	) {}
 
@@ -123,6 +123,6 @@ export class RequestAdapter<TResponse, TParams, TQuery, TBody> implements Reques
 	}
 
 	private createHeaderProvider(request: Request): HeaderProvider {
-		return new BunHeaderProvider(request.headers);
+		return this._deps.headerProviderFactory(request.headers);
 	}
 }

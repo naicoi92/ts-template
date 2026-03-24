@@ -49,6 +49,7 @@ export class CreateInvoiceHandler implements Handler<
 			request: {
 				method: this.method,
 				pathname: this.pathname,
+				timestamp: data.headers.get("x-timestamp") ?? "",
 				data: data.body,
 			},
 		};

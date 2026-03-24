@@ -32,13 +32,14 @@ export class GetInvoiceHandler implements Handler<GetInvoiceOutputDto, InvoicePa
 	) {}
 
 	async handle(data: RequestData<InvoiceParamsDto, void, void>): Promise<GetInvoiceOutputDto> {
-		const resolvedPathname = `/invoices/${data.params.orderId}`;
+		const resolvedPathname = this.resolvePathname(data.params);
 		const authContext: AuthContext = {
 			partnerName: data.headers.get("x-partner-name") ?? "",
 			signature: data.headers.get("x-signature") ?? "",
 			request: {
 				method: this.method,
 				pathname: resolvedPathname,
+				timestamp: data.headers.get("x-timestamp") ?? "",
 			},
 		};
 		const inputForUseCase: GetInvoiceInputDto = {
@@ -79,5 +80,9 @@ export class GetInvoiceHandler implements Handler<GetInvoiceOutputDto, InvoicePa
 
 	private get signatureVerifier(): SignatureVerifier {
 		return this._deps.signatureVerifier;
+	}
+
+	private resolvePathname(params: InvoiceParamsDto): string {
+		return this.pathname.replace(/:orderId/g, params.orderId);
 	}
 }

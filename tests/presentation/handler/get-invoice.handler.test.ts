@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { Invoice } from "../../../src/domain/entity";
 import { GetInvoiceHandler } from "../../../src/presentation/handler/get-invoice.handler";
 import {
+	createMockHeaderProvider,
 	createMockInvoiceRepository,
 	createMockLogger,
 	createMockPartnerRepository,
@@ -9,37 +10,14 @@ import {
 	resetAllMocks,
 } from "../../mocks/index.ts";
 import { invoiceFixtures, partnerFixtures } from "../../fixtures/index.ts";
-import type { HeaderProvider } from "../../../src/domain/interface/header-provider.interface";
 import { PartnerAuthenticationError } from "../../../src/domain/error";
-
-class MockHeaderProvider implements HeaderProvider {
-	private headers: Map<string, string> = new Map();
-
-	setHeader(name: string, value: string | undefined): void {
-		if (value !== undefined) {
-			this.headers.set(name.toLowerCase(), value);
-		}
-	}
-
-	get(name: string): string | null {
-		return this.headers.get(name.toLowerCase()) ?? null;
-	}
-
-	has(name: string): boolean {
-		return this.headers.has(name.toLowerCase());
-	}
-
-	clear(): void {
-		this.headers.clear();
-	}
-}
 
 describe("GetInvoiceHandler", () => {
 	const logger = createMockLogger();
 	const invoiceRepo = createMockInvoiceRepository();
 	const partnerRepo = createMockPartnerRepository();
 	const signatureVerifier = createMockSignatureVerifier();
-	const headerProvider = new MockHeaderProvider();
+	const headerProvider = createMockHeaderProvider();
 
 	let handler: GetInvoiceHandler;
 
@@ -78,6 +56,7 @@ describe("GetInvoiceHandler", () => {
 
 		test("1. missing x-partner-name header returns 401", async () => {
 			headerProvider.setHeader("x-signature", "some-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
 
 			await expect(
 				handler.handle({
@@ -91,6 +70,7 @@ describe("GetInvoiceHandler", () => {
 
 		test("2. missing x-signature header returns 401", async () => {
 			headerProvider.setHeader("x-partner-name", "partner-abc");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
 
 			await expect(
 				handler.handle({
@@ -113,6 +93,20 @@ describe("GetInvoiceHandler", () => {
 			).rejects.toThrow(PartnerAuthenticationError);
 		});
 
+		test("3b. missing x-timestamp header returns 401", async () => {
+			headerProvider.setHeader("x-partner-name", "partner-abc");
+			headerProvider.setHeader("x-signature", "some-signature");
+
+			await expect(
+				handler.handle({
+					params: { orderId },
+					query: undefined as never,
+					body: undefined as never,
+					headers: headerProvider,
+				}),
+			).rejects.toThrow(PartnerAuthenticationError);
+		});
+
 		test("4. invalid signature returns 401", async () => {
 			const partner = partnerFixtures.valid();
 			partnerRepo.seedPartner(partner);
@@ -120,6 +114,7 @@ describe("GetInvoiceHandler", () => {
 
 			headerProvider.setHeader("x-partner-name", partner.name);
 			headerProvider.setHeader("x-signature", "invalid-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
 
 			await expect(
 				handler.handle({
@@ -136,6 +131,7 @@ describe("GetInvoiceHandler", () => {
 
 			headerProvider.setHeader("x-partner-name", "unknown-partner");
 			headerProvider.setHeader("x-signature", "some-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
 
 			await expect(
 				handler.handle({
@@ -158,6 +154,7 @@ describe("GetInvoiceHandler", () => {
 
 			headerProvider.setHeader("x-partner-name", partner.name);
 			headerProvider.setHeader("x-signature", "valid-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
 
 			const result = await handler.handle({
 				params: { orderId: invoiceData.orderId! },
@@ -183,6 +180,7 @@ describe("GetInvoiceHandler", () => {
 
 			headerProvider.setHeader("x-partner-name", partner.name);
 			headerProvider.setHeader("x-signature", "valid-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
 
 			const invoiceData = invoiceFixtures.complete();
 			const invoice = new Invoice(invoiceData);
@@ -212,6 +210,7 @@ describe("GetInvoiceHandler", () => {
 
 			headerProvider.setHeader("x-partner-name", partner.name);
 			headerProvider.setHeader("x-signature", "valid-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
 
 			const invoiceData = invoiceFixtures.complete();
 			const invoice = new Invoice(invoiceData);
@@ -234,6 +233,7 @@ describe("GetInvoiceHandler", () => {
 
 			headerProvider.setHeader("x-partner-name", partner.name);
 			headerProvider.setHeader("x-signature", "valid-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
 
 			const invoiceData = invoiceFixtures.complete();
 			const invoice = new Invoice(invoiceData);
@@ -256,6 +256,7 @@ describe("GetInvoiceHandler", () => {
 
 			headerProvider.setHeader("x-partner-name", partner.name);
 			headerProvider.setHeader("x-signature", "valid-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
 
 			const invoiceData = invoiceFixtures.complete();
 			const invoice = new Invoice(invoiceData);

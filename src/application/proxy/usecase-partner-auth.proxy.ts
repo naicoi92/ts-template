@@ -31,7 +31,7 @@ export class UseCasePartnerAuthProxy<I, O> implements UseCase<I, O> {
 			throw new PartnerAuthenticationError();
 		}
 
-		if (!context.request.method || !context.request.pathname) {
+		if (!context.request.method || !context.request.pathname || !context.request.timestamp) {
 			throw new PartnerAuthenticationError();
 		}
 

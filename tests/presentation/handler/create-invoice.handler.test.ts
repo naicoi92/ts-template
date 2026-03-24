@@ -3,6 +3,7 @@ import { Customer, Invoice } from "../../../src/domain/entity";
 import { CreateInvoiceHandler } from "../../../src/presentation/handler/create-invoice.handler";
 import {
 	createMockCustomerRepository,
+	createMockHeaderProvider,
 	createMockInvoiceCodeGenerator,
 	createMockInvoiceRepository,
 	createMockLogger,
@@ -11,30 +12,7 @@ import {
 	resetAllMocks,
 } from "../../mocks/index.ts";
 import { invoiceFixtures, partnerFixtures } from "../../fixtures/index.ts";
-import type { HeaderProvider } from "../../../src/domain/interface/header-provider.interface";
 import { PartnerAuthenticationError } from "../../../src/domain/error";
-
-class MockHeaderProvider implements HeaderProvider {
-	private headers: Map<string, string> = new Map();
-
-	setHeader(name: string, value: string | undefined): void {
-		if (value !== undefined) {
-			this.headers.set(name.toLowerCase(), value);
-		}
-	}
-
-	get(name: string): string | null {
-		return this.headers.get(name.toLowerCase()) ?? null;
-	}
-
-	has(name: string): boolean {
-		return this.headers.has(name.toLowerCase());
-	}
-
-	clear(): void {
-		this.headers.clear();
-	}
-}
 
 describe("CreateInvoiceHandler", () => {
 	const logger = createMockLogger();
@@ -43,7 +21,7 @@ describe("CreateInvoiceHandler", () => {
 	const invoiceCodeGenerator = createMockInvoiceCodeGenerator();
 	const partnerRepo = createMockPartnerRepository();
 	const signatureVerifier = createMockSignatureVerifier();
-	const headerProvider = new MockHeaderProvider();
+	const headerProvider = createMockHeaderProvider();
 
 	let handler: CreateInvoiceHandler;
 
@@ -88,6 +66,7 @@ describe("CreateInvoiceHandler", () => {
 
 		test("1. missing x-partner-name header returns 401", async () => {
 			headerProvider.setHeader("x-signature", "some-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
 
 			await expect(
 				handler.handle({
@@ -101,6 +80,7 @@ describe("CreateInvoiceHandler", () => {
 
 		test("2. missing x-signature header returns 401", async () => {
 			headerProvider.setHeader("x-partner-name", "partner-abc");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
 
 			await expect(
 				handler.handle({
@@ -123,6 +103,20 @@ describe("CreateInvoiceHandler", () => {
 			).rejects.toThrow(PartnerAuthenticationError);
 		});
 
+		test("3b. missing x-timestamp header returns 401", async () => {
+			headerProvider.setHeader("x-partner-name", "partner-abc");
+			headerProvider.setHeader("x-signature", "some-signature");
+
+			await expect(
+				handler.handle({
+					params: undefined as never,
+					query: undefined as never,
+					body: validBody,
+					headers: headerProvider,
+				}),
+			).rejects.toThrow(PartnerAuthenticationError);
+		});
+
 		test("4. invalid signature returns 401", async () => {
 			const partner = partnerFixtures.valid();
 			partnerRepo.seedPartner(partner);
@@ -130,6 +124,7 @@ describe("CreateInvoiceHandler", () => {
 
 			headerProvider.setHeader("x-partner-name", partner.name);
 			headerProvider.setHeader("x-signature", "invalid-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
 
 			await expect(
 				handler.handle({
@@ -146,6 +141,7 @@ describe("CreateInvoiceHandler", () => {
 
 			headerProvider.setHeader("x-partner-name", "unknown-partner");
 			headerProvider.setHeader("x-signature", "some-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
 
 			await expect(
 				handler.handle({
@@ -176,6 +172,7 @@ describe("CreateInvoiceHandler", () => {
 
 			headerProvider.setHeader("x-partner-name", partner.name);
 			headerProvider.setHeader("x-signature", "valid-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
 
 			const result = await handler.handle({
 				params: undefined as never,
@@ -216,12 +213,14 @@ describe("CreateInvoiceHandler", () => {
 				request: {
 					method: "POST",
 					pathname: "/invoices",
+					timestamp: "2024-01-15T10:00:00Z",
 					data: validBody,
 				},
 			});
 
 			headerProvider.setHeader("x-partner-name", partner.name);
 			headerProvider.setHeader("x-signature", signature);
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
 
 			const result = await handler.handle({
 				params: undefined as never,
