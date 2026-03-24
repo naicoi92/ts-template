@@ -13,6 +13,7 @@ import type {
 	Logger,
 	PartnerRepository,
 	SignatureVerifier,
+	UseCase,
 } from "../../domain/interface";
 import { CreateInvoiceInputDtoSchema, CreateInvoiceOutputDtoSchema } from "../../domain/schema";
 import type { CreateInvoiceInputDto, CreateInvoiceOutputDto } from "../../domain/type";
@@ -44,17 +45,18 @@ export class CreateInvoiceHandler implements Handler<
 		data: RequestData<void, void, CreateInvoiceInputDto>,
 	): Promise<CreateInvoiceOutputDto> {
 		const canonicalString = buildCanonicalString(this.method, this.pathname, data.body);
-		const inputForUseCase: AuthContext & CreateInvoiceInputDto = {
-			...data.body,
+		const authContext: AuthContext = {
 			partnerName: data.headers.get("x-partner-name") ?? "",
 			signature: data.headers.get("x-signature") ?? "",
 			canonicalString,
 		};
 
-		return await this.createInvoiceUseCase.execute(inputForUseCase);
+		return await this.createInvoiceUseCase(authContext).execute(data.body);
 	}
 
-	private get createInvoiceUseCase() {
+	private createInvoiceUseCase(
+		authContext: AuthContext,
+	): UseCase<CreateInvoiceInputDto, CreateInvoiceOutputDto> {
 		const logger = this.logger.withTraceId("cinv");
 		const actualUseCase = new CreateInvoiceUseCase({
 			logger: logger,
@@ -64,10 +66,10 @@ export class CreateInvoiceHandler implements Handler<
 			}),
 			invoiceRepository: this.invoiceRepository,
 		});
-		return new UseCaseLogProxy<AuthContext, CreateInvoiceOutputDto>({
-			useCase: new UseCasePartnerAuthProxy<AuthContext, CreateInvoiceOutputDto>({
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				useCase: actualUseCase as any,
+		return new UseCaseLogProxy<CreateInvoiceInputDto, CreateInvoiceOutputDto>({
+			useCase: new UseCasePartnerAuthProxy<CreateInvoiceInputDto, CreateInvoiceOutputDto>({
+				useCase: actualUseCase,
+				authContext,
 				partnerRepository: this.partnerRepository,
 				signatureVerifier: this.signatureVerifier,
 			}),

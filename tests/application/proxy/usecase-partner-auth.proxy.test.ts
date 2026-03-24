@@ -36,13 +36,15 @@ describe("UseCasePartnerAuthProxy", () => {
 		);
 		proxy = new UseCasePartnerAuthProxy({
 			useCase: mockInnerUseCase as any,
+			authContext: AuthContext,
 			partnerRepository: partnerRepo,
 			signatureVerifier: signatureVerifier,
 		});
 
-		const result = await proxy.execute(AuthContext);
+		const input = { orderId: "ORDER-001" };
+		const result = await proxy.execute(input);
 
-		expect(result).toEqual({ success: true, input: AuthContext });
+		expect(result).toEqual({ success: true, input });
 	});
 
 	test("2. missing partnerName throws PartnerAuthenticationError", async () => {
@@ -51,18 +53,20 @@ describe("UseCasePartnerAuthProxy", () => {
 		const { UseCasePartnerAuthProxy } = await import(
 			"../../../src/application/proxy/usecase-partner-auth.proxy"
 		);
-		proxy = new UseCasePartnerAuthProxy({
-			useCase: mockInnerUseCase as any,
-			partnerRepository: partnerRepo,
-			signatureVerifier: signatureVerifier,
-		});
-
-		const contextWithoutPartnerName = {
+		const authContextWithoutPartnerName = {
+			partnerName: "",
 			signature: "valid-signature",
 			canonicalString: "canonical-data",
 		};
 
-		await expect(proxy.execute(contextWithoutPartnerName)).rejects.toThrow(
+		proxy = new UseCasePartnerAuthProxy({
+			useCase: mockInnerUseCase as any,
+			authContext: authContextWithoutPartnerName,
+			partnerRepository: partnerRepo,
+			signatureVerifier: signatureVerifier,
+		});
+
+		await expect(proxy.execute({ orderId: "ORDER-001" })).rejects.toThrow(
 			PartnerAuthenticationError,
 		);
 	});
@@ -74,18 +78,20 @@ describe("UseCasePartnerAuthProxy", () => {
 		const { UseCasePartnerAuthProxy } = await import(
 			"../../../src/application/proxy/usecase-partner-auth.proxy"
 		);
+		const authContextWithoutSignature = {
+			partnerName: "partner-abc",
+			signature: "",
+			canonicalString: "canonical-data",
+		};
+
 		proxy = new UseCasePartnerAuthProxy({
 			useCase: mockInnerUseCase as any,
+			authContext: authContextWithoutSignature,
 			partnerRepository: partnerRepo,
 			signatureVerifier: signatureVerifier,
 		});
 
-		const contextWithoutSignature = {
-			partnerName: "partner-abc",
-			canonicalString: "canonical-data",
-		};
-
-		await expect(proxy.execute(contextWithoutSignature)).rejects.toThrow(
+		await expect(proxy.execute({ orderId: "ORDER-001" })).rejects.toThrow(
 			PartnerAuthenticationError,
 		);
 	});
@@ -98,11 +104,14 @@ describe("UseCasePartnerAuthProxy", () => {
 		);
 		proxy = new UseCasePartnerAuthProxy({
 			useCase: mockInnerUseCase as any,
+			authContext: AuthContext,
 			partnerRepository: partnerRepo,
 			signatureVerifier: signatureVerifier,
 		});
 
-		await expect(proxy.execute(AuthContext)).rejects.toThrow(PartnerAuthenticationError);
+		await expect(proxy.execute({ orderId: "ORDER-001" })).rejects.toThrow(
+			PartnerAuthenticationError,
+		);
 	});
 
 	test("5. invalid signature throws PartnerAuthenticationError", async () => {
@@ -115,11 +124,14 @@ describe("UseCasePartnerAuthProxy", () => {
 		);
 		proxy = new UseCasePartnerAuthProxy({
 			useCase: mockInnerUseCase as any,
+			authContext: AuthContext,
 			partnerRepository: partnerRepo,
 			signatureVerifier: signatureVerifier,
 		});
 
-		await expect(proxy.execute(AuthContext)).rejects.toThrow(PartnerAuthenticationError);
+		await expect(proxy.execute({ orderId: "ORDER-001" })).rejects.toThrow(
+			PartnerAuthenticationError,
+		);
 	});
 
 	test("6. inner use case is not called on auth failure", async () => {
@@ -140,11 +152,14 @@ describe("UseCasePartnerAuthProxy", () => {
 		);
 		proxy = new UseCasePartnerAuthProxy({
 			useCase: trackingUseCase as any,
+			authContext: AuthContext,
 			partnerRepository: partnerRepo,
 			signatureVerifier: signatureVerifier,
 		});
 
-		await expect(proxy.execute(AuthContext)).rejects.toThrow(PartnerAuthenticationError);
+		await expect(proxy.execute({ orderId: "ORDER-001" })).rejects.toThrow(
+			PartnerAuthenticationError,
+		);
 		expect(innerUseCaseCalled).toBe(false);
 	});
 
@@ -161,11 +176,16 @@ describe("UseCasePartnerAuthProxy", () => {
 
 		proxy = new UseCasePartnerAuthProxy({
 			useCase: mockInnerUseCase as any,
+			authContext: AuthContext,
 			partnerRepository: new ThrowingRepo(),
 			signatureVerifier: signatureVerifier,
 		});
 
-		await expect(proxy.execute(AuthContext)).rejects.toThrow("database connection lost");
-		await expect(proxy.execute(AuthContext)).rejects.not.toThrow(PartnerAuthenticationError);
+		await expect(proxy.execute({ orderId: "ORDER-001" })).rejects.toThrow(
+			"database connection lost",
+		);
+		await expect(proxy.execute({ orderId: "ORDER-001" })).rejects.not.toThrow(
+			PartnerAuthenticationError,
+		);
 	});
 });

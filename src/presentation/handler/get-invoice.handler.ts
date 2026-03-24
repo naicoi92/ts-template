@@ -11,9 +11,10 @@ import type {
 	Logger,
 	PartnerRepository,
 	SignatureVerifier,
+	UseCase,
 } from "../../domain/interface";
 import { GetInvoiceOutputDtoSchema, InvoiceParamsDtoSchema } from "../../domain/schema";
-import type { GetInvoiceOutputDto, InvoiceParamsDto } from "../../domain/type";
+import type { GetInvoiceInputDto, GetInvoiceOutputDto, InvoiceParamsDto } from "../../domain/type";
 import type { RequestData } from "../../domain/interface/http-handler.interface";
 
 export class GetInvoiceHandler implements Handler<GetInvoiceOutputDto, InvoiceParamsDto> {
@@ -34,26 +35,28 @@ export class GetInvoiceHandler implements Handler<GetInvoiceOutputDto, InvoicePa
 	async handle(data: RequestData<InvoiceParamsDto, void, void>): Promise<GetInvoiceOutputDto> {
 		const resolvedPathname = `/invoices/${data.params.orderId}`;
 		const canonicalString = buildCanonicalString(this.method, resolvedPathname);
-		const inputForUseCase: AuthContext & { orderId: string } = {
-			orderId: data.params.orderId,
+		const authContext: AuthContext = {
 			partnerName: data.headers.get("x-partner-name") ?? "",
 			signature: data.headers.get("x-signature") ?? "",
 			canonicalString,
 		};
+		const inputForUseCase: GetInvoiceInputDto = {
+			orderId: data.params.orderId,
+		};
 
-		return await this.getInvoiceUseCase.execute(inputForUseCase);
+		return await this.getInvoiceUseCase(authContext).execute(inputForUseCase);
 	}
 
-	private get getInvoiceUseCase() {
+	private getInvoiceUseCase(authContext: AuthContext): UseCase<GetInvoiceInputDto, GetInvoiceOutputDto> {
 		const logger = this.logger.withTraceId("ginv");
 		logger.info("Initializing GetInvoiceUseCase");
-		return new UseCaseLogProxy<AuthContext, GetInvoiceOutputDto>({
-			useCase: new UseCasePartnerAuthProxy<AuthContext, GetInvoiceOutputDto>({
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		return new UseCaseLogProxy<GetInvoiceInputDto, GetInvoiceOutputDto>({
+			useCase: new UseCasePartnerAuthProxy<GetInvoiceInputDto, GetInvoiceOutputDto>({
 				useCase: new GetInvoiceUseCase({
 					logger: logger,
 					invoiceRepository: this.invoiceRepository,
-				}) as any,
+				}),
+				authContext,
 				partnerRepository: this.partnerRepository,
 				signatureVerifier: this.signatureVerifier,
 			}),

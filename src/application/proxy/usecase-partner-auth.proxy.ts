@@ -15,13 +15,14 @@ export class UseCasePartnerAuthProxy<I, O> implements UseCase<I, O> {
 	constructor(
 		private _deps: {
 			useCase: UseCase<I, O>;
+			authContext: AuthContext;
 			partnerRepository: PartnerRepository;
 			signatureVerifier: SignatureVerifier;
 		},
 	) {}
 
 	async execute(input: I): Promise<O> {
-		const context = input as AuthContext;
+		const context = this.authContext;
 
 		if (!context.partnerName || !context.signature) {
 			throw new PartnerAuthenticationError();
@@ -47,5 +48,9 @@ export class UseCasePartnerAuthProxy<I, O> implements UseCase<I, O> {
 		}
 
 		return this._deps.useCase.execute(input);
+	}
+
+	private get authContext(): AuthContext {
+		return this._deps.authContext;
 	}
 }
