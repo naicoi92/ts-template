@@ -27,8 +27,8 @@ describe("UseCasePartnerAuthProxy", () => {
 	});
 
 	test("1. valid partner name + valid signature delegates to inner use case", async () => {
-		const partner = partnerFixtures.valid();
-		partnerRepo.seedPartner(partner);
+		const dto = partnerFixtures.valid();
+		partnerRepo.seedPartner(dto);
 		signatureVerifier.setDefaultValid(true);
 
 		const { UseCasePartnerAuthProxy } = await import(
@@ -68,8 +68,8 @@ describe("UseCasePartnerAuthProxy", () => {
 	});
 
 	test("3. missing signature throws PartnerAuthenticationError", async () => {
-		const partner = partnerFixtures.valid();
-		partnerRepo.seedPartner(partner);
+		const dto = partnerFixtures.valid();
+		partnerRepo.seedPartner(dto);
 
 		const { UseCasePartnerAuthProxy } = await import(
 			"../../../src/application/proxy/usecase-partner-auth.proxy"
@@ -106,8 +106,8 @@ describe("UseCasePartnerAuthProxy", () => {
 	});
 
 	test("5. invalid signature throws PartnerAuthenticationError", async () => {
-		const partner = partnerFixtures.valid();
-		partnerRepo.seedPartner(partner);
+		const dto = partnerFixtures.valid();
+		partnerRepo.seedPartner(dto);
 		signatureVerifier.setDefaultValid(false);
 
 		const { UseCasePartnerAuthProxy } = await import(
@@ -123,8 +123,8 @@ describe("UseCasePartnerAuthProxy", () => {
 	});
 
 	test("6. inner use case is not called on auth failure", async () => {
-		const partner = partnerFixtures.valid();
-		partnerRepo.seedPartner(partner);
+		const dto = partnerFixtures.valid();
+		partnerRepo.seedPartner(dto);
 		signatureVerifier.setDefaultValid(false);
 
 		let innerUseCaseCalled = false;
@@ -146,5 +146,26 @@ describe("UseCasePartnerAuthProxy", () => {
 
 		await expect(proxy.execute(AuthContext)).rejects.toThrow(PartnerAuthenticationError);
 		expect(innerUseCaseCalled).toBe(false);
+	});
+
+	test("7. unexpected repository error propagates without converting to PartnerAuthenticationError", async () => {
+		const { UseCasePartnerAuthProxy } = await import(
+			"../../../src/application/proxy/usecase-partner-auth.proxy"
+		);
+
+		class ThrowingRepo extends MockPartnerRepository {
+			override async findByName(_name: string): Promise<never> {
+				throw new Error("database connection lost");
+			}
+		}
+
+		proxy = new UseCasePartnerAuthProxy({
+			useCase: mockInnerUseCase as any,
+			partnerRepository: new ThrowingRepo(),
+			signatureVerifier: signatureVerifier,
+		});
+
+		await expect(proxy.execute(AuthContext)).rejects.toThrow("database connection lost");
+		await expect(proxy.execute(AuthContext)).rejects.not.toThrow(PartnerAuthenticationError);
 	});
 });

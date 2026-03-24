@@ -1,6 +1,8 @@
+import type { Partner } from "../../domain/entity/partner.entity";
 import type { UseCase } from "../../domain/interface/usecase.interface";
 import type { PartnerRepository } from "../../domain/interface/partner-repository.interface";
 import type { SignatureVerifier } from "../../domain/interface/signature-verifier.interface";
+import { PartnerNotFoundError } from "../../domain/error/partner.error";
 import { PartnerAuthenticationError } from "../../domain/error/partner-authentication.error";
 
 export type AuthContext = {
@@ -23,9 +25,14 @@ export class UseCasePartnerAuthProxy<I, O> implements UseCase<I, O> {
 			throw new PartnerAuthenticationError();
 		}
 
-		const partner = await this._deps.partnerRepository.findByName(context.partnerName);
-		if (!partner) {
-			throw new PartnerAuthenticationError();
+		let partner: Partner;
+		try {
+			partner = await this._deps.partnerRepository.findByName(context.partnerName);
+		} catch (error) {
+			if (error instanceof PartnerNotFoundError) {
+				throw new PartnerAuthenticationError();
+			}
+			throw error;
 		}
 
 		const isValid = this._deps.signatureVerifier.verify(

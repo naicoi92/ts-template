@@ -1,23 +1,23 @@
-import type { PartnerCredential } from "../../src/domain/type";
+import { Partner } from "../../src/domain/entity/partner.entity";
+import { PartnerNotFoundError } from "../../src/domain/error/partner.error";
+import type { PartnerSelectDto } from "../../src/domain/type";
 import type { PartnerRepository } from "../../src/domain/interface/partner-repository.interface";
 
 export class MockPartnerRepository implements PartnerRepository {
-	private partners: Map<string, PartnerCredential> = new Map();
+	private partners: Map<string, Partner> = new Map();
 
-	async findByName(name: string): Promise<PartnerCredential | null> {
-		return this.partners.get(name) ?? null;
+	async findByName(name: string): Promise<Partner> {
+		const partner = this.partners.get(name);
+		if (!partner) throw new PartnerNotFoundError(0);
+		return partner;
 	}
 
 	reset(): void {
 		this.partners.clear();
 	}
 
-	seedPartner(partner: PartnerCredential): void {
-		this.partners.set(partner.name, partner);
-	}
-
-	getAllPartners(): PartnerCredential[] {
-		return Array.from(this.partners.values());
+	seedPartner(dto: PartnerSelectDto): void {
+		this.partners.set(dto.name ?? "", new Partner(dto));
 	}
 }
 

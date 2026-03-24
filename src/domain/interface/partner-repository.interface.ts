@@ -1,5 +1,9 @@
-import type { PartnerCredential } from "../type";
+import type { Partner } from "../entity/partner.entity";
 
 export interface PartnerRepository {
-	findByName(name: string): Promise<PartnerCredential | null>;
+	/**
+	 * Tìm partner theo tên.
+	 * @throws {PartnerNotFoundError} nếu không tìm thấy partner.
+	 */
+	findByName(name: string): Promise<Partner>;
 }
