@@ -8,7 +8,7 @@ export class MockPartnerRepository implements PartnerRepository {
 
 	async findByName(name: string): Promise<Partner> {
 		const partner = this.partners.get(name);
-		if (!partner) throw new PartnerNotFoundError(0);
+		if (!partner) throw new PartnerNotFoundError(name);
 		return partner;
 	}
 

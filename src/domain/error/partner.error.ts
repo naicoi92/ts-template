@@ -1,6 +1,6 @@
 export class PartnerNotFoundError extends Error {
-	constructor(partnerId: number) {
-		super(`partner with id ${partnerId} not found`);
+	constructor(name: string) {
+		super(`partner with name "${name}" not found`);
 	}
 }
 

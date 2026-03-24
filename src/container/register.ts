@@ -2,7 +2,7 @@ import { asClass, asFunction, createContainer } from "awilix";
 import { AppConfig } from "../infrastructure/config/app.config";
 import { KyselyDatabase } from "../infrastructure/database/kysely";
 import { LogConsoleTransport, LogLayerLogger, LogPinoTransport } from "../infrastructure/logger";
-import { KyselyCustomerRepository, KyselyInvoiceRepository, StaticPartnerRepository } from "../infrastructure/repositories";
+import { KyselyCustomerRepository, KyselyInvoiceRepository, KyselyPartnerRepository } from "../infrastructure/repositories";
 import { BunServer } from "../infrastructure/server/bun.server";
 import {
 	DatabaseHealthCheckService,
@@ -30,7 +30,7 @@ container.register({
 	// Repositories
 	invoiceRepository: asClass(KyselyInvoiceRepository).singleton(),
 	customerRepository: asClass(KyselyCustomerRepository).singleton(),
-	partnerRepository: asClass(StaticPartnerRepository).singleton(),
+	partnerRepository: asClass(KyselyPartnerRepository).singleton(),
 
 	// Services
 	invoiceCodeGenerator: asClass(TimestampInvoiceCodeGenerator).singleton(),

@@ -1,5 +1,4 @@
 import type { LogLevel } from "../enum";
-import type { PartnerCredential } from "../type";
 
 export interface DatabaseConfig {
 	readonly url: string;
@@ -16,7 +15,6 @@ export interface Config {
 	readonly database: DatabaseConfig;
 	readonly log: LogConfig;
 	readonly server: ServerConfig;
-	readonly partnerCredentials: PartnerCredential[];
 }
 
 export interface ConfigLoader {

@@ -1,6 +1,5 @@
 import z from "zod";
 import { LogLevel } from "../enum";
-import type { PartnerCredential } from "../type";
 
 export const EnvSchema = z.object({
 	NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
@@ -15,9 +14,4 @@ export const EnvSchema = z.object({
 		.transform((val) => val === "1")
 		.default(false),
 	DATABASE_URL: z.string(),
-
-	PARTNER_CREDENTIALS: z
-		.string()
-		.transform((val) => JSON.parse(val) as PartnerCredential[])
-		.default(() => [] as PartnerCredential[]),
 });
