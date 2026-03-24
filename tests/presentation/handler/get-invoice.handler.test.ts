@@ -165,11 +165,11 @@ describe("GetInvoiceHandler", () => {
 			});
 
 			expect(result).toBeInstanceOf(Object);
-			expect(result.orderId).toBe(invoiceData.orderId);
-			expect(result.invoiceId).toBe(invoiceData.invoiceId);
-			expect(result.code).toBe(invoiceData.code);
-			expect(result.amount).toBe(invoiceData.amount);
-			expect(result.status).toBe(invoiceData.status);
+			expect(result.orderId).toBe(invoiceData.orderId!);
+			expect(result.invoiceId).toBe(invoiceData.invoiceId!);
+			expect(result.code).toBe(invoiceData.code!);
+			expect(result.amount).toBe(invoiceData.amount!);
+			expect(result.status).toBe(invoiceData.status!);
 		});
 	});
 

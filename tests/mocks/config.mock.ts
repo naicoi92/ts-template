@@ -6,6 +6,7 @@ const DEFAULT_TEST_CONFIG: Config = {
 	database: { url: "postgresql://test:test@localhost:5432/test_db" },
 	log: { level: LogLevel.DEBUG, onlyConsole: true },
 	server: { port: 3001 },
+	partnerCredentials: [],
 };
 
 export class MockConfig implements Config {
@@ -32,6 +33,9 @@ export class MockConfig implements Config {
 	}
 	get server() {
 		return this._config.server;
+	}
+	get partnerCredentials() {
+		return this._config.partnerCredentials;
 	}
 }
 

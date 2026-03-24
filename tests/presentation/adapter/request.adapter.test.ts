@@ -55,24 +55,6 @@ function createMockResponseRender<TResponse>(): MockResponseRender<TResponse> {
 				}),
 			);
 		}),
-		created: mock<(data: TResponse, headers?: Record<string, string>) => Promise<Response>>(
-			(data, headers) => {
-				return Promise.resolve(
-					new Response(JSON.stringify(data), {
-						status: 201,
-						headers: { "Content-Type": "application/json", ...headers },
-					}),
-				);
-			},
-		),
-		noContent: mock<(headers?: Record<string, string>) => Promise<Response>>((headers) => {
-			return Promise.resolve(
-				new Response(null, {
-					status: 204,
-					headers,
-				}),
-			);
-		}),
 	};
 }
 

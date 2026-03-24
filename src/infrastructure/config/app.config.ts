@@ -1,6 +1,6 @@
 import type { Config, DatabaseConfig, LogConfig, ServerConfig } from "../../domain/interface";
 import { EnvSchema } from "../../domain/schema";
-import type { EnvConfigDto } from "../../domain/type";
+import type { EnvConfigDto, PartnerCredential } from "../../domain/type";
 
 export class AppConfig implements Config {
 	#envConfig: EnvConfigDto;
@@ -25,5 +25,8 @@ export class AppConfig implements Config {
 			level: this.#envConfig.LOG_LEVEL,
 			onlyConsole: this.#envConfig.VERCEL,
 		};
+	}
+	get partnerCredentials(): PartnerCredential[] {
+		return this.#envConfig.PARTNER_CREDENTIALS;
 	}
 }
