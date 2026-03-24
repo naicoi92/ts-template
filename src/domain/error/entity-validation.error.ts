@@ -36,9 +36,7 @@ export class InvoiceFieldNotFoundError extends Error {
  * Thrown when a required field is missing in Partner entity
  */
 export class PartnerFieldNotFoundError extends Error {
-	constructor(
-		public readonly field: "partnerId" | "name" | "token",
-	) {
+	constructor(public readonly field: "partnerId" | "name" | "token") {
 		super(`${field} not found`);
 		this.name = "PartnerFieldNotFoundError";
 	}

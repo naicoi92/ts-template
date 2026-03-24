@@ -2,7 +2,11 @@ import { asClass, asFunction, createContainer } from "awilix";
 import { AppConfig } from "../infrastructure/config/app.config";
 import { KyselyDatabase } from "../infrastructure/database/kysely";
 import { LogConsoleTransport, LogLayerLogger, LogPinoTransport } from "../infrastructure/logger";
-import { KyselyCustomerRepository, KyselyInvoiceRepository, KyselyPartnerRepository } from "../infrastructure/repositories";
+import {
+	KyselyCustomerRepository,
+	KyselyInvoiceRepository,
+	KyselyPartnerRepository,
+} from "../infrastructure/repositories";
 import { BunServer } from "../infrastructure/server/bun.server";
 import {
 	DatabaseHealthCheckService,

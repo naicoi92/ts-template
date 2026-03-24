@@ -12,11 +12,13 @@ export type AuthContext = {
 };
 
 export class UseCasePartnerAuthProxy<I, O> implements UseCase<I, O> {
-	constructor(private _deps: {
-		useCase: UseCase<I, O>;
-		partnerRepository: PartnerRepository;
-		signatureVerifier: SignatureVerifier;
-	}) {}
+	constructor(
+		private _deps: {
+			useCase: UseCase<I, O>;
+			partnerRepository: PartnerRepository;
+			signatureVerifier: SignatureVerifier;
+		},
+	) {}
 
 	async execute(input: I): Promise<O> {
 		const context = input as AuthContext;

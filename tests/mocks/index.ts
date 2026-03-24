@@ -10,14 +10,8 @@ export {
 	createMockInvoiceCodeGenerator,
 } from "./invoice-code-generator.mock";
 export { MockConfig, createMockConfig } from "./config.mock";
-export {
-	MockPartnerRepository,
-	createMockPartnerRepository,
-} from "./partner-repository.mock";
-export {
-	MockSignatureVerifier,
-	createMockSignatureVerifier,
-} from "./signature-verifier.mock";
+export { MockPartnerRepository, createMockPartnerRepository } from "./partner-repository.mock";
+export { MockSignatureVerifier, createMockSignatureVerifier } from "./signature-verifier.mock";
 
 import type { MockLogger } from "./logger.mock";
 import type { MockInvoiceRepository, MockCustomerRepository } from "./repository.mock";

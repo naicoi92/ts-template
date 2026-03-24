@@ -6,13 +6,7 @@
  * regardless of original key order.
  */
 
-type JsonValue =
-	| string
-	| number
-	| boolean
-	| null
-	| JsonValue[]
-	| { [key: string]: JsonValue };
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
 function sortKeys(value: JsonValue): JsonValue {
 	if (value === null || typeof value !== "object") {
@@ -30,11 +24,7 @@ function sortKeys(value: JsonValue): JsonValue {
 	return Object.fromEntries(sortedEntries);
 }
 
-export function buildCanonicalString(
-	method: string,
-	pathname: string,
-	data?: unknown,
-): string {
+export function buildCanonicalString(method: string, pathname: string, data?: unknown): string {
 	const upperMethod = method.toUpperCase();
 
 	let dataSegment = "";

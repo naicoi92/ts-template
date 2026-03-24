@@ -1,4 +1,9 @@
-import { type AuthContext, buildCanonicalString, UseCaseLogProxy, UseCasePartnerAuthProxy } from "../../application/proxy";
+import {
+	type AuthContext,
+	buildCanonicalString,
+	UseCaseLogProxy,
+	UseCasePartnerAuthProxy,
+} from "../../application/proxy";
 import { CreateInvoiceUseCase } from "../../application/use-case";
 import type {
 	CustomerRepository,
@@ -35,7 +40,9 @@ export class CreateInvoiceHandler implements Handler<
 		},
 	) {}
 
-	async handle(data: RequestData<void, void, CreateInvoiceInputDto>): Promise<CreateInvoiceOutputDto> {
+	async handle(
+		data: RequestData<void, void, CreateInvoiceInputDto>,
+	): Promise<CreateInvoiceOutputDto> {
 		const canonicalString = buildCanonicalString(this.method, this.pathname, data.body);
 		const inputForUseCase: AuthContext & CreateInvoiceInputDto = {
 			...data.body,

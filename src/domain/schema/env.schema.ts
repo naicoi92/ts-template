@@ -6,7 +6,7 @@ export const EnvSchema = z.object({
 
 	APP_NAME: z.string().default("qr-payment"),
 	LOG_LEVEL: z.enum(LogLevel).default(LogLevel.INFO),
-	 PORT: z.coerce.number().default(4001),
+	PORT: z.coerce.number().default(4001),
 
 	VERSION: z.string().optional().default("0.1.0"),
 	VERCEL: z

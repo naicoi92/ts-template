@@ -22,7 +22,10 @@ export class KyselyPartnerRepository implements PartnerRepository {
 					this.logger.withData({ name }).warn("Partner not found");
 					throw new PartnerNotFoundError(name);
 				}
-				this.logger.withError(error as Error).withData({ name }).error("Failed to find partner");
+				this.logger
+					.withError(error as Error)
+					.withData({ name })
+					.error("Failed to find partner");
 				throw error;
 			});
 
