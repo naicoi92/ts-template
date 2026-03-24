@@ -2,6 +2,7 @@ import {
 	CustomerNotFoundError,
 	InvoiceAmountMisMatch,
 	InvoiceNotFoundError,
+	PartnerAuthenticationError,
 	RequestValidationError,
 	ServiceUnhealthyError,
 } from "../../domain/error";
@@ -37,6 +38,10 @@ export class ErrorMapper {
 		{
 			status: 503,
 			errorClasses: [ServiceUnhealthyError],
+		},
+		{
+			status: 401,
+			errorClasses: [PartnerAuthenticationError],
 		},
 		{
 			status: 400,
