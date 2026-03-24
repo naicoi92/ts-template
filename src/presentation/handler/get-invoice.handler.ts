@@ -1,6 +1,6 @@
 import {
 	type AuthContext,
-	buildCanonicalString,
+	CanonicalStringBuilder,
 	UseCaseLogProxy,
 	UseCasePartnerAuthProxy,
 } from "../../application/proxy";
@@ -22,6 +22,7 @@ export class GetInvoiceHandler implements Handler<GetInvoiceOutputDto, InvoicePa
 	readonly method = "GET";
 	readonly paramsSchema = InvoiceParamsDtoSchema;
 	readonly responseSchema = GetInvoiceOutputDtoSchema;
+	private readonly canonicalStringBuilder = new CanonicalStringBuilder();
 
 	constructor(
 		private readonly _deps: {
@@ -34,7 +35,7 @@ export class GetInvoiceHandler implements Handler<GetInvoiceOutputDto, InvoicePa
 
 	async handle(data: RequestData<InvoiceParamsDto, void, void>): Promise<GetInvoiceOutputDto> {
 		const resolvedPathname = `/invoices/${data.params.orderId}`;
-		const canonicalString = buildCanonicalString(this.method, resolvedPathname);
+		const canonicalString = this.canonicalStringBuilder.build(this.method, resolvedPathname);
 		const authContext: AuthContext = {
 			partnerName: data.headers.get("x-partner-name") ?? "",
 			signature: data.headers.get("x-signature") ?? "",

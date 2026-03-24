@@ -8,30 +8,32 @@
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
-function sortKeys(value: JsonValue): JsonValue {
-	if (value === null || typeof value !== "object") {
-		return value;
+export class CanonicalStringBuilder {
+	build(method: string, pathname: string, data?: unknown): string {
+		const upperMethod = method.toUpperCase();
+
+		let dataSegment = "";
+		if (data !== undefined && data !== null) {
+			const sorted = this.sortKeys(data as JsonValue);
+			dataSegment = JSON.stringify(sorted);
+		}
+
+		return `${upperMethod}\n${pathname}\n${dataSegment}`;
 	}
 
-	if (Array.isArray(value)) {
-		return value.map(sortKeys);
+	private sortKeys(value: JsonValue): JsonValue {
+		if (value === null || typeof value !== "object") {
+			return value;
+		}
+
+		if (Array.isArray(value)) {
+			return value.map((item) => this.sortKeys(item));
+		}
+
+		const sortedEntries = Object.entries(value)
+			.sort(([a], [b]) => a.localeCompare(b))
+			.map(([key, nestedValue]) => [key, this.sortKeys(nestedValue)]);
+
+		return Object.fromEntries(sortedEntries);
 	}
-
-	const sortedEntries = Object.entries(value)
-		.sort(([a], [b]) => a.localeCompare(b))
-		.map(([k, v]) => [k, sortKeys(v)]);
-
-	return Object.fromEntries(sortedEntries);
-}
-
-export function buildCanonicalString(method: string, pathname: string, data?: unknown): string {
-	const upperMethod = method.toUpperCase();
-
-	let dataSegment = "";
-	if (data !== undefined && data !== null) {
-		const sorted = sortKeys(data as JsonValue);
-		dataSegment = JSON.stringify(sorted);
-	}
-
-	return `${upperMethod}\n${pathname}\n${dataSegment}`;
 }

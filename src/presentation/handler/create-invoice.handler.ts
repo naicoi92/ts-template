@@ -1,6 +1,6 @@
 import {
 	type AuthContext,
-	buildCanonicalString,
+	CanonicalStringBuilder,
 	UseCaseLogProxy,
 	UseCasePartnerAuthProxy,
 } from "../../application/proxy";
@@ -30,6 +30,7 @@ export class CreateInvoiceHandler implements Handler<
 	readonly method = "POST";
 	readonly bodySchema = CreateInvoiceInputDtoSchema;
 	readonly responseSchema = CreateInvoiceOutputDtoSchema;
+	private readonly canonicalStringBuilder = new CanonicalStringBuilder();
 	constructor(
 		private readonly _deps: {
 			logger: Logger;
@@ -44,7 +45,7 @@ export class CreateInvoiceHandler implements Handler<
 	async handle(
 		data: RequestData<void, void, CreateInvoiceInputDto>,
 	): Promise<CreateInvoiceOutputDto> {
-		const canonicalString = buildCanonicalString(this.method, this.pathname, data.body);
+		const canonicalString = this.canonicalStringBuilder.build(this.method, this.pathname, data.body);
 		const authContext: AuthContext = {
 			partnerName: data.headers.get("x-partner-name") ?? "",
 			signature: data.headers.get("x-signature") ?? "",
