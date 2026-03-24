@@ -49,7 +49,9 @@ export class GetInvoiceHandler implements Handler<GetInvoiceOutputDto, InvoicePa
 		return await this.getInvoiceUseCase(authContext).execute(inputForUseCase);
 	}
 
-	private getInvoiceUseCase(authContext: AuthContext): UseCase<GetInvoiceInputDto, GetInvoiceOutputDto> {
+	private getInvoiceUseCase(
+		authContext: AuthContext,
+	): UseCase<GetInvoiceInputDto, GetInvoiceOutputDto> {
 		const logger = this.logger.withTraceId("ginv");
 		logger.info("Initializing GetInvoiceUseCase");
 		return new UseCaseLogProxy<GetInvoiceInputDto, GetInvoiceOutputDto>({

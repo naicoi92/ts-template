@@ -49,7 +49,9 @@ container.register({
 	]).singleton(),
 
 	// Header Provider Factory
-	headerProviderFactory: asFunction(() => (headers: Headers) => new BunHeaderProvider(headers)).singleton(),
+	headerProviderFactory: asFunction(
+		() => (headers: Headers) => new BunHeaderProvider(headers),
+	).singleton(),
 
 	// Handlers (must be Handler[])
 	handlers: asFunction(() => [
