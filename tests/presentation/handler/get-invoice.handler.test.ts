@@ -1,26 +1,40 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { Invoice } from "../../../src/domain/entity";
 import { GetInvoiceHandler } from "../../../src/presentation/handler/get-invoice.handler";
-import { createMockInvoiceRepository, createMockLogger, resetAllMocks } from "../../mocks/index.ts";
-import { invoiceFixtures } from "../../fixtures/index.ts";
+import {
+	createMockHeaderProvider,
+	createMockInvoiceRepository,
+	createMockLogger,
+	createMockPartnerRepository,
+	createMockSignatureVerifier,
+	resetAllMocks,
+} from "../../mocks/index.ts";
+import { invoiceFixtures, partnerFixtures } from "../../fixtures/index.ts";
+import { PartnerAuthenticationError } from "../../../src/domain/error";
 
 describe("GetInvoiceHandler", () => {
 	const logger = createMockLogger();
 	const invoiceRepo = createMockInvoiceRepository();
+	const partnerRepo = createMockPartnerRepository();
+	const signatureVerifier = createMockSignatureVerifier();
+	const headerProvider = createMockHeaderProvider();
 
 	let handler: GetInvoiceHandler;
 
 	beforeEach(() => {
-		resetAllMocks(logger, invoiceRepo);
+		resetAllMocks(logger, invoiceRepo, undefined, undefined, partnerRepo, signatureVerifier);
+		headerProvider.clear();
 
 		handler = new GetInvoiceHandler({
 			logger,
 			invoiceRepository: invoiceRepo,
+			partnerRepository: partnerRepo,
+			signatureVerifier,
 		});
 	});
 
 	afterEach(() => {
-		resetAllMocks(logger, invoiceRepo);
+		resetAllMocks(logger, invoiceRepo, undefined, undefined, partnerRepo, signatureVerifier);
 	});
 
 	describe("handler metadata", () => {
@@ -37,14 +51,146 @@ describe("GetInvoiceHandler", () => {
 		});
 	});
 
+	describe("auth validation", () => {
+		const orderId = "ORDER-001";
+
+		test("1. missing x-partner-name header returns 401", async () => {
+			headerProvider.setHeader("x-signature", "some-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
+
+			await expect(
+				handler.handle({
+					params: { orderId },
+					query: undefined as never,
+					body: undefined as never,
+					headers: headerProvider,
+				}),
+			).rejects.toThrow(PartnerAuthenticationError);
+		});
+
+		test("2. missing x-signature header returns 401", async () => {
+			headerProvider.setHeader("x-partner-name", "partner-abc");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
+
+			await expect(
+				handler.handle({
+					params: { orderId },
+					query: undefined as never,
+					body: undefined as never,
+					headers: headerProvider,
+				}),
+			).rejects.toThrow(PartnerAuthenticationError);
+		});
+
+		test("3. missing both headers returns 401", async () => {
+			await expect(
+				handler.handle({
+					params: { orderId },
+					query: undefined as never,
+					body: undefined as never,
+					headers: headerProvider,
+				}),
+			).rejects.toThrow(PartnerAuthenticationError);
+		});
+
+		test("3b. missing x-timestamp header returns 401", async () => {
+			headerProvider.setHeader("x-partner-name", "partner-abc");
+			headerProvider.setHeader("x-signature", "some-signature");
+
+			await expect(
+				handler.handle({
+					params: { orderId },
+					query: undefined as never,
+					body: undefined as never,
+					headers: headerProvider,
+				}),
+			).rejects.toThrow(PartnerAuthenticationError);
+		});
+
+		test("4. invalid signature returns 401", async () => {
+			const partner = partnerFixtures.valid();
+			partnerRepo.seedPartner(partner);
+			signatureVerifier.setDefaultValid(false);
+
+			headerProvider.setHeader("x-partner-name", partner.name);
+			headerProvider.setHeader("x-signature", "invalid-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
+
+			await expect(
+				handler.handle({
+					params: { orderId },
+					query: undefined as never,
+					body: undefined as never,
+					headers: headerProvider,
+				}),
+			).rejects.toThrow(PartnerAuthenticationError);
+		});
+
+		test("5. unknown partner returns 401", async () => {
+			signatureVerifier.setDefaultValid(true);
+
+			headerProvider.setHeader("x-partner-name", "unknown-partner");
+			headerProvider.setHeader("x-signature", "some-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
+
+			await expect(
+				handler.handle({
+					params: { orderId },
+					query: undefined as never,
+					body: undefined as never,
+					headers: headerProvider,
+				}),
+			).rejects.toThrow(PartnerAuthenticationError);
+		});
+
+		test("6. valid auth continues to business logic", async () => {
+			const partner = partnerFixtures.valid();
+			partnerRepo.seedPartner(partner);
+			signatureVerifier.setDefaultValid(true);
+
+			const invoiceData = invoiceFixtures.complete();
+			const invoice = new Invoice(invoiceData);
+			invoiceRepo.seedInvoice(invoice);
+
+			headerProvider.setHeader("x-partner-name", partner.name);
+			headerProvider.setHeader("x-signature", "valid-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
+
+			const result = await handler.handle({
+				params: { orderId: invoiceData.orderId! },
+				query: undefined as never,
+				body: undefined as never,
+				headers: headerProvider,
+			});
+
+			expect(result).toBeInstanceOf(Object);
+			expect(result.orderId).toBe(invoiceData.orderId!);
+			expect(result.invoiceId).toBe(invoiceData.invoiceId!);
+			expect(result.code).toBe(invoiceData.code!);
+			expect(result.amount).toBe(invoiceData.amount!);
+			expect(result.status).toBe(invoiceData.status!);
+		});
+	});
+
 	describe("handle", () => {
 		test("should return data object", async () => {
+			const partner = partnerFixtures.valid();
+			partnerRepo.seedPartner(partner);
+			signatureVerifier.setDefaultValid(true);
+
+			headerProvider.setHeader("x-partner-name", partner.name);
+			headerProvider.setHeader("x-signature", "valid-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
+
 			const invoiceData = invoiceFixtures.complete();
 			const invoice = new Invoice(invoiceData);
 			invoiceRepo.seedInvoice(invoice);
 
 			const data = await handler.handle({
 				params: { orderId: invoiceData.orderId! },
+				query: undefined as never,
+				body: undefined as never,
+				headers: headerProvider,
 			});
 
 			expect(data).toBeInstanceOf(Object);
@@ -58,37 +204,69 @@ describe("GetInvoiceHandler", () => {
 		});
 
 		test("should log use case initialization", async () => {
+			const partner = partnerFixtures.valid();
+			partnerRepo.seedPartner(partner);
+			signatureVerifier.setDefaultValid(true);
+
+			headerProvider.setHeader("x-partner-name", partner.name);
+			headerProvider.setHeader("x-signature", "valid-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
+
 			const invoiceData = invoiceFixtures.complete();
 			const invoice = new Invoice(invoiceData);
 			invoiceRepo.seedInvoice(invoice);
 
 			await handler.handle({
 				params: { orderId: invoiceData.orderId! },
+				query: undefined as never,
+				body: undefined as never,
+				headers: headerProvider,
 			});
 
 			expect(logger.hasLog("info", "Initializing GetInvoiceUseCase")).toBe(true);
 		});
 
 		test("should log fetching invoice", async () => {
+			const partner = partnerFixtures.valid();
+			partnerRepo.seedPartner(partner);
+			signatureVerifier.setDefaultValid(true);
+
+			headerProvider.setHeader("x-partner-name", partner.name);
+			headerProvider.setHeader("x-signature", "valid-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
+
 			const invoiceData = invoiceFixtures.complete();
 			const invoice = new Invoice(invoiceData);
 			invoiceRepo.seedInvoice(invoice);
 
 			await handler.handle({
 				params: { orderId: invoiceData.orderId! },
+				query: undefined as never,
+				body: undefined as never,
+				headers: headerProvider,
 			});
 
 			expect(logger.hasLog("info", "Fetching invoice by orderId")).toBe(true);
 		});
 
 		test("should return invoice data for complete invoice (paid or unpaid)", async () => {
-			// complete invoice
+			const partner = partnerFixtures.valid();
+			partnerRepo.seedPartner(partner);
+			signatureVerifier.setDefaultValid(true);
+
+			headerProvider.setHeader("x-partner-name", partner.name);
+			headerProvider.setHeader("x-signature", "valid-signature");
+			headerProvider.setHeader("x-timestamp", "2024-01-15T10:00:00Z");
+
 			const invoiceData = invoiceFixtures.complete();
 			const invoice = new Invoice(invoiceData);
 			invoiceRepo.seedInvoice(invoice);
 
 			const data1 = await handler.handle({
 				params: { orderId: invoiceData.orderId! },
+				query: undefined as never,
+				body: undefined as never,
+				headers: headerProvider,
 			});
 			expect(data1).toEqual({
 				orderId: invoiceData.orderId!,
@@ -103,6 +281,9 @@ describe("GetInvoiceHandler", () => {
 			invoiceRepo.seedInvoice(paidInvoice);
 			const data2 = await handler.handle({
 				params: { orderId: paidInvoiceData.orderId! },
+				query: undefined as never,
+				body: undefined as never,
+				headers: headerProvider,
 			});
 			expect(data2).toEqual({
 				orderId: paidInvoiceData.orderId!,

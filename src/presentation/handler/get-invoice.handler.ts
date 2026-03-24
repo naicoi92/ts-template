@@ -1,8 +1,20 @@
-import { UseCaseLogProxy } from "../../application/proxy";
+import {
+	type AuthContext,
+	UseCaseLogProxy,
+	UseCasePartnerAuthProxy,
+} from "../../application/proxy";
 import { GetInvoiceUseCase } from "../../application/use-case";
-import type { Handler, InvoiceRepository, Logger } from "../../domain/interface";
+import type {
+	Handler,
+	InvoiceRepository,
+	Logger,
+	PartnerRepository,
+	SignatureVerifier,
+	UseCase,
+} from "../../domain/interface";
 import { GetInvoiceOutputDtoSchema, InvoiceParamsDtoSchema } from "../../domain/schema";
-import type { GetInvoiceOutputDto, InvoiceParamsDto } from "../../domain/type";
+import type { GetInvoiceInputDto, GetInvoiceOutputDto, InvoiceParamsDto } from "../../domain/type";
+import type { RequestData } from "../../domain/interface/http-handler.interface";
 
 export class GetInvoiceHandler implements Handler<GetInvoiceOutputDto, InvoiceParamsDto> {
 	readonly pathname = "/invoices/:orderId";
@@ -14,29 +26,65 @@ export class GetInvoiceHandler implements Handler<GetInvoiceOutputDto, InvoicePa
 		private readonly _deps: {
 			logger: Logger;
 			invoiceRepository: InvoiceRepository;
+			partnerRepository: PartnerRepository;
+			signatureVerifier: SignatureVerifier;
 		},
 	) {}
 
-	async handle(data: { params: InvoiceParamsDto }): Promise<GetInvoiceOutputDto> {
-		return await this.getInvoiceUseCase.execute(data.params.orderId);
+	async handle(data: RequestData<InvoiceParamsDto, void, void>): Promise<GetInvoiceOutputDto> {
+		const resolvedPathname = this.resolvePathname(data.params);
+		const authContext: AuthContext = {
+			partnerName: data.headers.get("x-partner-name") ?? "",
+			signature: data.headers.get("x-signature") ?? "",
+			request: {
+				method: this.method,
+				pathname: resolvedPathname,
+				timestamp: data.headers.get("x-timestamp") ?? "",
+			},
+		};
+		const inputForUseCase: GetInvoiceInputDto = {
+			orderId: data.params.orderId,
+		};
+
+		return await this.getInvoiceUseCase(authContext).execute(inputForUseCase);
 	}
 
-	private get getInvoiceUseCase() {
+	private getInvoiceUseCase(
+		authContext: AuthContext,
+	): UseCase<GetInvoiceInputDto, GetInvoiceOutputDto> {
 		const logger = this.logger.withTraceId("ginv");
 		logger.info("Initializing GetInvoiceUseCase");
-		return new UseCaseLogProxy<string, GetInvoiceOutputDto>({
-			useCase: new GetInvoiceUseCase({
-				logger: logger,
-				invoiceRepository: this.invoiceRepository,
+		return new UseCaseLogProxy<GetInvoiceInputDto, GetInvoiceOutputDto>({
+			useCase: new UseCasePartnerAuthProxy<GetInvoiceInputDto, GetInvoiceOutputDto>({
+				useCase: new GetInvoiceUseCase({
+					logger: logger,
+					invoiceRepository: this.invoiceRepository,
+				}),
+				authContext,
+				partnerRepository: this.partnerRepository,
+				signatureVerifier: this.signatureVerifier,
 			}),
 			logger: logger,
 		});
 	}
+
 	private get invoiceRepository(): InvoiceRepository {
 		return this._deps.invoiceRepository;
 	}
 
 	private get logger(): Logger {
 		return this._deps.logger;
+	}
+
+	private get partnerRepository(): PartnerRepository {
+		return this._deps.partnerRepository;
+	}
+
+	private get signatureVerifier(): SignatureVerifier {
+		return this._deps.signatureVerifier;
+	}
+
+	private resolvePathname(params: InvoiceParamsDto): string {
+		return this.pathname.replace(/:orderId/g, params.orderId);
 	}
 }

@@ -5,6 +5,7 @@ import {
 	RequestValidationError,
 	ServiceUnhealthyError,
 	InvoiceAmountMisMatch,
+	PartnerAuthenticationError,
 } from "../../../src/domain/error";
 import { ErrorMapper } from "../../../src/presentation/render/error.mapper";
 import {
@@ -102,6 +103,14 @@ describe("ErrorMapper", () => {
 		const result = mapper.map(new InvoiceAmountMisMatch("ORD-1", 100, 50));
 		expect(result.status).toBe(400);
 		expect(result.body.error.message).toContain("ORD-1");
+	});
+
+	test("maps PartnerAuthenticationError to 401", () => {
+		const result = mapper.map(new PartnerAuthenticationError());
+		expect(result.status).toBe(401);
+		expect(result.body).toEqual({
+			error: { message: "Authentication failed" },
+		});
 	});
 
 	test("maps generic Error to 500 with generic message", () => {

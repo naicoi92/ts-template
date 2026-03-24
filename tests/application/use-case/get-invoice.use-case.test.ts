@@ -32,7 +32,7 @@ describe("GetInvoiceUseCase", () => {
 			const invoice = new Invoice(invoiceData);
 			invoiceRepo.seedInvoice(invoice);
 
-			const result = await useCase.execute(invoiceData.orderId!);
+			const result = await useCase.execute({ orderId: invoiceData.orderId! });
 
 			expect(result).toBeDefined();
 			expect(result.orderId).toBe(invoiceData.orderId!);
@@ -40,7 +40,7 @@ describe("GetInvoiceUseCase", () => {
 		});
 
 		test("should throw InvoiceNotFoundError when invoice not found", async () => {
-			await expect(useCase.execute("NON-EXISTENT")).rejects.toThrow(InvoiceNotFoundError);
+			await expect(useCase.execute({ orderId: "NON-EXISTENT" })).rejects.toThrow(InvoiceNotFoundError);
 		});
 
 		test("should log fetching invoice", async () => {
@@ -48,7 +48,7 @@ describe("GetInvoiceUseCase", () => {
 			const invoice = new Invoice(invoiceData);
 			invoiceRepo.seedInvoice(invoice);
 
-			await useCase.execute(invoiceData.orderId!);
+			await useCase.execute({ orderId: invoiceData.orderId! });
 
 			expect(logger.hasLog("info", "Fetching invoice")).toBe(true);
 		});
