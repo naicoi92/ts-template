@@ -1,18 +1,26 @@
-# 🚀 Bun Clean Architecture Starter
+# 💳 QR Payment Service
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Bun](https://img.shields.io/badge/Runtime-Bun-black?logo=bun)](https://bun.sh)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Oxlint](https://img.shields.io/badge/Linter-Oxlint-60a5fa?logo=oxc)](https://oxc.rs/)
 
-A production-ready TypeScript starter template featuring Clean Architecture, Domain-Driven Design principles, Bun runtime, Kysely ORM, and PostgreSQL.
+Backend service for QR code payment processing. Built with Clean Architecture, Domain-Driven Design, Bun runtime, Kysely ORM, and PostgreSQL.
 
 ## 🌟 Introduction
 
-This template provides a solid foundation for building scalable, maintainable backend services with TypeScript. It follows Clean Architecture principles with clear separation of concerns across domain, application, infrastructure, and presentation layers.
+QR Payment Service là hệ thống xử lý thanh toán QR code, cho phép các đối tác (partners) tạo hóa đơn (invoices) và khách hàng thanh toán thông qua QR code. Hệ thống được thiết kế theo Clean Architecture với sự phân tách rõ ràng giữa domain logic, application use cases, infrastructure concerns và presentation layer.
 
-## 💡 Why This Template
+## 💡 Features
 
+### Core Business
+- **📱 QR Invoice Generation** - Tạo hóa đơn thanh toán QR cho đối tác
+- **🔐 Partner Authentication** - Xác thực đối tác qua HMAC signature
+- **👤 Customer Management** - Quản lý thông tin khách hàng
+- **📊 Invoice Tracking** - Theo dõi trạng thái hóa đơn (PENDING, PAID, CANCELLED)
+- **🧾 Invoice Codes** - Tạo mã hóa đơn tự động theo định dạng chuẩn
+
+### Technical
 - **⚡ Bun Runtime** - Fast JavaScript runtime with native TypeScript support
 - **🏗️ Clean Architecture** - Domain-centric design with dependency inversion
 - **📦 DDD Patterns** - Rich domain entities, repository interfaces, use cases
@@ -32,17 +40,11 @@ This template provides a solid foundation for building scalable, maintainable ba
 
 ### Installation
 
-1. **Use this template**
-
-    Click the "Use this template" button on GitHub or:
+1. **Clone repository**
 
     ```bash
-    # Using degit (recommended)
-    npx degit yourusername/bun-clean-architecture-starter my-project
-
-    # Or clone directly
-    git clone https://github.com/yourusername/bun-clean-architecture-starter.git my-project
-    cd my-project
+    git clone https://github.com/yourusername/qr-payment.git
+    cd qr-payment
     ```
 
 2. **Install dependencies**
@@ -62,6 +64,8 @@ This template provides a solid foundation for building scalable, maintainable ba
 
     ```bash
     bun run dev
+    # Or use Task runner
+    task dev
     ```
 
 ## 📁 Project Structure
@@ -141,6 +145,44 @@ qr-payment/
 | `task clean`  | Clean build artifacts                                 |
 
 > **Note**: Taskfile is the canonical task runner. CI uses package.json scripts with slight differences (Taskfile adds `--minify --sourcemap` to build).
+
+## 🔌 API Endpoints
+
+### Invoice Management
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `POST` | `/invoices` | Create new invoice | Partner HMAC |
+| `GET` | `/invoices/:orderId` | Get invoice by order ID | Partner HMAC |
+| `GET` | `/health` | Health check | None |
+
+### Request/Response Example
+
+**Create Invoice:**
+```bash
+curl -X POST http://localhost:4001/invoices \
+  -H "Content-Type: application/json" \
+  -H "X-Partner-ID: partner-123" \
+  -H "X-Signature: <hmac-signature>" \
+  -d '{
+    "orderId": "ORDER-001",
+    "email": "customer@example.com",
+    "amount": 100000
+  }'
+```
+
+**Response:**
+```json
+{
+  "invoiceId": 1,
+  "code": "INV-2025-000001",
+  "orderId": "ORDER-001",
+  "email": "customer@example.com",
+  "amount": 100000,
+  "status": "PENDING",
+  "createdAt": "2025-03-25T10:00:00Z"
+}
+```
 
 ## 📝 Key Patterns
 
@@ -262,21 +304,36 @@ Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
 
 ## 📋 What's Included
 
-- ✅ Clean Architecture folder structure (domain/application/infrastructure/presentation)
-- ✅ TypeScript strict mode configuration (~6,200 lines)
-- ✅ Oxlint/Oxfmt for linting and formatting (Ox toolchain)
-- ✅ Zod for environment and input validation
-- ✅ Kysely ORM with PostgreSQL
-- ✅ Awilix dependency injection with container registration
-- ✅ Structured logging with LogLayer + Pino
-- ✅ Bun native server with graceful shutdown
-- ✅ Request/Response adapters with body parsing
-- ✅ Example domain entities (Invoice, Customer, Partner)
-- ✅ Complete use cases with proxy patterns
-- ✅ Comprehensive test suite with mocks & fixtures
-- ✅ GitHub Actions CI workflow (lint → typecheck → test → build)
-- ✅ Task runner (Taskfile.yml) for local development
-- ✅ Issue and PR templates
+### Domain Entities
+- ✅ **Invoice** - QR hóa đơn với mã tự động, trạng thái, amount
+- ✅ **Customer** - Thông tin khách hàng (email, số điện thoại)
+- ✅ **Partner** - Đối tác tích hợp với API keys và secrets
+
+### Use Cases
+- ✅ **CreateInvoiceUseCase** - Tạo hóa đơn mới với validation
+- ✅ **GetInvoiceUseCase** - Truy vấn hóa đơn theo orderId
+- ✅ **UseCaseLogProxy** - Logging decorator cho tất cả use cases
+- ✅ **PartnerAuthenticationProxy** - Xác thực HMAC signature
+
+### Infrastructure
+- ✅ Kysely PostgreSQL repositories với type-safe queries
+- ✅ Bun server với graceful shutdown
+- ✅ Request/Response adapters với body parsing (JSON, form-urlencoded)
+- ✅ HMAC signature verification service
+- ✅ Structured logging với LogLayer + Pino
+
+### Testing & Quality
+- ✅ Comprehensive test suite (~6,200 lines)
+- ✅ Class-based mocks với reset/seed patterns
+- ✅ Test fixtures cho Invoice, Customer, Partner
+- ✅ Oxlint/Oxfmt cho linting và formatting
+- ✅ GitHub Actions CI workflow
+- ✅ Task runner (Taskfile.yml)
+
+### Documentation
+- ✅ Layer-specific AGENTS.md files
+- ✅ Code patterns và conventions
+- ✅ Anti-patterns guide
 
 ## 📚 Documentation
 
@@ -293,16 +350,26 @@ Detailed documentation for each layer is available in `AGENTS.md` files througho
 
 ## 🔮 Roadmap
 
-- [x] Clean Architecture structure
-- [x] Domain entities with validation
-- [x] Use cases with proxy patterns
-- [x] Authentication middleware
-- [x] Comprehensive test suite
-- [ ] Add database migration setup
-- [ ] Add rate limiting
-- [ ] Add OpenAPI documentation
-- [ ] Add Docker configuration
-- [ ] Add performance benchmarks
+### Core Features
+- [x] QR invoice generation
+- [x] Partner authentication (HMAC)
+- [x] Customer management
+- [x] Invoice tracking (PENDING/PAID/CANCELLED)
+- [x] Invoice code auto-generation
+- [ ] Payment callback/webhook
+- [ ] Payment expiration handling
+- [ ] Invoice cancellation
+- [ ] Bulk invoice operations
+
+### Technical Improvements
+- [ ] Database migration setup
+- [ ] Rate limiting
+- [ ] OpenAPI documentation
+- [ ] Docker containerization
+- [ ] Redis caching layer
+- [ ] Event-driven architecture (Inngest)
+- [ ] Performance benchmarks
+- [ ] Metrics & monitoring (Prometheus/Grafana)
 
 ## 📄 License
 
