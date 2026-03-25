@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
 import { ProxyBuilder } from "../../../src/application/builder/proxy.builder";
-import type { ProxyCtor } from "../../../src/application/builder/proxy.builder";
 import type { UseCase } from "../../../src/domain/interface/usecase.interface";
 
 // --- Test helpers: proxies that record wrapping order ---
@@ -119,12 +118,8 @@ describe("ProxyBuilder", () => {
 describe("ProxyBuilder with deps", () => {
 	test("passes deps to proxy constructor", () => {
 		const target = new BaseTarget();
-
-		const CtorWithDeps: ProxyCtor<TrackedTarget, string> =
-			TrackedProxyWithDeps as unknown as ProxyCtor<TrackedTarget, string>;
-
 		const result = new ProxyBuilder(target)
-			.withProxy(CtorWithDeps, "DEPS")
+			.withProxy(TrackedProxyWithDeps, "DEPS")
 			.build();
 
 		expect(result.callStack).toEqual(["DEPS", "base"]);
