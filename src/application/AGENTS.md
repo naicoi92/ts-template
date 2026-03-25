@@ -71,3 +71,21 @@ export class UseCaseLogProxy<I, O> implements UseCase<I, O> {
 - **Private getters for deps** - `private get logger() { return this._deps.logger; }`
 - **Return DTOs, not entities** - Use `to*OutputDto()` methods for transformation
 - **Proxies are decorators** - Use proxy pattern for cross-cutting (logging, timing, caching)
+
+## Builder Pattern
+
+```typescript
+// src/application/builder/invoice.builder.ts
+export class InvoiceBuilder {
+  private _data: InvoiceDto = {};
+
+  setOrderId(orderId: string): this {
+    this._data.orderId = orderId;
+    return this;
+  }
+
+  build(): Invoice {
+    return new Invoice(this._data);
+  }
+}
+```
