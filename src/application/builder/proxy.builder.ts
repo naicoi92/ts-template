@@ -2,14 +2,11 @@ export type ProxyCtor<T, D = void> = [D] extends [void]
 	? new (target: T) => T
 	: new (target: T, deps: D) => T;
 
-type ProxyDeps<C extends new (target: any, ...args: any[]) => any> = ConstructorParameters<C> extends [
-	any,
-	infer D,
-	...any[],
+type ProxyDeps<C extends new (target: any, ...args: any[]) => any> =
+	ConstructorParameters<C> extends [any, infer D, ...any[]] ? D : void;
+type ProxyDepsArgs<C extends new (target: any, ...args: any[]) => any> = [ProxyDeps<C>] extends [
+	void,
 ]
-	? D
-	: void;
-type ProxyDepsArgs<C extends new (target: any, ...args: any[]) => any> = [ProxyDeps<C>] extends [void]
 	? [] | [deps: ProxyDeps<C>]
 	: [deps: ProxyDeps<C>];
 
