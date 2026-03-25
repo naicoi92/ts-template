@@ -5,19 +5,27 @@ import { partnerFixtures } from "../../fixtures/partner.fixture";
 import { MockPartnerRepository } from "../../mocks/partner-repository.mock";
 import { MockSignatureVerifier } from "../../mocks/signature-verifier.mock";
 import { MockUseCase } from "../../mocks/usecase.mock";
+import { MockHeaderProvider } from "../../mocks/header-provider.mock";
 
 const mockInnerUseCase = new MockUseCase<object, { success: true; input: object }>();
 
-const AuthContext = {
-	partnerName: "partner-abc",
-	signature: "valid-signature",
-	request: {
-		method: "POST",
-		pathname: "/invoices",
-		timestamp: "2024-01-15T10:00:00Z",
-		data: { orderId: "ORDER-001", amount: 100 },
-	},
-} as const;
+function createAuthSource(
+	partnerName: string,
+	signature: string,
+	timestamp: string,
+	method = "POST",
+	pathname = "/invoices",
+) {
+	const headers = new MockHeaderProvider();
+	headers.setHeader("x-partner-name", partnerName);
+	headers.setHeader("x-signature", signature);
+	headers.setHeader("x-timestamp", timestamp);
+	return {
+		headers,
+		method,
+		pathname,
+	};
+}
 
 describe("UseCasePartnerAuthProxy", () => {
 	let partnerRepo: MockPartnerRepository;
@@ -38,7 +46,7 @@ describe("UseCasePartnerAuthProxy", () => {
 			"../../../src/application/proxy/usecase-partner-auth.proxy"
 		);
 		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
-			authContext: AuthContext,
+			authSource: createAuthSource("partner-abc", "valid-signature", "2024-01-15T10:00:00Z"),
 			partnerRepository: partnerRepo,
 			signatureVerifier: signatureVerifier,
 		});
@@ -55,19 +63,9 @@ describe("UseCasePartnerAuthProxy", () => {
 		const { UseCasePartnerAuthProxy } = await import(
 			"../../../src/application/proxy/usecase-partner-auth.proxy"
 		);
-		const authContextWithoutPartnerName = {
-			partnerName: "",
-			signature: "valid-signature",
-			request: {
-				method: "POST",
-				pathname: "/invoices",
-				timestamp: "2024-01-15T10:00:00Z",
-				data: { orderId: "ORDER-001", amount: 100 },
-			},
-		};
 
 		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
-			authContext: authContextWithoutPartnerName,
+			authSource: createAuthSource("", "valid-signature", "2024-01-15T10:00:00Z"),
 			partnerRepository: partnerRepo,
 			signatureVerifier: signatureVerifier,
 		});
@@ -84,19 +82,9 @@ describe("UseCasePartnerAuthProxy", () => {
 		const { UseCasePartnerAuthProxy } = await import(
 			"../../../src/application/proxy/usecase-partner-auth.proxy"
 		);
-		const authContextWithoutSignature = {
-			partnerName: "partner-abc",
-			signature: "",
-			request: {
-				method: "POST",
-				pathname: "/invoices",
-				timestamp: "2024-01-15T10:00:00Z",
-				data: { orderId: "ORDER-001", amount: 100 },
-			},
-		};
 
 		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
-			authContext: authContextWithoutSignature,
+			authSource: createAuthSource("partner-abc", "", "2024-01-15T10:00:00Z"),
 			partnerRepository: partnerRepo,
 			signatureVerifier: signatureVerifier,
 		});
@@ -114,19 +102,9 @@ describe("UseCasePartnerAuthProxy", () => {
 		const { UseCasePartnerAuthProxy } = await import(
 			"../../../src/application/proxy/usecase-partner-auth.proxy"
 		);
-		const authContextWithoutTimestamp = {
-			partnerName: "partner-abc",
-			signature: "valid-signature",
-			request: {
-				method: "POST",
-				pathname: "/invoices",
-				timestamp: "",
-				data: { orderId: "ORDER-001", amount: 100 },
-			},
-		};
 
 		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
-			authContext: authContextWithoutTimestamp,
+			authSource: createAuthSource("partner-abc", "valid-signature", ""),
 			partnerRepository: partnerRepo,
 			signatureVerifier: signatureVerifier,
 		});
@@ -143,7 +121,7 @@ describe("UseCasePartnerAuthProxy", () => {
 			"../../../src/application/proxy/usecase-partner-auth.proxy"
 		);
 		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
-			authContext: AuthContext,
+			authSource: createAuthSource("partner-abc", "valid-signature", "2024-01-15T10:00:00Z"),
 			partnerRepository: partnerRepo,
 			signatureVerifier: signatureVerifier,
 		});
@@ -162,7 +140,7 @@ describe("UseCasePartnerAuthProxy", () => {
 			"../../../src/application/proxy/usecase-partner-auth.proxy"
 		);
 		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
-			authContext: AuthContext,
+			authSource: createAuthSource("partner-abc", "valid-signature", "2024-01-15T10:00:00Z"),
 			partnerRepository: partnerRepo,
 			signatureVerifier: signatureVerifier,
 		});
@@ -187,7 +165,7 @@ describe("UseCasePartnerAuthProxy", () => {
 			"../../../src/application/proxy/usecase-partner-auth.proxy"
 		);
 		proxy = new UseCasePartnerAuthProxy(trackingUseCase, {
-			authContext: AuthContext,
+			authSource: createAuthSource("partner-abc", "valid-signature", "2024-01-15T10:00:00Z"),
 			partnerRepository: partnerRepo,
 			signatureVerifier: signatureVerifier,
 		});
@@ -210,7 +188,7 @@ describe("UseCasePartnerAuthProxy", () => {
 		}
 
 		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
-			authContext: AuthContext,
+			authSource: createAuthSource("partner-abc", "valid-signature", "2024-01-15T10:00:00Z"),
 			partnerRepository: new ThrowingRepo(),
 			signatureVerifier: signatureVerifier,
 		});

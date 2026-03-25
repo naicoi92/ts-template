@@ -214,7 +214,6 @@ describe("CreateInvoiceHandler", () => {
 					method: "POST",
 					pathname: "/invoices",
 					timestamp: "2024-01-15T10:00:00Z",
-					data: validBody,
 				},
 			});
 

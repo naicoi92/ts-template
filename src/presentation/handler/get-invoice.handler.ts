@@ -12,8 +12,8 @@ import type {
 } from "../../domain/interface";
 import { GetInvoiceOutputDtoSchema, InvoiceParamsDtoSchema } from "../../domain/schema";
 import type { GetInvoiceInputDto, GetInvoiceOutputDto, InvoiceParamsDto } from "../../domain/type";
+import type { PartnerAuthSource } from "../../domain/type/partner-auth-source.type";
 import type { RequestData } from "../../domain/interface/http-handler.interface";
-import { PartnerRequestAuthContextFactory } from "../factory/partner-request-auth-context.factory";
 
 export class GetInvoiceHandler implements Handler<GetInvoiceOutputDto, InvoiceParamsDto> {
 	readonly pathname = "/invoices/:orderId";
@@ -27,17 +27,16 @@ export class GetInvoiceHandler implements Handler<GetInvoiceOutputDto, InvoicePa
 			invoiceRepository: InvoiceRepository;
 			partnerRepository: PartnerRepository;
 			signatureVerifier: SignatureVerifier;
-			authContextFactory?: PartnerRequestAuthContextFactory;
 		},
 	) {}
 
 	async handle(data: RequestData<InvoiceParamsDto, void, void>): Promise<GetInvoiceOutputDto> {
 		const resolvedPathname = this.resolvePathname(data.params);
-		const authContext = this.authContextFactory.create({
+		const authSource: PartnerAuthSource = {
 			headers: data.headers,
 			method: this.method,
 			pathname: resolvedPathname,
-		});
+		};
 
 		const logger = this.logger.withTraceId("ginv");
 		logger.info("Initializing GetInvoiceUseCase");
@@ -51,7 +50,7 @@ export class GetInvoiceHandler implements Handler<GetInvoiceOutputDto, InvoicePa
 			baseUseCase,
 		)
 			.withProxy(UseCasePartnerAuthProxy, {
-				authContext,
+				authSource,
 				partnerRepository: this.partnerRepository,
 				signatureVerifier: this.signatureVerifier,
 			})
@@ -77,10 +76,6 @@ export class GetInvoiceHandler implements Handler<GetInvoiceOutputDto, InvoicePa
 
 	private get signatureVerifier(): SignatureVerifier {
 		return this._deps.signatureVerifier;
-	}
-
-	private get authContextFactory(): PartnerRequestAuthContextFactory {
-		return this._deps.authContextFactory ?? new PartnerRequestAuthContextFactory();
 	}
 
 	private resolvePathname(params: InvoiceParamsDto): string {

@@ -2,7 +2,6 @@ export type SignatureVerificationRequest = {
 	method: string;
 	pathname: string;
 	timestamp: string;
-	data?: unknown;
 };
 
 export type SignatureVerificationInput = {

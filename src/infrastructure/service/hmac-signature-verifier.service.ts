@@ -4,8 +4,6 @@ import type {
 	SignatureVerifier,
 } from "../../domain/interface/signature-verifier.interface";
 
-type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
-
 const MAX_SIGNATURE_AGE_SECONDS = 300;
 
 export class HmacSignatureVerifierService implements SignatureVerifier {
@@ -28,7 +26,6 @@ export class HmacSignatureVerifierService implements SignatureVerifier {
 			request.method,
 			request.pathname,
 			request.timestamp,
-			request.data,
 		);
 
 		const expectedSignature = this.computeHmacSha256(token, canonical);
@@ -36,21 +33,10 @@ export class HmacSignatureVerifierService implements SignatureVerifier {
 		return this.constantTimeCompare(signature, expectedSignature);
 	}
 
-	private buildCanonicalString(
-		method: string,
-		pathname: string,
-		timestamp?: string,
-		data?: unknown,
-	): string {
+	private buildCanonicalString(method: string, pathname: string, timestamp?: string): string {
 		const upperMethod = method.toUpperCase();
 
-		let dataSegment = "";
-		if (data !== undefined && data !== null) {
-			const sorted = this.sortJsonKeys(data as JsonValue);
-			dataSegment = JSON.stringify(sorted);
-		}
-
-		return `${upperMethod}\n${pathname}\n${timestamp ?? ""}\n${dataSegment}`;
+		return `${upperMethod}\n${pathname}\n${timestamp ?? ""}\n`;
 	}
 
 	private isValidTimestamp(timestamp?: string): boolean {
@@ -71,22 +57,6 @@ export class HmacSignatureVerifierService implements SignatureVerifier {
 		const ageSeconds = nowSeconds - timestampSeconds;
 
 		return Math.abs(ageSeconds) <= MAX_SIGNATURE_AGE_SECONDS;
-	}
-
-	private sortJsonKeys(value: JsonValue): JsonValue {
-		if (value === null || typeof value !== "object") {
-			return value;
-		}
-
-		if (Array.isArray(value)) {
-			return value.map((item) => this.sortJsonKeys(item));
-		}
-
-		const sortedEntries = Object.entries(value)
-			.sort(([a], [b]) => a.localeCompare(b))
-			.map(([key, nestedValue]) => [key, this.sortJsonKeys(nestedValue)]);
-
-		return Object.fromEntries(sortedEntries);
 	}
 
 	private computeHmacSha256(token: string, canonical: string): string {
