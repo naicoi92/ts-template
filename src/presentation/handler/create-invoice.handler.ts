@@ -1,8 +1,6 @@
-import {
-	type AuthContext,
-	UseCaseLogProxy,
-	UseCasePartnerAuthProxy,
-} from "../../application/proxy";
+import { ProxyBuilder } from "../../application/builder/proxy.builder";
+import { UseCaseLogProxy } from "../../application/proxy/usecase-log.proxy";
+import { UseCasePartnerAuthProxy } from "../../application/proxy/usecase-partner-auth.proxy";
 import { CreateInvoiceUseCase } from "../../application/use-case";
 import type {
 	CustomerRepository,
@@ -18,6 +16,7 @@ import { CreateInvoiceInputDtoSchema, CreateInvoiceOutputDtoSchema } from "../..
 import type { CreateInvoiceInputDto, CreateInvoiceOutputDto } from "../../domain/type";
 import type { RequestData } from "../../domain/interface/http-handler.interface";
 import { CacheCustomerProxy } from "../../infrastructure/repositories/cache-customer.proxy";
+import { PartnerRequestAuthContextFactory } from "../factory/partner-request-auth-context.factory";
 
 export class CreateInvoiceHandler implements Handler<
 	CreateInvoiceOutputDto,
@@ -29,6 +28,8 @@ export class CreateInvoiceHandler implements Handler<
 	readonly method = "POST";
 	readonly bodySchema = CreateInvoiceInputDtoSchema;
 	readonly responseSchema = CreateInvoiceOutputDtoSchema;
+	private readonly _authContextFactory = new PartnerRequestAuthContextFactory();
+
 	constructor(
 		private readonly _deps: {
 			logger: Logger;
@@ -43,42 +44,40 @@ export class CreateInvoiceHandler implements Handler<
 	async handle(
 		data: RequestData<void, void, CreateInvoiceInputDto>,
 	): Promise<CreateInvoiceOutputDto> {
-		const authContext: AuthContext = {
-			partnerName: data.headers.get("x-partner-name") ?? "",
-			signature: data.headers.get("x-signature") ?? "",
-			request: {
-				method: this.method,
-				pathname: this.pathname,
-				timestamp: data.headers.get("x-timestamp") ?? "",
-				data: data.body,
-			},
-		};
+		const authContext = this._authContextFactory.create({
+			headers: data.headers,
+			method: this.method,
+			pathname: this.pathname,
+			data: data.body,
+		});
 
-		return await this.createInvoiceUseCase(authContext).execute(data.body);
-	}
-
-	private createInvoiceUseCase(
-		authContext: AuthContext,
-	): UseCase<CreateInvoiceInputDto, CreateInvoiceOutputDto> {
 		const logger = this.logger.withTraceId("cinv");
-		const actualUseCase = new CreateInvoiceUseCase({
-			logger: logger,
+
+		const cachedCustomerRepo = new ProxyBuilder<CustomerRepository>(this.customerRepository)
+			.withProxy(CacheCustomerProxy)
+			.build();
+
+		const baseUseCase = new CreateInvoiceUseCase({
+			logger,
 			invoiceCodeGenerator: this.invoiceCodeGenerator,
-			customerRepository: new CacheCustomerProxy({
-				customerRepository: this.customerRepository,
-			}),
+			customerRepository: cachedCustomerRepo,
 			invoiceRepository: this.invoiceRepository,
 		});
-		return new UseCaseLogProxy<CreateInvoiceInputDto, CreateInvoiceOutputDto>({
-			useCase: new UseCasePartnerAuthProxy<CreateInvoiceInputDto, CreateInvoiceOutputDto>({
-				useCase: actualUseCase,
+
+		const useCase = new ProxyBuilder<UseCase<CreateInvoiceInputDto, CreateInvoiceOutputDto>>(
+			baseUseCase,
+		)
+			.withProxy(UseCasePartnerAuthProxy, {
 				authContext,
 				partnerRepository: this.partnerRepository,
 				signatureVerifier: this.signatureVerifier,
-			}),
-			logger: logger,
-		});
+			})
+			.withProxy(UseCaseLogProxy, { logger })
+			.build();
+
+		return await useCase.execute(data.body);
 	}
+
 	private get invoiceRepository(): InvoiceRepository {
 		return this._deps.invoiceRepository;
 	}

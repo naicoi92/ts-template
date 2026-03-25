@@ -4,20 +4,16 @@ import type { InvoiceCreateDto } from "../../domain/type";
 
 export class CacheInvoiceProxy implements InvoiceRepository {
 	orders: Map<string, Invoice> = new Map();
-	constructor(private deps: { invoiceRepository: InvoiceRepository }) {}
+	constructor(private target: InvoiceRepository) {}
 	async findByOrderId(orderId: string): Promise<Invoice> {
 		if (this.orders.has(orderId)) return this.orders.get(orderId) as Invoice;
-		const invoice = await this.invoiceRepository.findByOrderId(orderId);
+		const invoice = await this.target.findByOrderId(orderId);
 		this.orders.set(orderId, invoice);
 		return invoice;
 	}
 	async create(data: InvoiceCreateDto): Promise<Invoice> {
-		const invoice = await this.invoiceRepository.create(data);
+		const invoice = await this.target.create(data);
 		this.orders.set(invoice.orderId, invoice);
 		return invoice;
-	}
-
-	private get invoiceRepository(): InvoiceRepository {
-		return this.deps.invoiceRepository;
 	}
 }

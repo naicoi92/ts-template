@@ -3,15 +3,13 @@ import type { Logger, UseCase } from "../../domain/interface";
 export class UseCaseLogProxy<I, O> implements UseCase<I, O> {
 	timeBegin: number = Date.now();
 	constructor(
-		private deps: {
-			useCase: UseCase<I, O>;
-			logger: Logger;
-		},
+		private target: UseCase<I, O>,
+		private deps: { logger: Logger },
 	) {}
 	async execute(input: I): Promise<O> {
 		this.timeBegin = Date.now();
 		try {
-			const result = await this.useCase.execute(input);
+			const result = await this.target.execute(input);
 			this.logger
 				.withData({ input, executionTime: this.executionTime })
 				.info("execute use case successfully");
@@ -30,9 +28,6 @@ export class UseCaseLogProxy<I, O> implements UseCase<I, O> {
 		return `${executionTime}ms`;
 	}
 
-	private get useCase(): UseCase<I, O> {
-		return this.deps.useCase;
-	}
 	private get logger(): Logger {
 		return this.deps.logger;
 	}

@@ -24,23 +24,76 @@ presentation/
 
 ## PATTERNS
 
-### Handler Pattern
+### Handler Pattern (with UseCaseCompositionBuilder)
 
 ```typescript
 // handler/create-invoice.handler.ts
 export class CreateInvoiceHandler implements Handler<TResponse, TParams, TQuery, TBody> {
-	readonly pathname = "/invoices"; // NOT urlPattern!
+	readonly pathname = "/invoices";
 	readonly method = "POST";
-	readonly bodySchema = InvoiceCreateDtoSchema; // Zod schema
+	readonly bodySchema = InvoiceCreateDtoSchema;
 	readonly responseSchema = CreateInvoiceResponseSchema;
 
 	constructor(
-		private readonly _deps: { createInvoiceUseCase: CreateInvoiceUseCase; logger: Logger },
+		private readonly _deps: {
+			logger: Logger;
+			invoiceRepository: InvoiceRepository;
+			customerRepository: CustomerRepository;
+			invoiceCodeGenerator: InvoiceCodeGenerator;
+			partnerRepository: PartnerRepository;
+			signatureVerifier: SignatureVerifier;
+		},
 	) {}
 
+	async handle(data: RequestData<TParams, TQuery, TBody>): Promise<TResponse> {
+		// 1. Create auth context from request
+		const authContext = new PartnerRequestAuthContextFactory().create({
+			headers: data.headers,
+			method: this.method,
+			pathname: this.pathname,
+			data: data.body,
+		});
+
+		// 2. Create per-request cached repository (if needed)
+		const cachedCustomerRepository = new CachedCustomerRepositoryFactory().create(
+			this.customerRepository,
+		);
+
+		// 3. Create base use case
+		const baseUseCase = new CreateInvoiceUseCase({
+			logger: this.logger.withTraceId("cinv"),
+			invoiceRepository: this.invoiceRepository,
+			customerRepository: cachedCustomerRepository,
+			invoiceCodeGenerator: this.invoiceCodeGenerator,
+		});
+
+		// 4. Build decorated use case chain
+		const useCase = new UseCaseCompositionBuilder(baseUseCase)
+			.withPartnerAuthentication(authContext, this.partnerRepository, this.signatureVerifier)
+			.withLogging(this.logger.withTraceId("cinv"))
+			.build();
+
+		// 5. Execute and return
+		return await useCase.execute(data.body);
+	}
+}
+```
+
+### Legacy Handler Pattern (without composition builder)
+
+```typescript
+// handler/simple-handler.handler.ts
+export class SimpleHandler implements Handler<TResponse, TParams, TQuery, TBody> {
+	readonly pathname = "/simple";
+	readonly method = "POST";
+	readonly bodySchema = SimpleDtoSchema;
+	readonly responseSchema = SimpleResponseSchema;
+
+	constructor(private readonly _deps: { simpleUseCase: SimpleUseCase }) {}
+
 	async handle(data: { body: TBody }): Promise<TResponse> {
-		const invoice = await this.createInvoiceUseCase.execute(data.body);
-		return {}; // Returns typed response, NOT Response object
+		const result = await this.simpleUseCase.execute(data.body);
+		return result;
 	}
 }
 ```
