@@ -14,9 +14,9 @@ import type {
 } from "../../domain/interface";
 import { CreateInvoiceInputDtoSchema, CreateInvoiceOutputDtoSchema } from "../../domain/schema";
 import type { CreateInvoiceInputDto, CreateInvoiceOutputDto } from "../../domain/type";
+import type { PartnerAuthSource } from "../../domain/type/partner-auth-source.type";
 import type { RequestData } from "../../domain/interface/http-handler.interface";
 import { CacheCustomerProxy } from "../../infrastructure/repositories/cache-customer.proxy";
-import { PartnerRequestAuthContextFactory } from "../factory/partner-request-auth-context.factory";
 
 export class CreateInvoiceHandler implements Handler<
 	CreateInvoiceOutputDto,
@@ -28,7 +28,6 @@ export class CreateInvoiceHandler implements Handler<
 	readonly method = "POST";
 	readonly bodySchema = CreateInvoiceInputDtoSchema;
 	readonly responseSchema = CreateInvoiceOutputDtoSchema;
-	private readonly _authContextFactory = new PartnerRequestAuthContextFactory();
 
 	constructor(
 		private readonly _deps: {
@@ -44,12 +43,11 @@ export class CreateInvoiceHandler implements Handler<
 	async handle(
 		data: RequestData<void, void, CreateInvoiceInputDto>,
 	): Promise<CreateInvoiceOutputDto> {
-		const authContext = this._authContextFactory.create({
+		const authSource: PartnerAuthSource = {
 			headers: data.headers,
 			method: this.method,
 			pathname: this.pathname,
-			data: data.body,
-		});
+		};
 
 		const logger = this.logger.withTraceId("cinv");
 
@@ -68,7 +66,7 @@ export class CreateInvoiceHandler implements Handler<
 			baseUseCase,
 		)
 			.withProxy(UseCasePartnerAuthProxy, {
-				authContext,
+				authSource,
 				partnerRepository: this.partnerRepository,
 				signatureVerifier: this.signatureVerifier,
 			})

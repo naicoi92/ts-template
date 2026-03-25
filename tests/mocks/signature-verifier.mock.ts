@@ -23,22 +23,13 @@ export class MockSignatureVerifier implements SignatureVerifier {
 				s.signature === signature &&
 				s.request.method === request.method &&
 				s.request.pathname === request.pathname &&
-				s.request.timestamp === request.timestamp &&
-				this.toComparableData(s.request.data) === this.toComparableData(request.data),
+				s.request.timestamp === request.timestamp,
 		);
 		if (seeded) return true;
 
 		if (this.defaultValid) return true;
 
 		return false;
-	}
-
-	private toComparableData(data: unknown): string {
-		if (data === undefined) {
-			return "__undefined__";
-		}
-
-		return JSON.stringify(data);
 	}
 
 	reset(): void {

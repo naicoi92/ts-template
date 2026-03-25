@@ -6,44 +6,19 @@ import type {
 	SignatureVerifier,
 } from "../../../src/domain/interface/signature-verifier.interface";
 
-type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
-
 const MAX_SIGNATURE_AGE_SECONDS = 300;
 const FIXED_NOW_MS = Date.parse("2026-03-24T12:00:00.000Z");
 const FIXED_NOW_SECONDS = Math.floor(FIXED_NOW_MS / 1000);
 const originalDateNow = Date.now;
 
-function sortJsonKeys(value: JsonValue): JsonValue {
-	if (value === null || typeof value !== "object") {
-		return value;
-	}
-
-	if (Array.isArray(value)) {
-		return value.map(sortJsonKeys);
-	}
-
-	const sortedEntries = Object.entries(value)
-		.sort(([a], [b]) => a.localeCompare(b))
-		.map(([key, nestedValue]) => [key, sortJsonKeys(nestedValue)]);
-
-	return Object.fromEntries(sortedEntries);
-}
-
 function buildCanonicalString(
 	method: string,
 	pathname: string,
 	timestamp?: string,
-	data?: unknown,
 ): string {
 	const upperMethod = method.toUpperCase();
 
-	let dataSegment = "";
-	if (data !== undefined && data !== null) {
-		const sorted = sortJsonKeys(data as JsonValue);
-		dataSegment = JSON.stringify(sorted);
-	}
-
-	return `${upperMethod}\n${pathname}\n${timestamp ?? ""}\n${dataSegment}`;
+	return `${upperMethod}\n${pathname}\n${timestamp ?? ""}\n`;
 }
 
 function createSignature(token: string, request: SignatureVerificationRequest): string {
@@ -51,7 +26,6 @@ function createSignature(token: string, request: SignatureVerificationRequest): 
 		request.method,
 		request.pathname,
 		request.timestamp,
-		request.data,
 	);
 	const hmac = createHmac("sha256", token);
 	hmac.update(canonical);
@@ -79,7 +53,6 @@ describe("HmacSignatureVerifierService", () => {
 					method: "POST",
 					pathname: "/invoices",
 					timestamp,
-					data: { amount: 100 },
 				};
 				const signature = createSignature(token, request);
 
@@ -94,7 +67,6 @@ describe("HmacSignatureVerifierService", () => {
 					method: "POST",
 					pathname: "/invoices",
 					timestamp,
-					data: { amount: 100 },
 				};
 				const signature = createSignature(token, request);
 
@@ -109,10 +81,9 @@ describe("HmacSignatureVerifierService", () => {
 					method: "POST",
 					pathname: "/quick-brown-fox",
 					timestamp,
-					data: "The quick brown fox jumps over the lazy dog",
 				};
 				const hmac = createHmac("sha256", token);
-				hmac.update(`POST\n/quick-brown-fox\n${timestamp}\n\"The quick brown fox jumps over the lazy dog\"`);
+				hmac.update(`POST\n/quick-brown-fox\n${timestamp}\n`);
 				const expectedSignature = hmac.digest("hex");
 
 				const result = verifier.verify({ token, signature: expectedSignature, request });
@@ -126,12 +97,9 @@ describe("HmacSignatureVerifierService", () => {
 					method: "POST",
 					pathname: "/quick-brown-fox",
 					timestamp,
-					data: "The quick brown fox jumps over the lazy dog",
 				};
 				const hmac = createHmac("sha256", token);
-				hmac.update(
-					`POST\n/quick-brown-fox\n${timestamp}\n\"The quick brown fox jumps over the lazy dog\"`,
-				);
+				hmac.update(`POST\n/quick-brown-fox\n${timestamp}\n`);
 				const expectedSignature = hmac.digest("hex");
 
 				const result = verifier.verify({ token, signature: expectedSignature, request });
@@ -147,7 +115,6 @@ describe("HmacSignatureVerifierService", () => {
 					method: "POST",
 					pathname: "/invoices",
 					timestamp,
-					data: { amount: 100 },
 				};
 				const invalidSignature = "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -162,7 +129,6 @@ describe("HmacSignatureVerifierService", () => {
 					method: "POST",
 					pathname: "/invoices",
 					timestamp,
-					data: { amount: 100 },
 				};
 				const wrongSignature = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
@@ -177,7 +143,6 @@ describe("HmacSignatureVerifierService", () => {
 					method: "POST",
 					pathname: "/invoices",
 					timestamp,
-					data: { amount: 100 },
 				};
 				const shortSignature = "abcd";
 
@@ -192,7 +157,6 @@ describe("HmacSignatureVerifierService", () => {
 					method: "POST",
 					pathname: "/invoices",
 					timestamp,
-					data: { amount: 100 },
 				};
 				const nonHexSignature = "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg";
 
@@ -209,7 +173,6 @@ describe("HmacSignatureVerifierService", () => {
 					method: "POST",
 					pathname: "/invoices",
 					timestamp,
-					data: { amount: 100 },
 				};
 
 				const result = verifier.verify({ token, signature: "", request });
@@ -223,7 +186,6 @@ describe("HmacSignatureVerifierService", () => {
 					method: "POST",
 					pathname: "/invoices",
 					timestamp,
-					data: { amount: 100 },
 				};
 				const signature = "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8";
 
@@ -252,7 +214,6 @@ describe("HmacSignatureVerifierService", () => {
 					method: "POST",
 					pathname: "/invoices",
 					timestamp,
-					data: { amount: 100 },
 				};
 				const oddLengthSignature = "f7bc83f430538424b13298e6aa6fb143"; // 31 chars, odd
 
@@ -266,7 +227,6 @@ describe("HmacSignatureVerifierService", () => {
 					method: "POST",
 					pathname: "/invoices",
 					timestamp: "not-a-unix-timestamp",
-					data: { amount: 100 },
 				};
 				const signature = createSignature(token, request);
 
@@ -280,7 +240,6 @@ describe("HmacSignatureVerifierService", () => {
 					method: "POST",
 					pathname: "/invoices",
 					timestamp: `${FIXED_NOW_SECONDS - MAX_SIGNATURE_AGE_SECONDS - 1}`,
-					data: { amount: 100 },
 				};
 				const signature = createSignature(token, request);
 
@@ -294,7 +253,6 @@ describe("HmacSignatureVerifierService", () => {
 					method: "POST",
 					pathname: "/invoices",
 					timestamp: `${FIXED_NOW_SECONDS + MAX_SIGNATURE_AGE_SECONDS + 1}`,
-					data: { amount: 100 },
 				};
 				const signature = createSignature(token, request);
 
@@ -311,7 +269,6 @@ describe("HmacSignatureVerifierService", () => {
 					method: "POST",
 					pathname: "/invoices",
 					timestamp,
-					data: { amount: 100 },
 				};
 				const validSignature = createSignature(token, request);
 
