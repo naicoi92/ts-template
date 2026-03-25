@@ -8,9 +8,9 @@ export class ProxyBuilder<T> {
 
 	withProxy<D = void>(
 		ProxyClass: ProxyCtor<T, D>,
-		deps: [D] extends [void] ? D | undefined : D,
+		deps?: [D] extends [void] ? D | undefined : D,
 	): this {
-		this.current = new ProxyClass(this.current, deps);
+		this.current = new ProxyClass(this.current, deps as [D] extends [void] ? D | undefined : D);
 		return this;
 	}
 
