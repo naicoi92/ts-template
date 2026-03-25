@@ -33,11 +33,7 @@ export class HmacSignatureVerifierService implements SignatureVerifier {
 		return this.constantTimeCompare(signature, expectedSignature);
 	}
 
-	private buildCanonicalString(
-		method: string,
-		pathname: string,
-		timestamp?: string,
-	): string {
+	private buildCanonicalString(method: string, pathname: string, timestamp?: string): string {
 		const upperMethod = method.toUpperCase();
 
 		return `${upperMethod}\n${pathname}\n${timestamp ?? ""}\n`;
