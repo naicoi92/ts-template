@@ -89,3 +89,92 @@ export class InvoiceBuilder {
   }
 }
 ```
+
+### ProxyBuilder Pattern
+
+**Generic Builder Usage**
+
+The `ProxyBuilder<T>` pattern provides a fluent interface for decorating use cases and repositories with cross-cutting concerns.
+
+**Constructor Signature Pattern:**
+```typescript
+new ProxyBuilder<UseCase<Input, Output>>(baseUseCase)
+  .withLogging(logger)
+  .withCaching(cacheStore)
+  .build();
+```
+
+**Use Case Example:**
+```typescript
+// src/application/proxy/use-case-log.proxy.ts
+export class UseCaseLogProxy<I, O> implements UseCase<I, O> {
+  constructor(
+    private deps: { useCase: UseCase<I, O>; logger: Logger }
+  ) {}
+
+  async execute(input: I): Promise<O> {
+    const start = Date.now();
+    try {
+      const result = await this.useCase.execute(input);
+      this.deps.logger.withData({ executionTime: `${Date.now() - start}ms` })
+        .info("success");
+      return result;
+    } catch (error) {
+      this.deps.logger.withError(error).error("failed");
+      throw error;
+    }
+  }
+}
+```
+
+**Repository Example:**
+```typescript
+// src/application/proxy/repository-cache.proxy.ts
+export class RepositoryCacheProxy<R extends Repository> implements Repository<R> {
+  constructor(
+    private deps: { repository: R; cacheStore: CacheStore }
+  ) {}
+
+  async execute(input: any): Promise<any> {
+    const cacheKey = this.generateCacheKey(input);
+    const cached = await this.cacheStore.get(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.repository.execute(input);
+    await this.cacheStore.set(cacheKey, result);
+    return result;
+  }
+}
+```
+
+**Inner→Outer Semantics:**
+- **Inner**: Base component (use case or repository)
+- **Outer**: Decorated component with added behavior
+- **Semantics**: Outer layer wraps inner, allowing cross-cutting concerns to be added incrementally
+
+**Fluent Interface:**
+- Each builder method returns `this` for chaining
+- `build()` returns the final decorated component
+- Methods like `withLogging`, `withCaching`, `withAuthentication` can be added in any order
+
+**Constructor Pattern:**
+```typescript
+class ProxyBuilder<T> {
+  private _component: T;
+  constructor(component: T) {
+    this._component = component;
+  }
+  withLogging(logger: Logger): this {
+    // add logging behavior
+    return this;
+  }
+  withCaching(cacheStore: CacheStore): this {
+    // add caching behavior
+    return this;
+  }
+  build(): T {
+    // return decorated component
+    return this._component;
+  }
+}
+```

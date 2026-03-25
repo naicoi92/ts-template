@@ -37,7 +37,7 @@ describe("CacheCustomerProxy", () => {
 			updatedAt: dto.updatedAt as Date,
 		})));
 
-		const proxy = new CacheCustomerProxy({ customerRepository: mockRepo });
+		const proxy = new CacheCustomerProxy(mockRepo);
 
 		await proxy.findByEmail(email);
 		expect(counter.findByEmail).toBe(1);
@@ -56,7 +56,7 @@ describe("CacheCustomerProxy", () => {
 			updatedAt: dto.updatedAt as Date,
 		})));
 
-		const proxy = new CacheCustomerProxy({ customerRepository: mockRepo });
+		const proxy = new CacheCustomerProxy(mockRepo);
 
 		const result = await proxy.findByEmail(email);
 
@@ -81,7 +81,7 @@ describe("CacheCustomerProxy", () => {
 			return originalCreate(data);
 		};
 
-		const proxy = new CacheCustomerProxy({ customerRepository: notFoundRepo });
+		const proxy = new CacheCustomerProxy(notFoundRepo);
 
 		const result = await proxy.findByEmail(email);
 
@@ -101,7 +101,7 @@ describe("CacheCustomerProxy", () => {
 		}
 
 		const errorRepo = new OtherErrorRepo();
-		const proxy = new CacheCustomerProxy({ customerRepository: errorRepo });
+		const proxy = new CacheCustomerProxy(errorRepo);
 
 		await expect(proxy.findByEmail(email)).rejects.toThrow("database connection lost");
 		await expect(proxy.findByEmail(email)).rejects.not.toThrow(CustomerNotFoundError);
@@ -117,11 +117,11 @@ describe("CacheCustomerProxy", () => {
 			updatedAt: dto.updatedAt as Date,
 		})));
 
-		const proxy1 = new CacheCustomerProxy({ customerRepository: mockRepo });
+		const proxy1 = new CacheCustomerProxy(mockRepo);
 		await proxy1.findByEmail(email);
 		expect(counter.findByEmail).toBe(1);
 
-		const proxy2 = new CacheCustomerProxy({ customerRepository: mockRepo });
+		const proxy2 = new CacheCustomerProxy(mockRepo);
 		await proxy2.findByEmail(email);
 		expect(counter.findByEmail).toBe(2);
 
@@ -131,7 +131,7 @@ describe("CacheCustomerProxy", () => {
 
 	test("6. create caches the customer for future findByEmail", async () => {
 		const email = "newcustomer@example.com";
-		const proxy = new CacheCustomerProxy({ customerRepository: mockRepo });
+		const proxy = new CacheCustomerProxy(mockRepo);
 
 		await proxy.create({ email });
 

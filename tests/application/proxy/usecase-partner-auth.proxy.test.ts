@@ -37,8 +37,7 @@ describe("UseCasePartnerAuthProxy", () => {
 		const { UseCasePartnerAuthProxy } = await import(
 			"../../../src/application/proxy/usecase-partner-auth.proxy"
 		);
-		proxy = new UseCasePartnerAuthProxy({
-			useCase: mockInnerUseCase,
+		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
 			authContext: AuthContext,
 			partnerRepository: partnerRepo,
 			signatureVerifier: signatureVerifier,
@@ -67,8 +66,7 @@ describe("UseCasePartnerAuthProxy", () => {
 			},
 		};
 
-		proxy = new UseCasePartnerAuthProxy({
-			useCase: mockInnerUseCase,
+		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
 			authContext: authContextWithoutPartnerName,
 			partnerRepository: partnerRepo,
 			signatureVerifier: signatureVerifier,
@@ -97,8 +95,7 @@ describe("UseCasePartnerAuthProxy", () => {
 			},
 		};
 
-		proxy = new UseCasePartnerAuthProxy({
-			useCase: mockInnerUseCase,
+		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
 			authContext: authContextWithoutSignature,
 			partnerRepository: partnerRepo,
 			signatureVerifier: signatureVerifier,
@@ -128,8 +125,7 @@ describe("UseCasePartnerAuthProxy", () => {
 			},
 		};
 
-		proxy = new UseCasePartnerAuthProxy({
-			useCase: mockInnerUseCase,
+		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
 			authContext: authContextWithoutTimestamp,
 			partnerRepository: partnerRepo,
 			signatureVerifier: signatureVerifier,
@@ -146,8 +142,7 @@ describe("UseCasePartnerAuthProxy", () => {
 		const { UseCasePartnerAuthProxy } = await import(
 			"../../../src/application/proxy/usecase-partner-auth.proxy"
 		);
-		proxy = new UseCasePartnerAuthProxy({
-			useCase: mockInnerUseCase,
+		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
 			authContext: AuthContext,
 			partnerRepository: partnerRepo,
 			signatureVerifier: signatureVerifier,
@@ -166,8 +161,7 @@ describe("UseCasePartnerAuthProxy", () => {
 		const { UseCasePartnerAuthProxy } = await import(
 			"../../../src/application/proxy/usecase-partner-auth.proxy"
 		);
-		proxy = new UseCasePartnerAuthProxy({
-			useCase: mockInnerUseCase,
+		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
 			authContext: AuthContext,
 			partnerRepository: partnerRepo,
 			signatureVerifier: signatureVerifier,
@@ -192,8 +186,7 @@ describe("UseCasePartnerAuthProxy", () => {
 		const { UseCasePartnerAuthProxy } = await import(
 			"../../../src/application/proxy/usecase-partner-auth.proxy"
 		);
-		proxy = new UseCasePartnerAuthProxy({
-			useCase: trackingUseCase,
+		proxy = new UseCasePartnerAuthProxy(trackingUseCase, {
 			authContext: AuthContext,
 			partnerRepository: partnerRepo,
 			signatureVerifier: signatureVerifier,
@@ -216,8 +209,7 @@ describe("UseCasePartnerAuthProxy", () => {
 			}
 		}
 
-		proxy = new UseCasePartnerAuthProxy({
-			useCase: mockInnerUseCase,
+		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
 			authContext: AuthContext,
 			partnerRepository: new ThrowingRepo(),
 			signatureVerifier: signatureVerifier,

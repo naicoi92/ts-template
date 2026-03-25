@@ -17,10 +17,7 @@ describe("UseCaseLogProxy", () => {
 		const { UseCaseLogProxy } = await import(
 			"../../../src/application/proxy/usecase-log.proxy"
 		);
-		proxy = new UseCaseLogProxy({
-			useCase: mockUseCase,
-			logger: mockLogger,
-		});
+		proxy = new UseCaseLogProxy(mockUseCase, { logger: mockLogger });
 
 		const input = { orderId: "ORDER-001" };
 		const result = await proxy.execute(input);
@@ -43,10 +40,7 @@ describe("UseCaseLogProxy", () => {
 			throw new Error(errorMessage);
 		});
 
-		proxy = new UseCaseLogProxy({
-			useCase: mockUseCase,
-			logger: mockLogger,
-		});
+		proxy = new UseCaseLogProxy(mockUseCase, { logger: mockLogger });
 
 		const input = { orderId: "ORDER-001" };
 		await expect(proxy.execute(input)).rejects.toThrow(errorMessage);
@@ -64,10 +58,7 @@ describe("UseCaseLogProxy", () => {
 		const { UseCaseLogProxy } = await import(
 			"../../../src/application/proxy/usecase-log.proxy"
 		);
-		proxy = new UseCaseLogProxy({
-			useCase: mockUseCase,
-			logger: mockLogger,
-		});
+		proxy = new UseCaseLogProxy(mockUseCase, { logger: mockLogger });
 
 		await proxy.execute({ orderId: "ORDER-001" });
 
@@ -85,10 +76,7 @@ describe("UseCaseLogProxy", () => {
 			throw new Error("fail");
 		});
 
-		proxy = new UseCaseLogProxy({
-			useCase: mockUseCase,
-			logger: mockLogger,
-		});
+		proxy = new UseCaseLogProxy(mockUseCase, { logger: mockLogger });
 
 		await expect(proxy.execute({ orderId: "ORDER-001" })).rejects.toThrow();
 
@@ -102,10 +90,7 @@ describe("UseCaseLogProxy", () => {
 		const { UseCaseLogProxy } = await import(
 			"../../../src/application/proxy/usecase-log.proxy"
 		);
-		proxy = new UseCaseLogProxy({
-			useCase: mockUseCase,
-			logger: mockLogger,
-		});
+		proxy = new UseCaseLogProxy(mockUseCase, { logger: mockLogger });
 
 		const input = { orderId: "ORDER-002" };
 		await proxy.execute(input);

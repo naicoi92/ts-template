@@ -1,1 +1,1 @@
-export * from "./use-case-composition.builder";
+export * from "./proxy.builder";

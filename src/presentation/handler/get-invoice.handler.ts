@@ -1,4 +1,6 @@
-import { UseCaseCompositionBuilder } from "../../application/builder/use-case-composition.builder";
+import { ProxyBuilder } from "../../application/builder/proxy.builder";
+import { UseCaseLogProxy } from "../../application/proxy/usecase-log.proxy";
+import { UseCasePartnerAuthProxy } from "../../application/proxy/usecase-partner-auth.proxy";
 import { GetInvoiceUseCase } from "../../application/use-case";
 import type {
 	Handler,
@@ -6,6 +8,7 @@ import type {
 	Logger,
 	PartnerRepository,
 	SignatureVerifier,
+	UseCase,
 } from "../../domain/interface";
 import { GetInvoiceOutputDtoSchema, InvoiceParamsDtoSchema } from "../../domain/schema";
 import type { GetInvoiceInputDto, GetInvoiceOutputDto, InvoiceParamsDto } from "../../domain/type";
@@ -39,19 +42,23 @@ export class GetInvoiceHandler implements Handler<GetInvoiceOutputDto, InvoicePa
 		const logger = this.logger.withTraceId("ginv");
 		logger.info("Initializing GetInvoiceUseCase");
 
-		const useCase = new GetInvoiceUseCase({
+		const baseUseCase = new GetInvoiceUseCase({
 			logger,
 			invoiceRepository: this.invoiceRepository,
 		});
 
-		const composedUseCase = new UseCaseCompositionBuilder<GetInvoiceInputDto, GetInvoiceOutputDto>({
-			useCase,
-		})
-			.withPartnerAuthentication(authContext, this.partnerRepository, this.signatureVerifier)
-			.withLogging(logger)
+		const useCase = new ProxyBuilder<UseCase<GetInvoiceInputDto, GetInvoiceOutputDto>>(
+			baseUseCase,
+		)
+			.withProxy(UseCasePartnerAuthProxy, {
+				authContext,
+				partnerRepository: this.partnerRepository,
+				signatureVerifier: this.signatureVerifier,
+			})
+			.withProxy(UseCaseLogProxy, { logger })
 			.build();
 
-		return await composedUseCase.execute({
+		return await useCase.execute({
 			orderId: data.params.orderId,
 		});
 	}

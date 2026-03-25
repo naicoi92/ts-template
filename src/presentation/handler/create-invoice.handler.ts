@@ -1,4 +1,6 @@
-import { UseCaseCompositionBuilder } from "../../application/builder/use-case-composition.builder";
+import { ProxyBuilder } from "../../application/builder/proxy.builder";
+import { UseCaseLogProxy } from "../../application/proxy/usecase-log.proxy";
+import { UseCasePartnerAuthProxy } from "../../application/proxy/usecase-partner-auth.proxy";
 import { CreateInvoiceUseCase } from "../../application/use-case";
 import type {
 	CustomerRepository,
@@ -8,11 +10,12 @@ import type {
 	Logger,
 	PartnerRepository,
 	SignatureVerifier,
+	UseCase,
 } from "../../domain/interface";
 import { CreateInvoiceInputDtoSchema, CreateInvoiceOutputDtoSchema } from "../../domain/schema";
 import type { CreateInvoiceInputDto, CreateInvoiceOutputDto } from "../../domain/type";
 import type { RequestData } from "../../domain/interface/http-handler.interface";
-import { CachedCustomerRepositoryFactory } from "../../infrastructure/factory/cached-customer-repository.factory";
+import { CacheCustomerProxy } from "../../infrastructure/repositories/cache-customer.proxy";
 import { PartnerRequestAuthContextFactory } from "../factory/partner-request-auth-context.factory";
 
 export class CreateInvoiceHandler implements Handler<
@@ -26,7 +29,6 @@ export class CreateInvoiceHandler implements Handler<
 	readonly bodySchema = CreateInvoiceInputDtoSchema;
 	readonly responseSchema = CreateInvoiceOutputDtoSchema;
 	private readonly _authContextFactory = new PartnerRequestAuthContextFactory();
-	private readonly _cachedCustomerRepoFactory = new CachedCustomerRepositoryFactory();
 
 	constructor(
 		private readonly _deps: {
@@ -50,23 +52,30 @@ export class CreateInvoiceHandler implements Handler<
 		});
 
 		const logger = this.logger.withTraceId("cinv");
-		const cachedCustomerRepo = this._cachedCustomerRepoFactory.create(this.customerRepository);
 
-		const useCase = new CreateInvoiceUseCase({
+		const cachedCustomerRepo = new ProxyBuilder<CustomerRepository>(this.customerRepository)
+			.withProxy(CacheCustomerProxy)
+			.build();
+
+		const baseUseCase = new CreateInvoiceUseCase({
 			logger,
 			invoiceCodeGenerator: this.invoiceCodeGenerator,
 			customerRepository: cachedCustomerRepo,
 			invoiceRepository: this.invoiceRepository,
 		});
 
-		const composedUseCase = new UseCaseCompositionBuilder<CreateInvoiceInputDto, CreateInvoiceOutputDto>({
-			useCase,
-		})
-			.withPartnerAuthentication(authContext, this.partnerRepository, this.signatureVerifier)
-			.withLogging(logger)
+		const useCase = new ProxyBuilder<UseCase<CreateInvoiceInputDto, CreateInvoiceOutputDto>>(
+			baseUseCase,
+		)
+			.withProxy(UseCasePartnerAuthProxy, {
+				authContext,
+				partnerRepository: this.partnerRepository,
+				signatureVerifier: this.signatureVerifier,
+			})
+			.withProxy(UseCaseLogProxy, { logger })
 			.build();
 
-		return await composedUseCase.execute(data.body);
+		return await useCase.execute(data.body);
 	}
 
 	private get invoiceRepository(): InvoiceRepository {

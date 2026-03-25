@@ -16,8 +16,8 @@ export type AuthContext = {
 
 export class UseCasePartnerAuthProxy<I, O> implements UseCase<I, O> {
 	constructor(
-		private _deps: {
-			useCase: UseCase<I, O>;
+		private target: UseCase<I, O>,
+		private deps: {
 			authContext: AuthContext;
 			partnerRepository: PartnerRepository;
 			signatureVerifier: SignatureVerifier;
@@ -37,7 +37,7 @@ export class UseCasePartnerAuthProxy<I, O> implements UseCase<I, O> {
 
 		let partner: Partner;
 		try {
-			partner = await this._deps.partnerRepository.findByName(context.partnerName);
+			partner = await this.deps.partnerRepository.findByName(context.partnerName);
 		} catch (error) {
 			if (error instanceof PartnerNotFoundError) {
 				throw new PartnerAuthenticationError();
@@ -45,7 +45,7 @@ export class UseCasePartnerAuthProxy<I, O> implements UseCase<I, O> {
 			throw error;
 		}
 
-		const isValid = this._deps.signatureVerifier.verify({
+		const isValid = this.deps.signatureVerifier.verify({
 			token: partner.token,
 			signature: context.signature,
 			request: context.request,
@@ -54,10 +54,10 @@ export class UseCasePartnerAuthProxy<I, O> implements UseCase<I, O> {
 			throw new PartnerAuthenticationError();
 		}
 
-		return this._deps.useCase.execute(input);
+		return this.target.execute(input);
 	}
 
 	private get authContext(): AuthContext {
-		return this._deps.authContext;
+		return this.deps.authContext;
 	}
 }
