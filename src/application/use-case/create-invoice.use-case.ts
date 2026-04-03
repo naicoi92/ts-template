@@ -5,6 +5,7 @@ import type {
 	InvoiceCodeGenerator,
 	InvoiceRepository,
 	Logger,
+	PartnerRepository,
 	UseCase,
 } from "../../domain/interface";
 import type { CreateInvoiceInputDto, CreateInvoiceOutputDto } from "../../domain/type";
@@ -17,6 +18,7 @@ export class CreateInvoiceUseCase implements UseCase<
 		private _deps: {
 			logger: Logger;
 			invoiceRepository: InvoiceRepository;
+			partnerRepository: PartnerRepository;
 			customerRepository: CustomerRepository;
 			invoiceCodeGenerator: InvoiceCodeGenerator;
 		},

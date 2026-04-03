@@ -2,7 +2,7 @@ import type { Invoice } from "../../domain/entity";
 import type { InvoiceRepository } from "../../domain/interface";
 import type { InvoiceCreateDto } from "../../domain/type";
 
-export class CacheInvoiceProxy implements InvoiceRepository {
+export class CacheInvoiceRepositoryProxy implements InvoiceRepository {
 	orders: Map<string, Invoice> = new Map();
 	constructor(private target: InvoiceRepository) {}
 	async findByOrderId(orderId: string): Promise<Invoice> {

@@ -3,7 +3,7 @@ import { CustomerNotFoundError } from "../../domain/error";
 import type { CustomerRepository } from "../../domain/interface";
 import type { CustomerCreateDto } from "../../domain/type";
 
-export class CacheCustomerProxy implements CustomerRepository {
+export class CacheCustomerRepositoryProxy implements CustomerRepository {
 	customers: Map<string, Customer> = new Map();
 	constructor(private target: CustomerRepository) {}
 	async findByEmail(email: string): Promise<Customer> {

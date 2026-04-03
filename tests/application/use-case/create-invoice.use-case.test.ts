@@ -7,6 +7,7 @@ import {
 	createMockInvoiceCodeGenerator,
 	createMockInvoiceRepository,
 	createMockLogger,
+	createMockPartnerRepository,
 	resetAllMocks,
 } from "../../mocks/index.ts";
 import { invoiceFixtures, invoiceCreateFixtures } from "../../fixtures";
@@ -15,23 +16,25 @@ describe("CreateInvoiceUseCase", () => {
 	const logger = createMockLogger();
 	const invoiceRepo = createMockInvoiceRepository();
 	const customerRepo = createMockCustomerRepository();
+	const partnerRepo = createMockPartnerRepository();
 	const codeGenerator = createMockInvoiceCodeGenerator();
 
 	let useCase: CreateInvoiceUseCase;
 
 	beforeEach(() => {
-		resetAllMocks(logger, invoiceRepo, customerRepo, codeGenerator);
+		resetAllMocks(logger, invoiceRepo, customerRepo, codeGenerator, partnerRepo);
 		codeGenerator.setCodes(["INV-TEST-001"]);
 		useCase = new CreateInvoiceUseCase({
 			logger,
 			invoiceRepository: invoiceRepo,
+			partnerRepository: partnerRepo,
 			customerRepository: customerRepo,
 			invoiceCodeGenerator: codeGenerator,
 		});
 	});
 
 	afterEach(() => {
-		resetAllMocks(logger, invoiceRepo, customerRepo, codeGenerator);
+		resetAllMocks(logger, invoiceRepo, customerRepo, codeGenerator, partnerRepo);
 	});
 
 	describe("execute", () => {
