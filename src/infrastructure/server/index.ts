@@ -1,2 +1,2 @@
-export * from "./bun-header-provider";
+export * from "./bun-header";
 export * from "./bun.server";

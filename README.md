@@ -14,6 +14,7 @@ QR Payment Service là hệ thống xử lý thanh toán QR code, cho phép các
 ## 💡 Features
 
 ### Core Business
+
 - **📱 QR Invoice Generation** - Tạo hóa đơn thanh toán QR cho đối tác
 - **🔐 Partner Authentication** - Xác thực đối tác qua HMAC signature
 - **👤 Customer Management** - Quản lý thông tin khách hàng
@@ -21,6 +22,7 @@ QR Payment Service là hệ thống xử lý thanh toán QR code, cho phép các
 - **🧾 Invoice Codes** - Tạo mã hóa đơn tự động theo định dạng chuẩn
 
 ### Technical
+
 - **⚡ Bun Runtime** - Fast JavaScript runtime with native TypeScript support
 - **🏗️ Clean Architecture** - Domain-centric design with dependency inversion
 - **📦 DDD Patterns** - Rich domain entities, repository interfaces, use cases
@@ -135,14 +137,14 @@ qr-payment/
 
 ### Task Runner (Recommended for CI)
 
-| Command       | Description                                           |
-| ------------- | ----------------------------------------------------- |
-| `task dev`    | Dev server with HMR                                   |
-| `task build`  | Production build with minify + sourcemap              |
-| `task test`   | Run tests                                             |
-| `task lint`   | Run oxlint + oxfmt check                              |
-| `task ci`     | Run all CI tasks (lint → typecheck → test → build)    |
-| `task clean`  | Clean build artifacts                                 |
+| Command      | Description                                        |
+| ------------ | -------------------------------------------------- |
+| `task dev`   | Dev server with HMR                                |
+| `task build` | Production build with minify + sourcemap           |
+| `task test`  | Run tests                                          |
+| `task lint`  | Run oxlint + oxfmt check                           |
+| `task ci`    | Run all CI tasks (lint → typecheck → test → build) |
+| `task clean` | Clean build artifacts                              |
 
 > **Note**: Taskfile is the canonical task runner. CI uses package.json scripts with slight differences (Taskfile adds `--minify --sourcemap` to build).
 
@@ -150,15 +152,16 @@ qr-payment/
 
 ### Invoice Management
 
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| `POST` | `/invoices` | Create new invoice | Partner HMAC |
-| `GET` | `/invoices/:orderId` | Get invoice by order ID | Partner HMAC |
-| `GET` | `/health` | Health check | None |
+| Method | Endpoint             | Description             | Auth         |
+| ------ | -------------------- | ----------------------- | ------------ |
+| `POST` | `/invoices`          | Create new invoice      | Partner HMAC |
+| `GET`  | `/invoices/:orderId` | Get invoice by order ID | Partner HMAC |
+| `GET`  | `/health`            | Health check            | None         |
 
 ### Request/Response Example
 
 **Create Invoice:**
+
 ```bash
 curl -X POST http://localhost:4001/invoices \
   -H "Content-Type: application/json" \
@@ -172,15 +175,16 @@ curl -X POST http://localhost:4001/invoices \
 ```
 
 **Response:**
+
 ```json
 {
-  "invoiceId": 1,
-  "code": "INV-2025-000001",
-  "orderId": "ORDER-001",
-  "email": "customer@example.com",
-  "amount": 100000,
-  "status": "PENDING",
-  "createdAt": "2025-03-25T10:00:00Z"
+	"invoiceId": 1,
+	"code": "INV-2025-000001",
+	"orderId": "ORDER-001",
+	"email": "customer@example.com",
+	"amount": 100000,
+	"status": "PENDING",
+	"createdAt": "2025-03-25T10:00:00Z"
 }
 ```
 
@@ -305,17 +309,20 @@ Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
 ## 📋 What's Included
 
 ### Domain Entities
+
 - ✅ **Invoice** - QR hóa đơn với mã tự động, trạng thái, amount
 - ✅ **Customer** - Thông tin khách hàng (email, số điện thoại)
 - ✅ **Partner** - Đối tác tích hợp với API keys và secrets
 
 ### Use Cases
+
 - ✅ **CreateInvoiceUseCase** - Tạo hóa đơn mới với validation
 - ✅ **GetInvoiceUseCase** - Truy vấn hóa đơn theo orderId
 - ✅ **UseCaseLogProxy** - Logging decorator cho tất cả use cases
 - ✅ **PartnerAuthenticationProxy** - Xác thực HMAC signature
 
 ### Infrastructure
+
 - ✅ Kysely PostgreSQL repositories với type-safe queries
 - ✅ Bun server với graceful shutdown
 - ✅ Request/Response adapters với body parsing (JSON, form-urlencoded)
@@ -323,6 +330,7 @@ Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
 - ✅ Structured logging với LogLayer + Pino
 
 ### Testing & Quality
+
 - ✅ Comprehensive test suite (~6,200 lines)
 - ✅ Class-based mocks với reset/seed patterns
 - ✅ Test fixtures cho Invoice, Customer, Partner
@@ -331,6 +339,7 @@ Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
 - ✅ Task runner (Taskfile.yml)
 
 ### Documentation
+
 - ✅ Layer-specific AGENTS.md files
 - ✅ Code patterns và conventions
 - ✅ Anti-patterns guide
@@ -339,18 +348,19 @@ Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
 
 Detailed documentation for each layer is available in `AGENTS.md` files throughout the project:
 
-| Document | Description |
-|----------|-------------|
-| [`AGENTS.md`](./AGENTS.md) | Project overview, commands, configuration |
-| [`src/domain/AGENTS.md`](./src/domain/AGENTS.md) | Domain layer patterns (Entity, Repository) |
-| [`src/application/AGENTS.md`](./src/application/AGENTS.md) | Use case patterns, Proxy, Builder |
-| [`src/infrastructure/AGENTS.md`](./src/infrastructure/AGENTS.md) | Infrastructure patterns (Kysely, Config) |
-| [`src/presentation/AGENTS.md`](./src/presentation/AGENTS.md) | Handler, Adapter, Render patterns |
-| [`tests/AGENTS.md`](./tests/AGENTS.md) | Testing conventions and patterns |
+| Document                                                         | Description                                |
+| ---------------------------------------------------------------- | ------------------------------------------ |
+| [`AGENTS.md`](./AGENTS.md)                                       | Project overview, commands, configuration  |
+| [`src/domain/AGENTS.md`](./src/domain/AGENTS.md)                 | Domain layer patterns (Entity, Repository) |
+| [`src/application/AGENTS.md`](./src/application/AGENTS.md)       | Use case patterns, Proxy, Builder          |
+| [`src/infrastructure/AGENTS.md`](./src/infrastructure/AGENTS.md) | Infrastructure patterns (Kysely, Config)   |
+| [`src/presentation/AGENTS.md`](./src/presentation/AGENTS.md)     | Handler, Adapter, Render patterns          |
+| [`tests/AGENTS.md`](./tests/AGENTS.md)                           | Testing conventions and patterns           |
 
 ## 🔮 Roadmap
 
 ### Core Features
+
 - [x] QR invoice generation
 - [x] Partner authentication (HMAC)
 - [x] Customer management
@@ -362,6 +372,7 @@ Detailed documentation for each layer is available in `AGENTS.md` files througho
 - [ ] Bulk invoice operations
 
 ### Technical Improvements
+
 - [ ] Database migration setup
 - [ ] Rate limiting
 - [ ] OpenAPI documentation

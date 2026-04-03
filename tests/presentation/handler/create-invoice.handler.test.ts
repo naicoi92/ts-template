@@ -3,7 +3,7 @@ import { Customer, Invoice } from "../../../src/domain/entity";
 import { CreateInvoiceHandler } from "../../../src/presentation/handler/create-invoice.handler";
 import {
 	createMockCustomerRepository,
-	createMockHeaderProvider,
+	createMockRequestHeader,
 	createMockInvoiceCodeGenerator,
 	createMockInvoiceRepository,
 	createMockLogger,
@@ -21,12 +21,19 @@ describe("CreateInvoiceHandler", () => {
 	const invoiceCodeGenerator = createMockInvoiceCodeGenerator();
 	const partnerRepo = createMockPartnerRepository();
 	const signatureVerifier = createMockSignatureVerifier();
-	const headerProvider = createMockHeaderProvider();
+	const headerProvider = createMockRequestHeader();
 
 	let handler: CreateInvoiceHandler;
 
 	beforeEach(() => {
-		resetAllMocks(logger, invoiceRepo, customerRepo, invoiceCodeGenerator, partnerRepo, signatureVerifier);
+		resetAllMocks(
+			logger,
+			invoiceRepo,
+			customerRepo,
+			invoiceCodeGenerator,
+			partnerRepo,
+			signatureVerifier,
+		);
 		headerProvider.clear();
 
 		handler = new CreateInvoiceHandler({
@@ -40,7 +47,14 @@ describe("CreateInvoiceHandler", () => {
 	});
 
 	afterEach(() => {
-		resetAllMocks(logger, invoiceRepo, customerRepo, invoiceCodeGenerator, partnerRepo, signatureVerifier);
+		resetAllMocks(
+			logger,
+			invoiceRepo,
+			customerRepo,
+			invoiceCodeGenerator,
+			partnerRepo,
+			signatureVerifier,
+		);
 	});
 
 	describe("handler metadata", () => {

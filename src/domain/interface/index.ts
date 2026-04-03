@@ -1,7 +1,6 @@
 export * from "./config.interface";
 export * from "./usecase.interface";
 export * from "./customer-repository.interface";
-export * from "./header-provider.interface";
 export * from "./health-check-service.interface";
 export * from "./http-handler.interface";
 export * from "./invoice-code-generator.interface";

@@ -81,15 +81,15 @@ qr-payment/
 
 ### Layer-Specific
 
-| Layer         | Anti-Pattern                          | Rule                                          |
-| ------------- | ------------------------------------- | --------------------------------------------- |
-| Domain        | Infrastructure imports                | Domain never imports from other layers        |
-| Domain        | Return null from repositories         | Throw `*NotFoundError` instead                |
-| Application   | Import infrastructure implementations | Inject domain interfaces only                 |
-| Infrastructure| Import other infrastructure classes   | Use constructor injection                     |
-| Presentation  | Return Response from handlers         | Return typed data, render handles Response    |
-| Presentation  | Handler depends on infrastructure     | Handlers depend on application layer only     |
-| Tests         | Inline test data                      | Use fixtures from `tests/fixtures/`           |
+| Layer          | Anti-Pattern                          | Rule                                       |
+| -------------- | ------------------------------------- | ------------------------------------------ |
+| Domain         | Infrastructure imports                | Domain never imports from other layers     |
+| Domain         | Return null from repositories         | Throw `*NotFoundError` instead             |
+| Application    | Import infrastructure implementations | Inject domain interfaces only              |
+| Infrastructure | Import other infrastructure classes   | Use constructor injection                  |
+| Presentation   | Return Response from handlers         | Return typed data, render handles Response |
+| Presentation   | Handler depends on infrastructure     | Handlers depend on application layer only  |
+| Tests          | Inline test data                      | Use fixtures from `tests/fixtures/`        |
 
 ## COMMANDS
 
@@ -196,16 +196,17 @@ src/presentation/render/json.render.ts
 
 ## NON-STANDARD PATTERNS
 
-| Pattern | Note |
-|---------|------|
-| Route mapping | By pathname only (method check in RequestAdapter). Same path different methods not supported. |
-| Container.build | Used inside asFunction registrations - potential ordering issues |
-| headerProviderFactory | Function in container (not class) - per-request factory |
-| Config parsing | Immediate Zod parsing in constructor - env must be set before container creation |
+| Pattern               | Note                                                                                          |
+| --------------------- | --------------------------------------------------------------------------------------------- |
+| Route mapping         | By pathname only (method check in RequestAdapter). Same path different methods not supported. |
+| Container.build       | Used inside asFunction registrations - potential ordering issues                              |
+| headerProviderFactory | Function in container (not class) - per-request factory                                       |
+| Config parsing        | Immediate Zod parsing in constructor - env must be set before container creation              |
 
 ## CI/CD PIPELINE
 
 GitHub Actions (`.github/workflows/ci.yml`):
+
 1. **lint**: oxlint + oxfmt check
 2. **typecheck**: bunx tsc --noEmit
 3. **test**: bun test --timeout=10000 (needs lint + typecheck)

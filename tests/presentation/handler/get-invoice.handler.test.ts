@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { Invoice } from "../../../src/domain/entity";
 import { GetInvoiceHandler } from "../../../src/presentation/handler/get-invoice.handler";
 import {
-	createMockHeaderProvider,
+	createMockRequestHeader,
 	createMockInvoiceRepository,
 	createMockLogger,
 	createMockPartnerRepository,
@@ -17,7 +17,7 @@ describe("GetInvoiceHandler", () => {
 	const invoiceRepo = createMockInvoiceRepository();
 	const partnerRepo = createMockPartnerRepository();
 	const signatureVerifier = createMockSignatureVerifier();
-	const headerProvider = createMockHeaderProvider();
+	const headerProvider = createMockRequestHeader();
 
 	let handler: GetInvoiceHandler;
 

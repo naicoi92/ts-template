@@ -1,7 +1,12 @@
 import type z from "zod";
 import { formatZodError, RequestValidationError } from "../../domain/error/validation.error";
-import type { Handler, Logger, RequestHandler, ResponseRender } from "../../domain/interface";
-import type { HeaderProvider } from "../../domain/interface/header-provider.interface";
+import type {
+	Handler,
+	Logger,
+	RequestHandler,
+	RequestHeader,
+	ResponseRender,
+} from "../../domain/interface";
 import type { ValidationErrorSource } from "../../domain/type/validation.type";
 import { InvalidRequestMethodError } from "../error";
 import type { RequestBodyParser } from "./body-parser";
@@ -16,7 +21,7 @@ export class RequestAdapter<TResponse, TParams, TQuery, TBody> implements Reques
 			handler: Handler<TResponse, TParams, TQuery, TBody>;
 			render: ResponseRender<TResponse, Response>;
 			bodyParsers: RequestBodyParser[];
-			headerProviderFactory: (headers: Headers) => HeaderProvider;
+			headerProviderFactory: (headers: Headers) => RequestHeader;
 		},
 	) {}
 
@@ -122,7 +127,7 @@ export class RequestAdapter<TResponse, TParams, TQuery, TBody> implements Reques
 		return this._deps.render;
 	}
 
-	private createHeaderProvider(request: Request): HeaderProvider {
+	private createHeaderProvider(request: Request): RequestHeader {
 		return this._deps.headerProviderFactory(request.headers);
 	}
 }

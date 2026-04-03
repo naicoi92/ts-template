@@ -8,7 +8,7 @@ import {
 	KyselyPartnerRepository,
 } from "../infrastructure/repositories";
 import { BunServer } from "../infrastructure/server/bun.server";
-import { BunHeaderProvider } from "../infrastructure/server/bun-header-provider";
+import { BunHeader } from "../infrastructure/server/bun-header";
 import {
 	DatabaseHealthCheckService,
 	HmacSignatureVerifierService,
@@ -50,7 +50,7 @@ container.register({
 
 	// Header Provider Factory
 	headerProviderFactory: asFunction(
-		() => (headers: Headers) => new BunHeaderProvider(headers),
+		() => (headers: Headers) => new BunHeader(headers),
 	).singleton(),
 
 	// Handlers (must be Handler[])

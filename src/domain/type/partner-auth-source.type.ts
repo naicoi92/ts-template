@@ -1,4 +1,4 @@
-import type { HeaderProvider } from "../interface/header-provider.interface";
+import type { RequestHeader } from "../interface";
 
 /**
  * Raw authentication source data from partner request.
@@ -7,7 +7,7 @@ import type { HeaderProvider } from "../interface/header-provider.interface";
  * information without coupling to specific HTTP frameworks.
  */
 export type PartnerAuthSource = {
-	headers: HeaderProvider;
+	headers: RequestHeader;
 	method: string;
 	pathname: string;
 };

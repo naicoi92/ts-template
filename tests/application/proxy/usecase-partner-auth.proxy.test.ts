@@ -5,7 +5,7 @@ import { partnerFixtures } from "../../fixtures/partner.fixture";
 import { MockPartnerRepository } from "../../mocks/partner-repository.mock";
 import { MockSignatureVerifier } from "../../mocks/signature-verifier.mock";
 import { MockUseCase } from "../../mocks/usecase.mock";
-import { MockHeaderProvider } from "../../mocks/header-provider.mock";
+import { MockRequestHeader } from "../../mocks/request-header.mock";
 
 const mockInnerUseCase = new MockUseCase<object, { success: true; input: object }>();
 
@@ -16,7 +16,7 @@ function createAuthSource(
 	method = "POST",
 	pathname = "/invoices",
 ) {
-	const headers = new MockHeaderProvider();
+	const headers = new MockRequestHeader();
 	headers.setHeader("x-partner-name", partnerName);
 	headers.setHeader("x-signature", signature);
 	headers.setHeader("x-timestamp", timestamp);
@@ -42,9 +42,8 @@ describe("UseCasePartnerAuthProxy", () => {
 		partnerRepo.seedPartner(dto);
 		signatureVerifier.setDefaultValid(true);
 
-		const { UseCasePartnerAuthProxy } = await import(
-			"../../../src/application/proxy/usecase-partner-auth.proxy"
-		);
+		const { UseCasePartnerAuthProxy } =
+			await import("../../../src/application/proxy/usecase-partner-auth.proxy");
 		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
 			authSource: createAuthSource("partner-abc", "valid-signature", "2024-01-15T10:00:00Z"),
 			partnerRepository: partnerRepo,
@@ -60,9 +59,8 @@ describe("UseCasePartnerAuthProxy", () => {
 	test("2. missing partnerName throws PartnerAuthenticationError", async () => {
 		signatureVerifier.setDefaultValid(true);
 
-		const { UseCasePartnerAuthProxy } = await import(
-			"../../../src/application/proxy/usecase-partner-auth.proxy"
-		);
+		const { UseCasePartnerAuthProxy } =
+			await import("../../../src/application/proxy/usecase-partner-auth.proxy");
 
 		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
 			authSource: createAuthSource("", "valid-signature", "2024-01-15T10:00:00Z"),
@@ -79,9 +77,8 @@ describe("UseCasePartnerAuthProxy", () => {
 		const dto = partnerFixtures.valid();
 		partnerRepo.seedPartner(dto);
 
-		const { UseCasePartnerAuthProxy } = await import(
-			"../../../src/application/proxy/usecase-partner-auth.proxy"
-		);
+		const { UseCasePartnerAuthProxy } =
+			await import("../../../src/application/proxy/usecase-partner-auth.proxy");
 
 		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
 			authSource: createAuthSource("partner-abc", "", "2024-01-15T10:00:00Z"),
@@ -99,9 +96,8 @@ describe("UseCasePartnerAuthProxy", () => {
 		partnerRepo.seedPartner(dto);
 		signatureVerifier.setDefaultValid(true);
 
-		const { UseCasePartnerAuthProxy } = await import(
-			"../../../src/application/proxy/usecase-partner-auth.proxy"
-		);
+		const { UseCasePartnerAuthProxy } =
+			await import("../../../src/application/proxy/usecase-partner-auth.proxy");
 
 		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
 			authSource: createAuthSource("partner-abc", "valid-signature", ""),
@@ -117,9 +113,8 @@ describe("UseCasePartnerAuthProxy", () => {
 	test("4. unknown partner throws PartnerAuthenticationError", async () => {
 		signatureVerifier.setDefaultValid(true);
 
-		const { UseCasePartnerAuthProxy } = await import(
-			"../../../src/application/proxy/usecase-partner-auth.proxy"
-		);
+		const { UseCasePartnerAuthProxy } =
+			await import("../../../src/application/proxy/usecase-partner-auth.proxy");
 		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
 			authSource: createAuthSource("partner-abc", "valid-signature", "2024-01-15T10:00:00Z"),
 			partnerRepository: partnerRepo,
@@ -136,9 +131,8 @@ describe("UseCasePartnerAuthProxy", () => {
 		partnerRepo.seedPartner(dto);
 		signatureVerifier.setDefaultValid(false);
 
-		const { UseCasePartnerAuthProxy } = await import(
-			"../../../src/application/proxy/usecase-partner-auth.proxy"
-		);
+		const { UseCasePartnerAuthProxy } =
+			await import("../../../src/application/proxy/usecase-partner-auth.proxy");
 		proxy = new UseCasePartnerAuthProxy(mockInnerUseCase, {
 			authSource: createAuthSource("partner-abc", "valid-signature", "2024-01-15T10:00:00Z"),
 			partnerRepository: partnerRepo,
@@ -161,9 +155,8 @@ describe("UseCasePartnerAuthProxy", () => {
 			},
 		});
 
-		const { UseCasePartnerAuthProxy } = await import(
-			"../../../src/application/proxy/usecase-partner-auth.proxy"
-		);
+		const { UseCasePartnerAuthProxy } =
+			await import("../../../src/application/proxy/usecase-partner-auth.proxy");
 		proxy = new UseCasePartnerAuthProxy(trackingUseCase, {
 			authSource: createAuthSource("partner-abc", "valid-signature", "2024-01-15T10:00:00Z"),
 			partnerRepository: partnerRepo,
@@ -177,9 +170,8 @@ describe("UseCasePartnerAuthProxy", () => {
 	});
 
 	test("7. unexpected repository error propagates without converting to PartnerAuthenticationError", async () => {
-		const { UseCasePartnerAuthProxy } = await import(
-			"../../../src/application/proxy/usecase-partner-auth.proxy"
-		);
+		const { UseCasePartnerAuthProxy } =
+			await import("../../../src/application/proxy/usecase-partner-auth.proxy");
 
 		class ThrowingRepo extends MockPartnerRepository {
 			override async findByName(_name: string): Promise<never> {

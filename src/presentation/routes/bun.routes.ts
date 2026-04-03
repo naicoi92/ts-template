@@ -1,6 +1,11 @@
 import { fromPairs, keys, map } from "lodash-es";
-import type { Handler, Logger, RequestHandler, ResponseRender } from "../../domain/interface";
-import type { HeaderProvider } from "../../domain/interface/header-provider.interface";
+import type {
+	Handler,
+	Logger,
+	RequestHandler,
+	RequestHeader,
+	ResponseRender,
+} from "../../domain/interface";
 import { RequestAdapter } from "../adapter";
 import type { RequestBodyParser } from "../adapter/body-parser";
 import { ErrorMapper, JsonRender } from "../render";
@@ -17,7 +22,7 @@ export class BunRoutes {
 			handlers: Handler[];
 			logger: Logger;
 			bodyParsers: RequestBodyParser[];
-			headerProviderFactory: (headers: Headers) => HeaderProvider;
+			headerProviderFactory: (headers: Headers) => RequestHeader;
 		},
 	) {}
 

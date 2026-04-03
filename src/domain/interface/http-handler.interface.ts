@@ -1,6 +1,26 @@
 import type { z } from "zod";
-import type { HeaderProvider } from "./header-provider.interface";
 
+/**
+ * Framework-agnostic header access interface
+ *
+ * Abstracts HTTP header retrieval to keep domain/presentation
+ * layers independent of specific runtime implementations.
+ */
+export interface RequestHeader {
+	/**
+	 * Get header value by name
+	 * @param name - Case-insensitive header name
+	 * @returns Header value or null if not found
+	 */
+	get(name: string): string | null;
+
+	/**
+	 * Check if header exists
+	 * @param name - Case-insensitive header name
+	 * @returns true if header exists, false otherwise
+	 */
+	has(name: string): boolean;
+}
 /**
  * Validated request data passed to handler
  * Types are inferred from Zod schemas
@@ -13,7 +33,7 @@ export interface RequestData<TParams, TQuery, TBody> {
 	/** Validated request body */
 	readonly body: TBody;
 	/** Header provider for accessing request headers */
-	readonly headers: HeaderProvider;
+	readonly headers: RequestHeader;
 }
 /**
  * HTTP Request Handler Interface

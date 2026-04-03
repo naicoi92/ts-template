@@ -1,6 +1,6 @@
-import type { HeaderProvider } from "../../src/domain/interface/header-provider.interface";
+import type { RequestHeader } from "../../src/domain/interface";
 
-export class MockHeaderProvider implements HeaderProvider {
+export class MockRequestHeader implements RequestHeader {
 	private headers: Map<string, string> = new Map();
 
 	setHeader(name: string, value: string | undefined): void {
@@ -22,6 +22,6 @@ export class MockHeaderProvider implements HeaderProvider {
 	}
 }
 
-export function createMockHeaderProvider(): MockHeaderProvider {
-	return new MockHeaderProvider();
+export function createMockRequestHeader(): MockRequestHeader {
+	return new MockRequestHeader();
 }

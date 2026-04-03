@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, mock, test } from "bun:test";
 import { z } from "zod";
 import { RequestAdapter } from "../../../src/presentation/adapter/request.adapter";
-import type { Handler, ResponseRender } from "../../../src/domain/interface";
-import type { HeaderProvider } from "../../../src/domain/interface/header-provider.interface";
+import type { Handler, RequestHeader, ResponseRender } from "../../../src/domain/interface";
+
 import { createMockLogger } from "../../mocks/index";
 import { RequestValidationError } from "../../../src/domain/error";
 import {
@@ -14,7 +14,7 @@ import {
 	FormUrlEncodedBodyParser,
 } from "../../../src/presentation/adapter/body-parser";
 
-const headerProviderFactory = (headers: Headers): HeaderProvider => ({
+const headerProviderFactory = (headers: Headers): RequestHeader => ({
 	get: (name: string) => headers.get(name),
 	has: (name: string) => headers.has(name),
 });
@@ -149,12 +149,12 @@ describe("RequestAdapter", () => {
 			});
 			voidHandler.handle.mockImplementation(() => Promise.resolve({ status: "ok" }));
 			const voidAdapter = new RequestAdapter({
-			logger,
-			handler: voidHandler,
-			render: createMockResponseRender(),
-			bodyParsers,
-			headerProviderFactory,
-		});
+				logger,
+				handler: voidHandler,
+				render: createMockResponseRender(),
+				bodyParsers,
+				headerProviderFactory,
+			});
 
 			const request = new Request("http://localhost/health", { method: "GET" });
 			await voidAdapter.handle(request);
@@ -204,12 +204,12 @@ describe("RequestAdapter", () => {
 				bodySchema,
 			});
 			const bodyAdapter = new RequestAdapter({
-			logger,
-			handler: mockBodyHandler,
-			render: createMockResponseRender(),
-			bodyParsers,
-			headerProviderFactory,
-		});
+				logger,
+				handler: mockBodyHandler,
+				render: createMockResponseRender(),
+				bodyParsers,
+				headerProviderFactory,
+			});
 
 			const bodyData = { name: "Invoice 1", amount: 100 };
 			const request = new Request("http://localhost/invoices", {
@@ -236,12 +236,12 @@ describe("RequestAdapter", () => {
 			);
 			const bodyRender = createMockResponseRender<{ id: string }>();
 			const bodyAdapter = new RequestAdapter({
-			logger,
-			handler: mockBodyHandler,
-			render: bodyRender,
-			bodyParsers,
-			headerProviderFactory,
-		});
+				logger,
+				handler: mockBodyHandler,
+				render: bodyRender,
+				bodyParsers,
+				headerProviderFactory,
+			});
 
 			const request = new Request("http://localhost/invoices", {
 				method: "POST",
@@ -267,12 +267,12 @@ describe("RequestAdapter", () => {
 			);
 			const bodyRender = createMockResponseRender<{ id: string }>();
 			const bodyAdapter = new RequestAdapter({
-			logger,
-			handler: mockBodyHandler,
-			render: bodyRender,
-			bodyParsers,
-			headerProviderFactory,
-		});
+				logger,
+				handler: mockBodyHandler,
+				render: bodyRender,
+				bodyParsers,
+				headerProviderFactory,
+			});
 
 			const request = new Request("http://localhost/invoices", {
 				method: "POST",
@@ -301,12 +301,12 @@ describe("RequestAdapter", () => {
 			});
 			const bodyRender = createMockResponseRender<{ id: string }>();
 			const bodyAdapter = new RequestAdapter({
-			logger,
-			handler: mockBodyHandler,
-			render: bodyRender,
-			bodyParsers,
-			headerProviderFactory,
-		});
+				logger,
+				handler: mockBodyHandler,
+				render: bodyRender,
+				bodyParsers,
+				headerProviderFactory,
+			});
 
 			const formData = new URLSearchParams();
 			formData.append("email", "test@example.com");
@@ -343,12 +343,12 @@ describe("RequestAdapter", () => {
 				querySchema,
 			});
 			const queryAdapter = new RequestAdapter({
-			logger,
-			handler: mockQueryHandler,
-			render: createMockResponseRender(),
-			bodyParsers,
-			headerProviderFactory,
-		});
+				logger,
+				handler: mockQueryHandler,
+				render: createMockResponseRender(),
+				bodyParsers,
+				headerProviderFactory,
+			});
 
 			const request = new Request("http://localhost/invoices?page=2&limit=10", {
 				method: "GET",
@@ -376,12 +376,12 @@ describe("RequestAdapter", () => {
 			});
 			const queryRender = createMockResponseRender<{ id: string }>();
 			const queryAdapter = new RequestAdapter({
-			logger,
-			handler: mockQueryHandler,
-			render: queryRender,
-			bodyParsers,
-			headerProviderFactory,
-		});
+				logger,
+				handler: mockQueryHandler,
+				render: queryRender,
+				bodyParsers,
+				headerProviderFactory,
+			});
 
 			const request = new Request("http://localhost/invoices?page=0", { method: "GET" });
 			await queryAdapter.handle(request);
@@ -403,12 +403,12 @@ describe("RequestAdapter", () => {
 				},
 			);
 			const paramsAdapter = new RequestAdapter({
-			logger,
-			handler: mockParamsHandler,
-			render: createMockResponseRender(),
-			bodyParsers,
-			headerProviderFactory,
-		});
+				logger,
+				handler: mockParamsHandler,
+				render: createMockResponseRender(),
+				bodyParsers,
+				headerProviderFactory,
+			});
 
 			const request = new Request(
 				"http://localhost/invoices/550e8400-e29b-41d4-a716-446655440000",
@@ -432,12 +432,12 @@ describe("RequestAdapter", () => {
 			);
 			const paramsRender = createMockResponseRender<{ id: string }>();
 			const paramsAdapter = new RequestAdapter({
-			logger,
-			handler: mockParamsHandler,
-			render: paramsRender,
-			bodyParsers,
-			headerProviderFactory,
-		});
+				logger,
+				handler: mockParamsHandler,
+				render: paramsRender,
+				bodyParsers,
+				headerProviderFactory,
+			});
 
 			const request = new Request("http://localhost/invoices/invalid-uuid", {
 				method: "GET",
@@ -470,12 +470,12 @@ describe("RequestAdapter", () => {
 				Promise.resolve({ id: "INV-001", status: "pending" }),
 			);
 			const validAdapter = new RequestAdapter({
-			logger,
-			handler: mockValidHandler,
-			render: createMockResponseRender(),
-			bodyParsers,
-			headerProviderFactory,
-		});
+				logger,
+				handler: mockValidHandler,
+				render: createMockResponseRender(),
+				bodyParsers,
+				headerProviderFactory,
+			});
 
 			const request = new Request("http://localhost/invoices", { method: "GET" });
 			await validAdapter.handle(request);
@@ -506,12 +506,12 @@ describe("RequestAdapter", () => {
 			);
 			const invalidRender = createMockResponseRender<{ id: string; status: string }>();
 			const invalidAdapter = new RequestAdapter({
-			logger,
-			handler: mockInvalidHandler,
-			render: invalidRender,
-			bodyParsers,
-			headerProviderFactory,
-		});
+				logger,
+				handler: mockInvalidHandler,
+				render: invalidRender,
+				bodyParsers,
+				headerProviderFactory,
+			});
 
 			const request = new Request("http://localhost/invoices", { method: "GET" });
 			await invalidAdapter.handle(request);

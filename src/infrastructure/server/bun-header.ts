@@ -1,9 +1,9 @@
-import type { HeaderProvider } from "../../domain/interface/header-provider.interface";
+import type { RequestHeader } from "../../domain/interface";
 
 /**
  * Bun implementation of HeaderProvider wrapping native Headers
  */
-export class BunHeaderProvider implements HeaderProvider {
+export class BunHeader implements RequestHeader {
 	constructor(private readonly _headers: Headers) {}
 
 	get(name: string): string | null {
