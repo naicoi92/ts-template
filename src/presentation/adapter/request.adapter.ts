@@ -1,12 +1,6 @@
 import type z from "zod";
 import { formatZodError, RequestValidationError } from "../../domain/error/validation.error";
-import type {
-	Handler,
-	Logger,
-	RequestHandler,
-	RequestHeader,
-	ResponseRender,
-} from "../../domain/interface";
+import type { Handler, Logger, RequestHandler, ResponseRender } from "../../domain/interface";
 import type { ValidationErrorSource } from "../../domain/type/validation.type";
 import { InvalidRequestMethodError } from "../error";
 import type { RequestBodyParser } from "./body-parser";
@@ -21,7 +15,6 @@ export class RequestAdapter<TResponse, TParams, TQuery, TBody> implements Reques
 			handler: Handler<TResponse, TParams, TQuery, TBody>;
 			render: ResponseRender<TResponse, Response>;
 			bodyParsers: RequestBodyParser[];
-			headerProviderFactory: (headers: Headers) => RequestHeader;
 		},
 	) {}
 
@@ -34,7 +27,7 @@ export class RequestAdapter<TResponse, TParams, TQuery, TBody> implements Reques
 			const params = this.parseParams(url.pathname);
 			const query = this.parseQueries(url.searchParams);
 			const body = await this.parseBody(request);
-			const headers = this.createHeaderProvider(request);
+
 			this.logger
 				.withData({
 					pathname: url.pathname,
@@ -52,7 +45,7 @@ export class RequestAdapter<TResponse, TParams, TQuery, TBody> implements Reques
 				params: params as TParams,
 				query: query as TQuery,
 				body: body as TBody,
-				headers,
+				headers: request.headers,
 			});
 			const response = this.schemaParse(data, this.handler.responseSchema, "response");
 			return this.render.data(response);
@@ -125,9 +118,5 @@ export class RequestAdapter<TResponse, TParams, TQuery, TBody> implements Reques
 	}
 	private get render(): ResponseRender<TResponse, Response> {
 		return this._deps.render;
-	}
-
-	private createHeaderProvider(request: Request): RequestHeader {
-		return this._deps.headerProviderFactory(request.headers);
 	}
 }

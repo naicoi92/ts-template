@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, mock, test } from "bun:test";
 import { z } from "zod";
 import { RequestAdapter } from "../../../src/presentation/adapter/request.adapter";
-import type { Handler, RequestHeader, ResponseRender } from "../../../src/domain/interface";
+import type { Handler, ResponseRender } from "../../../src/domain/interface";
 
 import { createMockLogger } from "../../mocks/index";
 import { RequestValidationError } from "../../../src/domain/error";
@@ -13,11 +13,6 @@ import {
 	JsonBodyParser,
 	FormUrlEncodedBodyParser,
 } from "../../../src/presentation/adapter/body-parser";
-
-const headerProviderFactory = (headers: Headers): RequestHeader => ({
-	get: (name: string) => headers.get(name),
-	has: (name: string) => headers.has(name),
-});
 
 interface MockResponseRender<TResponse> extends ResponseRender<TResponse, Response> {
 	data: ReturnType<typeof mock>;
@@ -112,7 +107,6 @@ describe("RequestAdapter", () => {
 			handler: mockHandler,
 			render: mockRender,
 			bodyParsers,
-			headerProviderFactory,
 		});
 	});
 
@@ -153,7 +147,6 @@ describe("RequestAdapter", () => {
 				handler: voidHandler,
 				render: createMockResponseRender(),
 				bodyParsers,
-				headerProviderFactory,
 			});
 
 			const request = new Request("http://localhost/health", { method: "GET" });
@@ -208,7 +201,6 @@ describe("RequestAdapter", () => {
 				handler: mockBodyHandler,
 				render: createMockResponseRender(),
 				bodyParsers,
-				headerProviderFactory,
 			});
 
 			const bodyData = { name: "Invoice 1", amount: 100 };
@@ -240,7 +232,6 @@ describe("RequestAdapter", () => {
 				handler: mockBodyHandler,
 				render: bodyRender,
 				bodyParsers,
-				headerProviderFactory,
 			});
 
 			const request = new Request("http://localhost/invoices", {
@@ -271,7 +262,6 @@ describe("RequestAdapter", () => {
 				handler: mockBodyHandler,
 				render: bodyRender,
 				bodyParsers,
-				headerProviderFactory,
 			});
 
 			const request = new Request("http://localhost/invoices", {
@@ -305,7 +295,6 @@ describe("RequestAdapter", () => {
 				handler: mockBodyHandler,
 				render: bodyRender,
 				bodyParsers,
-				headerProviderFactory,
 			});
 
 			const formData = new URLSearchParams();
@@ -347,7 +336,6 @@ describe("RequestAdapter", () => {
 				handler: mockQueryHandler,
 				render: createMockResponseRender(),
 				bodyParsers,
-				headerProviderFactory,
 			});
 
 			const request = new Request("http://localhost/invoices?page=2&limit=10", {
@@ -380,7 +368,6 @@ describe("RequestAdapter", () => {
 				handler: mockQueryHandler,
 				render: queryRender,
 				bodyParsers,
-				headerProviderFactory,
 			});
 
 			const request = new Request("http://localhost/invoices?page=0", { method: "GET" });
@@ -407,7 +394,6 @@ describe("RequestAdapter", () => {
 				handler: mockParamsHandler,
 				render: createMockResponseRender(),
 				bodyParsers,
-				headerProviderFactory,
 			});
 
 			const request = new Request(
@@ -436,7 +422,6 @@ describe("RequestAdapter", () => {
 				handler: mockParamsHandler,
 				render: paramsRender,
 				bodyParsers,
-				headerProviderFactory,
 			});
 
 			const request = new Request("http://localhost/invoices/invalid-uuid", {
@@ -474,7 +459,6 @@ describe("RequestAdapter", () => {
 				handler: mockValidHandler,
 				render: createMockResponseRender(),
 				bodyParsers,
-				headerProviderFactory,
 			});
 
 			const request = new Request("http://localhost/invoices", { method: "GET" });
@@ -510,7 +494,6 @@ describe("RequestAdapter", () => {
 				handler: mockInvalidHandler,
 				render: invalidRender,
 				bodyParsers,
-				headerProviderFactory,
 			});
 
 			const request = new Request("http://localhost/invoices", { method: "GET" });
